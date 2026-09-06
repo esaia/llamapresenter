@@ -180,7 +180,7 @@ const PresentMenu = () => {
 };
 
 export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOpenNav: () => void }) => {
-  const { tab, setTab } = useStudio();
+  const { tab, setTab, timer } = useStudio();
 
   return (
     <header
@@ -212,42 +212,79 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
         </Link>
       </div>
 
+      {/* Five tabs and two buttons do not share a row until the window is wide.
+          Below that the tabs take a line of their own and split it evenly,
+          which is the only way "Lower3rd" stays on screen on a phone. */}
       <nav
         aria-label="Workspace"
-        className="order-last flex items-center gap-0.5 rounded-studio border border-studio-border
-          bg-studio-surface p-0.5 sm:order-none"
+        className="order-last flex w-full items-center gap-0.5 rounded-studio border border-studio-border
+          bg-studio-surface p-0.5 lg:order-none lg:w-auto"
       >
-        {TABS.map(({ id, label, Icon, beta }) => (
-          <button
-            key={id}
-            type="button"
-            aria-current={tab === id ? 'page' : undefined}
-            onClick={() => setTab(id)}
-            className={cn(
-              'inline-flex h-7 items-center gap-1.5 rounded-[4px] pl-3 text-xs font-medium transition-colors',
-              'duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
-              beta ? 'pr-2' : 'pr-3',
-              tab === id ? 'bg-studio-lift text-studio-text shadow-studio' : 'text-studio-muted hover:text-studio-text',
-            )}
-          >
-            <Icon className="size-3.5" />
-            {label}
+        {TABS.map(({ id, label, Icon, beta }) => {
+          // A run started on the Stage tab keeps going while the operator is
+          // off in Bible or Lyrics, and nothing else in the bar says so. The
+          // tab that owns the timer wears the run.
+          const running = id === 'stage' && timer.running;
 
-            {/* Read out as part of the tab's name rather than hidden from it:
-                "Lower3rd, beta" is what a screen reader should say, because it
-                is what the sighted operator is being told. */}
-            {beta ? (
-              <span
-                className={cn(
-                  'rounded-[3px] px-1 py-px text-[9px] font-semibold uppercase leading-[1.4] tracking-[0.08em]',
-                  tab === id ? 'bg-studio-accent/12 text-studio-accent' : 'bg-studio-border/70 text-studio-faint',
-                )}
-              >
-                Beta
+          // Read out as part of the tab's own name rather than hidden from it:
+          // "Lower3rd, beta" and "Stage, timer running" are what a screen
+          // reader should say, because they are what the sighted operator is
+          // being told by the badge and the dot.
+          const name = [label, beta ? 'beta' : null, running ? 'timer running' : null].filter(Boolean).join(', ');
+
+          return (
+            <button
+              key={id}
+              type="button"
+              aria-current={tab === id ? 'page' : undefined}
+              aria-label={name}
+              title={name}
+              onClick={() => setTab(id)}
+              className={cn(
+                'inline-flex h-7 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[4px] px-2 text-xs',
+                'font-medium transition-colors duration-150 focus:outline-none',
+                'focus-visible:ring-2 focus-visible:ring-studio-accent/40 sm:flex-none sm:justify-start sm:pl-3',
+                beta ? 'sm:pr-2' : 'sm:pr-3',
+                tab === id
+                  ? 'bg-studio-lift text-studio-text shadow-studio'
+                  : running
+                    ? 'text-studio-text'
+                    : 'text-studio-muted hover:text-studio-text',
+              )}
+            >
+              <span className="relative flex shrink-0 items-center">
+                <Icon className="size-3.5" />
+
+                {/* The same beat as the on-screen badge, so a running timer
+                    and a live slide read as one language. */}
+                {running ? (
+                  <span
+                    aria-hidden
+                    className="absolute -right-1 -top-1 size-1.5 animate-pulse rounded-full bg-studio-live
+                      ring-2 ring-studio-surface"
+                  />
+                ) : null}
               </span>
-            ) : null}
-          </button>
-        ))}
+
+              <span className="hidden truncate sm:inline">{label}</span>
+
+              {/* On a phone the label is gone and the badge with it: the tab is
+                  an icon, and one dot beside it is already the run. */}
+              {beta ? (
+                <span
+                  aria-hidden
+                  className={cn(
+                    'hidden rounded-[3px] px-1 py-px text-[9px] font-semibold uppercase leading-[1.4]',
+                    'tracking-[0.08em] sm:inline',
+                    tab === id ? 'bg-studio-accent/12 text-studio-accent' : 'bg-studio-border/70 text-studio-faint',
+                  )}
+                >
+                  Beta
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
       </nav>
 
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">

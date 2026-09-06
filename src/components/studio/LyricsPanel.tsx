@@ -247,8 +247,11 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
             {/* Room under the last song, so every song in the order can be
                 taken to the top of the panel — the last one included. Without
                 it the list stops where its cards stop, and picking the last
-                song moves nothing: it is already as far down as it goes. */}
-            <div aria-hidden className="h-[70vh]" />
+                song moves nothing: it is already as far down as it goes.
+                Only where this column is the thing that scrolls: below lg the
+                page scrolls instead, and the room is dead space under the
+                last slide. */}
+            <div aria-hidden className="hidden lg:block lg:h-[70vh]" />
           </div>
         )}
       </div>
