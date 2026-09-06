@@ -181,7 +181,13 @@ export interface Database {
       }>;
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      /** Verses whose text contains a phrase, in one translation and optionally one book. */
+      bible_search: {
+        Args: { p_lang: string; p_version: string; p_query: string; p_book?: number | null; p_limit?: number };
+        Returns: { book: number; wigni: number; chapter: number; verse: number; text: string }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

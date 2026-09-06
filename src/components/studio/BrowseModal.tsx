@@ -5,10 +5,19 @@ import { Search, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { IconButton } from '@/components/ui/IconButton';
-import { bookMatches, bookName, booksOf, normalizeName, type BookEntry } from '@/lib/bible/passage';
+import { bookMatches, bookName, booksOf, normalizeName, toSharedBook, type BookEntry } from '@/lib/bible/passage';
+import {
+  MIN_SEARCH_LENGTH,
+  searchVerses,
+  snippetAround,
+  splitOnMatch,
+  type VerseHit,
+} from '@/lib/bible/search';
 import { chapterCount, verseCount } from '@/lib/bible/versification';
 import { cn } from '@/lib/cn';
 import { useStudio } from '@/lib/studio/StudioProvider';
+
+import { BookScope } from './BookScope';
 
 interface Crumb {
   label: string;
@@ -93,6 +102,23 @@ export const BrowseModal = ({
   const [query, setQuery] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // What the same box found in the text. A book name is answered from a table
+  // the console already holds, so it filters as fast as the operator types;
+  // the words of a verse are a question for the library, so they are asked a
+  // moment after the typing stops and the answer arrives beneath the books.
+  //
+  // The question the answer belongs to is kept with it — the words, and the
+  // translation they were looked for in — which is what makes both "these are
+  // stale" and "still looking" plain derivations rather than a second piece of
+  // state to keep in step.
+  const [found, setFound] = useState<{ asked: string; hits: VerseHit[] }>({ asked: '', hits: [] });
+
+  // Which book the words are looked for in, as a shared id. Common words find
+  // more than the forty verses that come back, and those forty are the first
+  // forty in canonical order — every one of them in Matthew. Narrowing to a
+  // book is what makes "jesus" a search rather than a list of Matthew 1.
+  const [scope, setScope] = useState<number | null>(null);
+
   const lang = settings.adminLang;
   const step = !book ? 'books' : !chapter ? 'chapters' : 'verses';
 
@@ -103,6 +129,34 @@ export const BrowseModal = ({
   useEffect(() => {
     searchRef.current?.focus();
   }, []);
+
+  const term = query.trim();
+  const searchable = term.length >= MIN_SEARCH_LENGTH;
+  const asked = `${lang}|${settings.adminVersion}|${scope ?? ''}|${term}`;
+  const hits = found.asked === asked ? found.hits : [];
+  const searching = searchable && found.asked !== asked;
+
+  useEffect(() => {
+    if (!searchable) return;
+
+    const controller = new AbortController();
+
+    // Long enough that a word typed at speed is one request rather than six,
+    // short enough that the answer is there by the time the eye has finished
+    // reading the books above it.
+    const timer = setTimeout(() => {
+      void searchVerses({ lang, version: settings.adminVersion, query: term, book: scope }, controller.signal)
+        .then(results => setFound({ asked, hits: results }))
+        .catch(() => {
+          if (!controller.signal.aborted) setFound({ asked, hits: [] });
+        });
+    }, 250);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [asked, lang, scope, searchable, settings.adminVersion, term]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -182,17 +236,22 @@ export const BrowseModal = ({
   const [error, setError] = useState('');
 
   // A chapter is a round trip to the API, and on a hall's connection that is
-  // long enough for the operator to wonder whether the click landed.
-  const [adding, setAdding] = useState<'chapter' | 'range' | null>(null);
+  // long enough for the operator to wonder whether the click landed. Which
+  // button is waiting is held rather than a bare flag: a verse found by its
+  // words is added by its own card, and that card is what should spin.
+  const [adding, setAdding] = useState<string | null>(null);
 
-  const add = async (from: number | null, to: number | null) => {
-    if (!book || !chapter || adding) return;
+  const put = async (
+    request: { book: number; chapter: number; from: number | null; to: number | null },
+    marker: string,
+  ) => {
+    if (adding) return;
 
     setError('');
-    setAdding(from === null ? 'chapter' : 'range');
+    setAdding(marker);
 
     try {
-      const block = await addPassage({ book: book.book, chapter, from, to });
+      const block = await addPassage(request);
 
       onClose();
 
@@ -203,6 +262,17 @@ export const BrowseModal = ({
       setAdding(null);
     }
   };
+
+  const add = (from: number | null, to: number | null) =>
+    book && chapter ? void put({ book: book.book, chapter, from, to }, from === null ? 'chapter' : 'range') : undefined;
+
+  // A hit carries the language's own book id, because that is what the row it
+  // came out of holds. Everything past this point speaks the shared one.
+  const addHit = (hit: VerseHit) =>
+    void put(
+      { book: toSharedBook(hit.book, lang), chapter: hit.chapter, from: hit.verse, to: hit.verse },
+      `${hit.book}-${hit.chapter}-${hit.verse}`,
+    );
 
   const rangeLabel = range ? (range.to > range.from ? `${range.from}-${range.to}` : `${range.from}`) : '';
 
@@ -238,37 +308,112 @@ export const BrowseModal = ({
         <div className="studio-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4">
           {step === 'books' ? (
             <>
-              <div className="relative mb-3 flex items-center">
-                <Search className="pointer-events-none absolute left-3 size-4 text-studio-faint" />
-                <input
-                  ref={searchRef}
-                  type="text"
-                  value={query}
-                  placeholder="Filter books"
-                  onChange={event => setQuery(event.target.value)}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter' && matches.length > 0) {
-                      event.preventDefault();
-                      pickBook(matches[0]);
-                    }
-                  }}
-                  className="h-9 w-full rounded-studio border border-studio-border bg-studio-bg pr-3 pl-9 text-sm
-                    text-studio-text placeholder:text-studio-faint focus:outline-none focus-visible:ring-2
-                    focus-visible:ring-studio-accent/40"
-                />
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="relative flex min-w-0 flex-1 items-center">
+                  <Search className="pointer-events-none absolute left-3 size-4 text-studio-faint" />
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={query}
+                    placeholder="A book, or words in a verse"
+                    onChange={event => setQuery(event.target.value)}
+                    onKeyDown={event => {
+                      if (event.key !== 'Enter') return;
+
+                      // A book if the words name one, and the first verse they
+                      // were found in otherwise: Enter takes whatever the box is
+                      // actually offering.
+                      if (matches.length > 0) {
+                        event.preventDefault();
+                        pickBook(matches[0]);
+                      } else if (hits.length > 0) {
+                        event.preventDefault();
+                        addHit(hits[0]);
+                      }
+                    }}
+                    className="h-9 w-full rounded-studio border border-studio-border bg-studio-bg pr-3 pl-9 text-sm
+                      text-studio-text placeholder:text-studio-faint focus:outline-none focus-visible:ring-2
+                      focus-visible:ring-studio-accent/40"
+                  />
+                </div>
+
+                {/* Only ever narrows the text search — the book grid below is
+                    the whole 66 whatever this says, because picking a book
+                    there is how the operator browses to a reference — so it
+                    appears with the search it belongs to and not before. */}
+                {searchable ? (
+                  <BookScope books={books} value={scope} onPick={setScope} className="shrink-0 sm:w-48" />
+                ) : null}
               </div>
 
-              {matches.length === 0 ? (
-                <p className="pt-10 text-center text-sm text-studio-muted">No book matches “{query}”.</p>
-              ) : (
-                <div className="grid grid-cols-2 gap-2 pb-2 sm:grid-cols-3 md:grid-cols-4">
+              {matches.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                   {matches.map(entry => (
                     <GridButton key={entry.book} onClick={() => pickBook(entry)} className="truncate px-3 text-left">
                       {entry.name}
                     </GridButton>
                   ))}
                 </div>
-              )}
+              ) : null}
+
+              {/* The other half of the same box: what the operator typed, found
+                  in the text rather than in a book's name. A remembered line —
+                  "a thousand generations" — is how a verse is asked for at
+                  least as often as by its reference. */}
+              {searchable ? (
+                <div className={cn('pb-2', matches.length > 0 && 'mt-5 border-t border-studio-border pt-4')}>
+                  <p className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-studio-faint">
+                    In the text{scope ? ` · ${bookName(scope, lang)}` : ''}
+                    {searching ? <span className="normal-case tracking-normal">searching…</span> : null}
+                  </p>
+
+                  {hits.length === 0 ? (
+                    <p className="py-6 text-center text-sm text-studio-muted">
+                      {searching
+                        ? 'Looking…'
+                        : `Nothing in ${scope ? bookName(scope, lang) : settings.adminVersion} says “${term}”.`}
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-1.5">
+                      {hits.map(hit => {
+                        const shared = toSharedBook(hit.book, lang);
+                        const [before, match, after] = splitOnMatch(snippetAround(hit.text, term), term);
+                        const marker = `${hit.book}-${hit.chapter}-${hit.verse}`;
+
+                        return (
+                          <button
+                            key={marker}
+                            type="button"
+                            disabled={adding !== null}
+                            onClick={() => addHit(hit)}
+                            className={cn(
+                              'rounded-studio border border-studio-border bg-studio-bg px-3 py-2 text-left',
+                              'transition-colors duration-150 hover:border-studio-faint hover:bg-studio-surface',
+                              'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
+                              'disabled:opacity-60',
+                              adding === marker && 'border-studio-text bg-studio-surface',
+                            )}
+                          >
+                            <span className="block text-sm text-studio-text">
+                              {before}
+                              <mark className="rounded-[3px] bg-studio-accent/20 text-studio-text">{match}</mark>
+                              {after}
+                            </span>
+
+                            <span className="mt-1 block text-xs text-studio-muted">
+                              {bookName(shared, lang)} {hit.chapter}:{hit.verse}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : matches.length === 0 ? (
+                <p className="pt-10 text-center text-sm text-studio-muted">
+                  No book matches “{query}”. Type {MIN_SEARCH_LENGTH} letters or more to search the text as well.
+                </p>
+              ) : null}
             </>
           ) : null}
 
@@ -307,7 +452,7 @@ export const BrowseModal = ({
                 size="md"
                 loading={adding === 'chapter'}
                 disabled={adding !== null}
-                onClick={() => void add(null, null)}
+                onClick={() => add(null, null)}
               >
                 Whole chapter
               </Button>
@@ -317,7 +462,7 @@ export const BrowseModal = ({
                 size="md"
                 loading={adding === 'range'}
                 disabled={!range || adding !== null}
-                onClick={() => (range ? void add(range.from, range.to) : undefined)}
+                onClick={() => (range ? add(range.from, range.to) : undefined)}
               >
                 {range && book && chapter
                   ? `Add ${bookName(book.book, lang)} ${chapter}:${rangeLabel}`

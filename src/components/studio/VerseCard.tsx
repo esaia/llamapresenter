@@ -120,7 +120,7 @@ export const VerseCard = ({
         type="button"
         data-slide-card
         onClick={onGoLive}
-        title={isLive ? 'Click again to clear the screen' : text}
+        title={isLive ? 'Click again to clear the screen' : undefined}
         className={cn(
           'flex aspect-video w-full flex-col justify-between rounded-[4px] bg-studio-slide p-2 text-left',
           'transition-shadow duration-150 focus:outline-none',
