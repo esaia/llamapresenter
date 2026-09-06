@@ -286,7 +286,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
     void orderLists(kind, without);
   };
 
-  const listRow = (list: OpenList, name: string, index: number) => (
+  const listRow = (list: OpenList, name: string, index: number, last: number) => (
     <ListRow
       key={list.id}
       kind={list.kind}
@@ -317,7 +317,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
         dropList(list.kind, sideOf(event) === 'before' ? index : index + 1)(event);
       }}
       lineAbove={listDrop?.kind === list.kind && listDrop.at === index}
-      lineBelow={listDrop?.kind === list.kind && listDrop.at === index + 1}
+      lineBelow={listDrop?.kind === list.kind && listDrop.at === index + 1 && index === last}
       name={name}
       count={countOf(list)}
       chosen={same(open, list)}
@@ -367,7 +367,9 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
         </div>
 
         <ul onDragLeave={() => setListDrop(null)}>
-          {libraries.map((library, index) => listRow({ kind: 'library', id: library.id }, library.name, index))}
+          {libraries.map((library, index) =>
+            listRow({ kind: 'library', id: library.id }, library.name, index, libraries.length - 1),
+          )}
         </ul>
 
         <div className="flex items-center justify-between border-y border-studio-border bg-studio-surface px-2.5 py-1.5">
@@ -379,7 +381,9 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
         </div>
 
         <ul onDragLeave={() => setListDrop(null)}>
-          {playlists.map((list, index) => listRow({ kind: 'playlist', id: list.id }, list.name, index))}
+          {playlists.map((list, index) =>
+            listRow({ kind: 'playlist', id: list.id }, list.name, index, playlists.length - 1),
+          )}
         </ul>
 
         {libraries.length === 0 && playlists.length === 0 ? (
@@ -632,8 +636,12 @@ const SongList = ({
             running &&
               dropIndex === index &&
               'before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-px before:bg-studio-accent',
+            // Only the last row draws a line under itself. Any other gap is
+            // the top of the row below, and both drawing it gave two hairlines
+            // with the divider between them.
             running &&
               dropIndex === index + 1 &&
+              index === items.length - 1 &&
               'after:absolute after:inset-x-0 after:bottom-0 after:z-10 after:h-px after:bg-studio-accent',
           )}
         >
