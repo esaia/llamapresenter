@@ -9,6 +9,7 @@ import { cn } from '@/lib/cn';
 import {
   addLang,
   armLang,
+  isOriginal,
   langsOf,
   lower3rdLangOf,
   MAX_SONG_LANGS,
@@ -153,16 +154,11 @@ export const SongLangs = ({ song, onChange }: { song: Song; onChange: (song: Son
                     label={`Show ${lang.label || `language ${index + 1}`} on the projector`}
                   />
 
-                  {/* The first language is the song itself — the words the
-                      import or the paste put there. Removing it would promote a
-                      translation over them and throw them away, so it has no
-                      cross; dragging another language above it moves the words
-                      instead, and then this one can go. */}
-                  {index === 0 ? (
-                    <span
-                      className="w-5"
-                      title="The first language is the song itself. Drag another above it to change which that is."
-                    />
+                  {/* The original stays, wherever it has been dragged to: it
+                      is the song itself. A translation goes whenever the
+                      operator says, top of the list or not. */}
+                  {isOriginal(lang.id) ? (
+                    <span className="w-5" title="The words this song was written in. They stay." />
                   ) : (
                     <button
                       type="button"

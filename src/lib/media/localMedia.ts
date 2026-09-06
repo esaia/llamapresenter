@@ -12,12 +12,29 @@
 
 import type { LocalFileMeta } from '@/lib/types';
 
-/** A stored file: its identity, plus the bytes themselves. */
-export type LocalFile = LocalFileMeta & { file: File | Blob };
+/**
+ * A stored file: its identity, plus the bytes themselves — and, for a picture,
+ * which shelf the operator filed it on.
+ */
+export type LocalFile = LocalFileMeta & { file: File | Blob; folder?: string };
+
+/**
+ * A shelf of the operator's own pictures.
+ *
+ * Kept here rather than in the database because the pictures are: a row naming
+ * a background this machine cannot produce would list a picture no console can
+ * show. The library and the shelves it is arranged on stay together.
+ */
+export interface LocalFolder {
+  id: string;
+  name: string;
+  position: number;
+}
 
 const DB_NAME = 'studioMedia';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE = 'files';
+const FOLDERS = 'folders';
 
 /**
  * Files that arrived from *another* device over the peer connection, kept
@@ -32,7 +49,7 @@ const openDb = () =>
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onupgradeneeded = () => {
-      [STORE, RECEIVED].forEach(name => {
+      [STORE, RECEIVED, FOLDERS].forEach(name => {
         if (!request.result.objectStoreNames.contains(name)) {
           request.result.createObjectStore(name, { keyPath: 'id' });
         }
@@ -60,13 +77,14 @@ const run = async <T>(
   });
 };
 
-export const saveLocalFile = async (file: File): Promise<LocalFile> => {
+export const saveLocalFile = async (file: File, folder?: string): Promise<LocalFile> => {
   const record: LocalFile = {
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: file.name,
     type: file.type,
     size: file.size,
     file,
+    ...(folder ? { folder } : {}),
   };
 
   await run('readwrite', store => store.put(record));
@@ -79,6 +97,55 @@ export const loadLocalFiles = () => run<LocalFile[]>('readonly', store => store.
 export const loadLocalFile = (id: string) => run<LocalFile | undefined>('readonly', store => store.get(id));
 
 export const deleteLocalFile = (id: string) => run<void>('readwrite', store => store.delete(id));
+
+// ------------------------------------------------------------------ shelves
+
+export const loadFolders = async (): Promise<LocalFolder[]> => {
+  const folders = await run<LocalFolder[]>('readonly', store => store.getAll(), FOLDERS);
+
+  return folders.sort((a, b) => a.position - b.position);
+};
+
+export const saveFolder = async (name: string): Promise<LocalFolder> => {
+  const folders = await loadFolders();
+  const folder: LocalFolder = {
+    id: `folder-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name,
+    position: folders.length,
+  };
+
+  await run('readwrite', store => store.put(folder), FOLDERS);
+
+  return folder;
+};
+
+export const renameFolder = async (id: string, name: string): Promise<void> => {
+  const folders = await loadFolders();
+  const folder = folders.find(item => item.id === id);
+
+  if (folder) await run('readwrite', store => store.put({ ...folder, name }), FOLDERS);
+};
+
+/**
+ * A shelf dropped. The pictures on it are not: they go back to being unfiled,
+ * the way deleting a song library moves its songs rather than burning them.
+ */
+export const deleteFolder = async (id: string): Promise<void> => {
+  const files = await loadLocalFiles();
+
+  await Promise.all(
+    files.filter(file => file.folder === id).map(file => run('readwrite', store => store.put({ ...file, folder: undefined }))),
+  );
+
+  await run<void>('readwrite', store => store.delete(id), FOLDERS);
+};
+
+/** Move a picture to another shelf, or off the shelves altogether. */
+export const setFileFolder = async (id: string, folder?: string): Promise<void> => {
+  const file = await loadLocalFile(id);
+
+  if (file) await run('readwrite', store => store.put({ ...file, folder }));
+};
 
 /**
  * The projector's copy of a background it was sent. Kept so a reload — or a

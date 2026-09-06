@@ -20,11 +20,17 @@ import { emptyShowData, type ShowData, type Song, type SongLang, type SongSlide 
 export const MAX_SONG_LANGS = 3;
 
 /**
- * The id of the language a song already had before it was given any. It only
- * has to be unique within the song; nothing reads it as a name, and a reorder
- * can move it off the front like any other.
+ * The id of the language a song already had before it was given any — the one
+ * the import or the paste put there, which is to say the song itself.
+ *
+ * It is only an id: nothing reads it as a name, and a reorder can move it off
+ * the front like any other. What it marks is the one language the song cannot
+ * be stripped of, wherever it has since been dragged.
  */
 export const PRIMARY_ID = 'primary';
+
+/** The words the song arrived with, which are not the operator's to delete. */
+export const isOriginal = (langId: string) => langId === PRIMARY_ID;
 
 /** The languages as stored, alongside the two picks. */
 export interface StoredLangs {
@@ -219,18 +225,17 @@ export const addLang = (song: Song, lang: SongLang): Song => {
 /**
  * A language dropped, and its words with it.
  *
- * The first one stays. It is the song itself — the words a `.pro` import or a
- * paste put there, held in `slide.text` — and removing it would promote a
- * translation that may be half typed into its place and throw the original
- * away, which is a song disappearing rather than a language being removed. To
- * be rid of it, drag another language to the front first: that moves the words
- * rather than discarding them, and then the old one is a translation like any
- * other.
+ * One stays: the original, wherever it has since been dragged to. Those are
+ * the words a `.pro` import or a paste put there, and dropping them is a song
+ * disappearing rather than a language being removed. A translation the
+ * operator typed is theirs to take back, first in the list or not — taking it
+ * off the top simply moves the language below it back into `slide.text`, which
+ * is where the original's words were going to end up anyway.
  */
 export const removeLang = (song: Song, langId: string): Song => {
   const list = langsOf(song);
 
-  if (list[0]?.id === langId) return song;
+  if (isOriginal(langId)) return song;
 
   return withLangs(
     song,

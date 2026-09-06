@@ -42,9 +42,8 @@ const listDragProps = (kind: OpenList['kind'], id: string) => ({
  * One song or a whole selection: the ids ride as one comma-separated string,
  * because a drag carries text and eleven songs dragged together are one act.
  */
-export const songDragProps = (songs: string | string[]) => {
+export const songDragProps = (songs: string | string[], label?: string) => {
   const ids = (Array.isArray(songs) ? songs : [songs]).join(',');
-
   const count = Array.isArray(songs) ? songs.length : 1;
 
   return {
@@ -54,28 +53,31 @@ export const songDragProps = (songs: string | string[]) => {
       event.dataTransfer.setData('text/plain', ids);
       event.dataTransfer.effectAllowed = 'move';
 
-      // Carrying several, the row under the pointer is the wrong picture: it
-      // says one song is moving while three are. The browser will only take a
-      // node that is in the document, so the count is built off-screen, handed
-      // over, and taken away once the drag has its snapshot.
-      if (count > 1) {
-        // The count sits below and right of the pointer rather than under it:
-        // the anchor is the corner of a transparent margin, so the cursor has
-        // somewhere to be that is not on top of the number it is carrying.
-        const ghost = document.createElement('div');
-        const chip = document.createElement('div');
+      const said = count > 1 ? `${count} songs` : label;
 
-        ghost.className = 'pointer-events-none fixed -top-40 left-0 pt-4 pl-4';
-        chip.textContent = `${count} songs`;
-        chip.className =
-          'rounded-studio bg-studio-accent px-2.5 py-1.5 text-xs font-semibold text-studio-onaccent shadow-studio';
+      if (!said) return;
 
-        ghost.append(chip);
-        document.body.append(ghost);
-        event.dataTransfer.setDragImage(ghost, 0, 0);
+      // Words alone, carried by the pointer. The browser's own drag image is a
+      // photograph of the row — a yellow slab that says more about the row's
+      // highlight than about the song in it — and with several picked it shows
+      // one of them while four are moving.
+      //
+      // Held the way every file manager holds a dragged name: the pointer just
+      // inside the leading edge and level with the middle of the text, so the
+      // label hangs off the cursor rather than trailing below and to the right
+      // of it. The node has to be in the document to be photographed, so it is
+      // put off-screen, measured, and taken away once the snapshot is made.
+      const ghost = document.createElement('div');
 
-        setTimeout(() => ghost.remove(), 0);
-      }
+      ghost.textContent = said;
+      ghost.className =
+        'pointer-events-none fixed top-[-100px] left-0 text-xs font-semibold whitespace-nowrap text-studio-text ' +
+        '[text-shadow:0_1px_4px_#000]';
+
+      document.body.append(ghost);
+      event.dataTransfer.setDragImage(ghost, 10, ghost.getBoundingClientRect().height / 2);
+
+      setTimeout(() => ghost.remove(), 0);
     },
   };
 };
@@ -133,7 +135,7 @@ const ListRow = ({
       // happen to be stacked.
       'group/list relative flex items-center gap-1 border-b border-studio-border pr-1 transition-colors',
       'duration-150 last:border-b-0',
-      chosen ? 'bg-studio-lift' : 'hover:bg-studio-surface',
+      chosen ? 'bg-studio-raised' : 'hover:bg-studio-surface',
       over && 'ring-1 ring-inset ring-studio-accent',
       // Drawn over the row, so the rows below do not step down a pixel as the
       // line moves between them.
@@ -595,7 +597,7 @@ const SongList = ({
       {items.map((song, index) => (
         <li
           key={song.id}
-          {...songDragProps(manyPicked(song.id) ? picked : song.id)}
+          {...songDragProps(manyPicked(song.id) ? picked : song.id, song.title)}
           onDragOver={
             running
               ? event => {

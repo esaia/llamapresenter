@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 
 import { useCustomFonts } from '@/components/projector/useCustomFonts';
@@ -10,6 +10,7 @@ import { toggleRun } from '@/lib/timer/model';
 
 import { AppBar } from './AppBar';
 import { AudioBar } from './AudioBar';
+import { MediaPane } from './MediaPane';
 import { AudioPanel } from './AudioPanel';
 import { Lower3rdPanel } from './Lower3rdPanel';
 import { LyricsPanel } from './LyricsPanel';
@@ -49,8 +50,6 @@ export const Console = () => {
   const {
     blocks,
     stepLive,
-    cardSize,
-    setCardSize,
     tab,
     loading,
     updateTimer,
@@ -229,24 +228,6 @@ export const Console = () => {
                 )}
               </div>
 
-              {/* h-9, the same as the audio rail's fade bar beside it — the
-                  two foot the same screen and a three-pixel step between them
-                  reads as a mistake. */}
-              <div className="flex h-9 shrink-0 items-center justify-end gap-3 border-t border-studio-border bg-studio-bg px-4">
-                <label className="flex items-center gap-3 text-xs text-studio-muted">
-                  Card size
-                  <input
-                    type="range"
-                    min={140}
-                    max={320}
-                    step={10}
-                    value={cardSize}
-                    onChange={event => setCardSize(Number(event.target.value))}
-                    style={{ '--range-fill': `${((cardSize - 140) / 180) * 100}%` } as CSSProperties}
-                    className="studio-range h-1.5 cursor-pointer appearance-none rounded-full bg-studio-border w-40"
-                  />
-                </label>
-              </div>
             </>
           ) : null}
 
@@ -255,8 +236,11 @@ export const Console = () => {
           {tab === 'audio' ? <AudioPanel /> : null}
           {tab === 'stage' ? <TimerPanel /> : null}
 
-          {/* Mounted on every tab, so a bed can be faded or stopped without
-              leaving the passage that is on screen. */}
+          {/* Both mounted on every tab: a background is changed and a bed is
+              faded during a service, not between them, and neither should cost
+              the operator the passage they are looking at. */}
+          <MediaPane />
+
           <AudioBar />
         </main>
 

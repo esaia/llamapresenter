@@ -164,19 +164,30 @@ describe('removeLang', () => {
     expect(left.slides[0].text).toBe('შენ ხარ ღირსი');
   });
 
-  // The words in `text` are the song itself. Dropping the language that holds
-  // them would promote a half-typed translation over them and throw them away,
-  // which reads as the song vanishing.
-  it('refuses to drop the first language, words and all', () => {
-    expect(removeLang(bilingual(), 'ka')).toEqual(bilingual());
-  });
-
-  it('drops the old first language once another has been dragged in front', () => {
-    const moved = reorderLangs(bilingual(), ['en', 'ka']);
-    const left = removeLang(moved, 'ka');
+  it('promotes what is left when the first language goes', () => {
+    const left = removeLang(bilingual(), 'ka');
 
     expect(left.slides.map(slide => slide.text)).toEqual(['You are worthy', 'Glory to you']);
     expect(left.slides.every(slide => slide.alt === undefined)).toBe(true);
+  });
+
+  // Dragging the original into second place moves its words but does not make
+  // them the operator's to throw away.
+  it('refuses the original wherever it has been dragged to', () => {
+    const song = addLang(plain(), en);
+    const moved = reorderLangs(song, ['en', PRIMARY_ID]);
+
+    expect(removeLang(moved, PRIMARY_ID)).toEqual(moved);
+  });
+
+  // The translation is the operator's either way round, and taking it off the
+  // top hands the original's words back to `slide.text` where they started.
+  it('lets a translation go from the top of the list', () => {
+    const song = reorderLangs(addLang(plain(), en), ['en', PRIMARY_ID]);
+    const left = removeLang(song, 'en');
+
+    expect(left.langs?.map(lang => lang.id)).toEqual([PRIMARY_ID]);
+    expect(left.slides.map(slide => slide.text)).toEqual(plain().slides.map(slide => slide.text));
   });
 
   it('takes a song back to the plain kind when one language is left', () => {

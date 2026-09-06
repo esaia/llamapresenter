@@ -380,6 +380,10 @@
   /* One step above a surface: what a hover, a dragged-over drop zone or a
      raised control reaches for. On white this was simply `white`. */
   --color-studio-lift: #2e2b28;
+  /* One step above a lift, and the last of them: the row whose list is open.
+     A rail of near-blacks needs the open one found at a glance, and it cannot
+     be the accent — that is reserved for what is on the wall. */
+  --color-studio-raised: #423d38;
   --color-studio-bar: #100f0f;
   --color-studio-border: #35312d;
   --color-studio-divider: #262322;

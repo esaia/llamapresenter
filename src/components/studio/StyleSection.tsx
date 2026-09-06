@@ -13,11 +13,9 @@ import {
   MIN_TEXT_SIZE,
   SCALE_MODES,
 } from '@/lib/projector/looks';
-import { DYNAMIC_THEME, THEMES } from '@/lib/projector/themes';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import type { Align } from '@/lib/types';
 
-import { LocalBackgrounds } from './LocalBackgrounds';
 import { ProjectorLookPicker } from './ProjectorLookPicker';
 
 const ALIGNMENTS = [
@@ -108,60 +106,6 @@ export const StyleSection = () => {
 
   return (
     <div className="space-y-6">
-      <Field label="Background" hint="Shown behind the text on the projector screen.">
-        <div
-          className="studio-scroll max-h-[260px] overflow-y-auto rounded-studio border border-studio-border
-            bg-studio-surface p-2"
-        >
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">
-            {THEMES.map(item => (
-              <button
-                key={item.id}
-                type="button"
-                aria-label={item.label}
-                title={item.label}
-                aria-pressed={settings.theme === item.id}
-                onClick={() => update({ theme: item.id })}
-                className={cn(
-                  'overflow-hidden rounded-[4px] transition-shadow duration-150 focus:outline-none',
-                  settings.theme === item.id
-                    ? 'ring-2 ring-studio-accent'
-                    : 'ring-1 ring-studio-border hover:ring-studio-faint',
-                )}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.src} alt="" loading="lazy" className="h-14 w-full object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <LocalBackgrounds />
-
-        <div className="mt-2 flex items-center gap-1.5">
-          <input
-            type="text"
-            value={settings.dynamicImage}
-            placeholder="…or paste your own image URL"
-            onChange={event => update({ dynamicImage: event.target.value })}
-            className="h-8 min-w-0 flex-1 rounded-studio border border-studio-border px-2.5 text-xs text-studio-text
-              placeholder:text-studio-faint focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40"
-          />
-          <button
-            type="button"
-            onClick={() => update({ theme: DYNAMIC_THEME })}
-            className={cn(
-              'h-8 shrink-0 rounded-studio border px-3 text-xs font-medium transition-colors duration-150',
-              settings.theme === DYNAMIC_THEME
-                ? 'border-studio-accent bg-studio-accent text-studio-onaccent'
-                : 'border-studio-border bg-studio-bg text-studio-text hover:bg-studio-surface',
-            )}
-          >
-            Use
-          </button>
-        </div>
-      </Field>
-
       <ProjectorLookPicker />
 
       <Field
