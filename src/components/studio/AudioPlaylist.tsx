@@ -7,7 +7,7 @@ import { cn } from '@/lib/cn';
 import { useAudio, type Track } from '@/lib/studio/AudioProvider';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
-import { DROP_ZONE } from './dropZone';
+import { DROP_ZONE, leftZone, useDragEnded } from './dropZone';
 import { useLibraryReorder } from './libraryDrag';
 import { LIFTED_SLOT } from './sortable';
 import { useTrackReorder } from './trackDrag';
@@ -140,6 +140,8 @@ export const AudioPlaylist = () => {
   const [listsOpen, setListsOpen] = useState(true);
   const [dragging, setDragging] = useState(false);
 
+  useDragEnded(dragging, () => setDragging(false));
+
   // A library deleted from the Audio tab must not leave the rail looking at
   // nothing.
   const open = categories.some(category => category.id === view) ? view : ALL;
@@ -177,7 +179,7 @@ export const AudioPlaylist = () => {
         }
       }}
       onDragLeave={event => {
-        if (event.currentTarget === event.target) setDragging(false);
+        if (leftZone(event)) setDragging(false);
       }}
       onDrop={drop}
       className={cn('flex min-h-0 flex-1 flex-col', dragging && DROP_ZONE)}

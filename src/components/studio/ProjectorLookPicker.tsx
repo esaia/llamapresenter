@@ -1,32 +1,26 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { HiOutlinePencil } from 'react-icons/hi';
 
 import { Slide } from '@/components/projector/Slide';
+import { useLocalFiles } from '@/components/projector/useLocalBackground';
+import { IconButton } from '@/components/ui/IconButton';
 import { cn } from '@/lib/cn';
 import { fitText } from '@/lib/projector/fitText';
-import { fitTo, LYRIC_LOOKS, VERSE_LOOKS, type Look } from '@/lib/projector/looks';
+import { CUSTOM_LOOK, fitTo, LYRIC_LOOKS, VERSE_LOOKS, type Look } from '@/lib/projector/looks';
+import { filesUsedBy, SAMPLE_VERSE } from '@/lib/projector/template';
 import { DYNAMIC_THEME, LOCAL_THEME, themeSrc } from '@/lib/projector/themes';
 import { projectorStyle } from '@/lib/studio/settings';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { REQUIRED_LANG, type ProjectorStyle, type ShowData } from '@/lib/types';
 
+import { TemplateEditor } from './TemplateEditor';
+
 const TARGETS = [
   { id: 'verses', label: 'Verses' },
   { id: 'lyrics', label: 'Lyrics' },
 ];
-
-/** Long enough to wrap onto three lines in a tile, short enough to stay read. */
-const SAMPLE_VERSE: ShowData = {
-  [REQUIRED_LANG]: [
-    {
-      bv: 'For God so loved the world, that he gave his one and only Son.',
-      wigni: 43,
-      tavi: 3,
-      muxli: 16,
-    },
-  ],
-};
 
 const SAMPLE_LYRIC: ShowData = {
   lyrics: { title: 'Amazing Grace', text: 'Amazing grace, how sweet the sound that saved a wretch like me' },
@@ -49,11 +43,13 @@ const LookTile = ({
   showData,
   style,
   background,
+  assets,
 }: {
   look: Look;
   showData: ShowData;
   style: ProjectorStyle;
   background: string;
+  assets?: Record<string, string>;
 }) => {
   const boxRef = useRef<HTMLDivElement>(null);
   const slideRef = useRef<HTMLDivElement>(null);
@@ -73,6 +69,9 @@ const LookTile = ({
   }, []);
 
   useLayoutEffect(() => {
+    // The custom template fits each of its own boxes; see `Look.selfFit`.
+    if (look.selfFit) return;
+
     const { available, min, max } = fitTo(look, FRAME_H, {
       scale: showData.lyrics ? style.lyricsScale : 'both',
       size: style.lyricsSize,
@@ -88,7 +87,7 @@ const LookTile = ({
             over the same picture. */}
         <div className="absolute inset-0 bg-black/55" />
 
-        <Slide ref={slideRef} showData={showData} style={style} />
+        <Slide ref={slideRef} showData={showData} style={style} assets={assets} />
       </div>
     </div>
   );
@@ -105,9 +104,13 @@ const LookTile = ({
  * picker does.
  */
 export const ProjectorLookPicker = () => {
-  const { settings, update } = useStudio();
+  const { settings, showData, update } = useStudio();
 
-  const [target, setTarget] = useState('verses');
+  // Opens on whichever kind of slide is live. An operator who hits the pencil
+  // over a song is there about the song, and landing on the verse grid means
+  // finding the tab before finding the tile.
+  const [target, setTarget] = useState(showData?.lyrics ? 'lyrics' : 'verses');
+  const [editing, setEditing] = useState(false);
 
   const lyrics = target === 'lyrics';
   const looks = lyrics ? LYRIC_LOOKS : VERSE_LOOKS;
@@ -129,9 +132,24 @@ export const ProjectorLookPicker = () => {
   // three-language operator is not judging a look through three stacked blocks.
   const style: ProjectorStyle = {
     ...projectorStyle(settings),
+    // The custom tile draws the saved template whichever look is currently on,
+    // so an operator can see what they built before switching to it.
+    template: settings.customTemplate,
+    lyricsTemplate: settings.customLyricsTemplate,
+    fonts: settings.customFonts,
     order: [REQUIRED_LANG],
     enabled: { [REQUIRED_LANG]: true },
   };
+
+  // A picture placed in a template is in this browser's IndexedDB, so unlike
+  // the background it can be minted here.
+  const assets = useLocalFiles(
+    useMemo(
+      () => [...filesUsedBy(settings.customTemplate), ...filesUsedBy(settings.customLyricsTemplate)],
+      [settings.customLyricsTemplate, settings.customTemplate],
+    ),
+    null,
+  );
 
   return (
     <div>
@@ -168,37 +186,54 @@ export const ProjectorLookPicker = () => {
 
       <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
         {looks.map(look => (
-          <button
-            key={look.value}
-            type="button"
-            aria-pressed={selected === look.value}
-            onClick={() => select(look.value)}
-            className={cn(
-              'overflow-hidden rounded-studio border text-left transition-colors duration-150',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
-              selected === look.value
-                ? 'border-studio-accent ring-1 ring-studio-accent'
-                : 'border-studio-border hover:border-studio-faint',
-            )}
-          >
-            <LookTile
-              look={look}
-              showData={lyrics ? SAMPLE_LYRIC : SAMPLE_VERSE}
-              style={{ ...style, look: look.value, lyricsLook: look.value }}
-              background={background}
-            />
-
-            <span
+          // The custom tile carries a second control, and a button cannot hold
+          // another one — so the tile is a box with the two side by side.
+          <div key={look.value} className="relative">
+            <button
+              type="button"
+              aria-pressed={selected === look.value}
+              onClick={() => select(look.value)}
               className={cn(
-                'block truncate px-1.5 py-1 text-[11px] font-medium',
-                selected === look.value ? 'bg-studio-accent text-studio-onaccent' : 'bg-studio-bg text-studio-muted',
+                'block w-full overflow-hidden rounded-studio border text-left transition-colors duration-150',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
+                selected === look.value
+                  ? 'border-studio-accent ring-1 ring-studio-accent'
+                  : 'border-studio-border hover:border-studio-faint',
               )}
             >
-              {look.label}
-            </span>
-          </button>
+              <LookTile
+                look={look}
+                showData={lyrics ? SAMPLE_LYRIC : SAMPLE_VERSE}
+                style={{ ...style, look: look.value, lyricsLook: look.value }}
+                background={background}
+                assets={assets}
+              />
+
+              <span
+                className={cn(
+                  'block truncate px-1.5 py-1 text-[11px] font-medium',
+                  selected === look.value ? 'bg-studio-accent text-studio-onaccent' : 'bg-studio-bg text-studio-muted',
+                )}
+              >
+                {look.label}
+              </span>
+            </button>
+
+            {look.value === CUSTOM_LOOK ? (
+              <IconButton
+                label="Edit the custom slide"
+                tone="onDark"
+                onClick={() => setEditing(true)}
+                className="absolute top-1 right-1 size-6 bg-black/55 backdrop-blur-sm"
+              >
+                <HiOutlinePencil className="text-xs" />
+              </IconButton>
+            ) : null}
+          </div>
         ))}
       </div>
+
+      {editing ? <TemplateEditor target={lyrics ? 'lyrics' : 'verses'} onClose={() => setEditing(false)} /> : null}
     </div>
   );
 };

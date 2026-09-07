@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { HiOutlinePencil } from 'react-icons/hi';
 
 import { cn } from '@/lib/cn';
@@ -8,6 +8,7 @@ import { SCREEN_LABELS } from '@/lib/live/blackout';
 import { fitText, refitOnFontLoad } from '@/lib/projector/fitText';
 import { sameVerse } from '@/lib/projector/keepSame';
 import { fitTo, lookOf } from '@/lib/projector/looks';
+import { filesUsedBy } from '@/lib/projector/template';
 import { DYNAMIC_THEME, LOCAL_THEME, themeSrc } from '@/lib/projector/themes';
 import { loadLocalFile } from '@/lib/media/localMedia';
 import { projectorStyle, stageLangOf } from '@/lib/studio/settings';
@@ -20,6 +21,7 @@ import {
 } from '@/lib/studio/previewMode';
 import { timerIsLive } from '@/lib/timer/model';
 import { Slide } from '@/components/projector/Slide';
+import { useLocalFiles } from '@/components/projector/useLocalBackground';
 import { StageScreen } from '@/components/projector/StageScreen';
 import { TimerScreen } from '@/components/projector/TimerScreen';
 import { useStudio } from '@/lib/studio/StudioProvider';
@@ -202,6 +204,16 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
   const projector = projectorStyle(settings);
   const look = lookOf(lyrics ? projector.lyricsLook : projector.look, Boolean(lyrics));
 
+  // The pictures a custom template places. No transport: the console owns
+  // every file in its own media library, so there is no peer to ask.
+  const assets = useLocalFiles(
+    useMemo(
+      () => [...filesUsedBy(projector.template), ...filesUsedBy(projector.lyricsTemplate)],
+      [projector.lyricsTemplate, projector.template],
+    ),
+    null,
+  );
+
   // The badge and the clear strip answer for the outputs, not for the panel,
   // so they read the live slide rather than the one the fade is still showing.
   const isLive = Boolean(showData.lyrics?.text) || armed.some(lang => (showData[lang] ?? []).length > 0);
@@ -215,6 +227,10 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
   // the slide, and only then jumps. Measured and set before the paint, there
   // is nothing to see in between.
   useLayoutEffect(() => {
+    // A custom template fits each of its own boxes; there is no single size
+    // for the slide to be given. Same check the projector makes.
+    if (look.selfFit) return;
+
     const refit = () => {
       const height = screenRef.current?.clientHeight ?? 0;
       const { available, min, max } = fitTo(look, height, {
@@ -403,7 +419,7 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
             {!hasContent ? (
               <p className="text-xs text-white/40">Nothing is live</p>
             ) : (
-              <Slide ref={textRef} showData={onScreen} style={projector} />
+              <Slide ref={textRef} showData={onScreen} style={projector} assets={assets} />
             )}
           </div>
         </div>

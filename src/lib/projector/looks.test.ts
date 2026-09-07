@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_LYRIC_LOOK, DEFAULT_VERSE_LOOK, LYRIC_LOOKS, VERSE_LOOKS, fitTo, lookOf } from './looks';
+import { CUSTOM_LOOK, DEFAULT_LYRIC_LOOK, DEFAULT_VERSE_LOOK, LYRIC_LOOKS, VERSE_LOOKS, fitTo, lookOf } from './looks';
 
 describe('lookOf', () => {
   it('finds a stored look', () => {
-    expect(lookOf('corner', false).label).toBe('Reference in corner');
+    expect(lookOf('chip', false).label).toBe('Reference chip');
     expect(lookOf('lower', true).heightRatio).toBeLessThan(0.5);
+  });
+
+  it('falls back for a look that has since been dropped', () => {
+    expect(lookOf('corner', false).value).toBe(DEFAULT_VERSE_LOOK);
   });
 
   it('falls back for a row written before the looks existed', () => {
@@ -56,5 +60,24 @@ describe('the look registries', () => {
   it('contain their own default', () => {
     expect(VERSE_LOOKS.some(look => look.value === DEFAULT_VERSE_LOOK)).toBe(true);
     expect(LYRIC_LOOKS.some(look => look.value === DEFAULT_LYRIC_LOOK)).toBe(true);
+  });
+});
+
+describe('the custom look', () => {
+  it('is offered for both kinds of slide, which keep separate templates', () => {
+    expect(VERSE_LOOKS.some(look => look.value === CUSTOM_LOOK)).toBe(true);
+    expect(LYRIC_LOOKS.some(look => look.value === CUSTOM_LOOK)).toBe(true);
+  });
+
+  it('fits itself, and is the only look that does', () => {
+    expect(lookOf(CUSTOM_LOOK, false).selfFit).toBe(true);
+    expect(lookOf(CUSTOM_LOOK, true).selfFit).toBe(true);
+    expect([...VERSE_LOOKS, ...LYRIC_LOOKS].filter(look => look.selfFit)).toHaveLength(2);
+  });
+
+  it('is not what an empty or unknown look falls back to', () => {
+    expect(lookOf('', false).value).toBe(DEFAULT_VERSE_LOOK);
+    expect(lookOf('', true).value).toBe(DEFAULT_LYRIC_LOOK);
+    expect(lookOf('nonsense', false).value).toBe(DEFAULT_VERSE_LOOK);
   });
 });

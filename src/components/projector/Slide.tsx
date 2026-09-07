@@ -1,34 +1,18 @@
 import type { RefObject } from 'react';
 
-import { apiBookName } from '@/lib/bible/passage';
 import { cn } from '@/lib/cn';
 import { lyricBlocks } from '@/lib/lyrics/langs';
 import { fontStyleOf } from '@/lib/projector/fonts';
-import { DEFAULT_LYRIC_LOOK, DEFAULT_VERSE_LOOK } from '@/lib/projector/looks';
+import { CUSTOM_LOOK, DEFAULT_LYRIC_LOOK, DEFAULT_VERSE_LOOK } from '@/lib/projector/looks';
+import { referenceOf } from '@/lib/projector/template';
 import type { Align, Lang, ProjectorStyle, ShowData, Verse } from '@/lib/types';
+
+import { CustomSlide } from './CustomSlide';
 
 const ALIGN_CLASS: Record<Align, string> = {
   left: 'text-left',
   center: 'text-center',
   right: 'text-right',
-};
-
-/**
- * The reference for one group, in one language: `John 3:16`, or `3:16-18` when
- * the card carries several verses. Split into book and number because a look
- * may want to set them apart, the way the lower third does.
- */
-const referenceOf = (verses: Verse[], lang: Lang) => {
-  const first = verses[0];
-  const last = verses[verses.length - 1];
-
-  return {
-    // `wigni` is the book number the API used for this language, counting from
-    // Genesis = 1; the name arrays carry three group headers before Genesis, so
-    // the same book sits two further along.
-    book: apiBookName(first.wigni, lang),
-    numbers: `${first.tavi}:${verses.length > 1 ? `${first.muxli}-${last.muxli}` : first.muxli}`,
-  };
 };
 
 /** One language's verses, with its reference. */
@@ -67,11 +51,14 @@ export const Slide = ({
   ref,
   showData,
   style,
+  assets,
   className,
 }: {
   ref?: RefObject<HTMLDivElement | null>;
   showData: ShowData;
   style: ProjectorStyle;
+  /** Object URLs for the pictures a custom template names, by file id. */
+  assets?: Record<string, string>;
   className?: string;
 }) => {
   const lyrics = showData?.lyrics;
@@ -79,6 +66,20 @@ export const Slide = ({
   const look = lyrics
     ? style.lyricsLook || DEFAULT_LYRIC_LOOK
     : style.look || DEFAULT_VERSE_LOOK;
+
+  // The operator's own arrangement is not this markup with different knobs on
+  // it, so it is drawn somewhere else entirely. Neither the ref nor the class
+  // travels: both belong to the single fit the shipped looks share, and a
+  // template fits each of its boxes on its own. Verses and songs keep separate
+  // templates, because a song slide has no reference and its languages are the
+  // song's rather than the armed ones. A look set to custom with no template —
+  // an output handed a payload from a console that had since moved off it —
+  // falls through to the standard slide rather than to a bare screen.
+  const template = lyrics ? style.lyricsTemplate : style.template;
+
+  if (look === CUSTOM_LOOK && template) {
+    return <CustomSlide template={template} showData={showData} style={style} assets={assets} />;
+  }
 
   // A shipped face is a class and nothing else; one the operator added has no
   // class and is named inline instead. `fontStyleOf` decides which, so a font

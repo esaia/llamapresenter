@@ -1,10 +1,14 @@
 /**
  * The layouts `/show` can draw a slide in.
  *
- * The app ships variants rather than an editor: an operator picks the look that
- * suits their room, they do not build one. So a look is a row here and a block
- * of CSS in `globals.css`, exactly as a lower-third variant is — the markup in
+ * Eight of them are shipped variants: an operator picks the look that suits
+ * their room rather than building one, so a look is a row here and a block of
+ * CSS in `globals.css`, exactly as a lower-third variant is — the markup in
  * `Slide.tsx` is the same for all of them.
+ *
+ * The ninth is the one they *do* build. `custom` is a row here like any other,
+ * but it is drawn from `lib/projector/template.ts` instead of from CSS, and it
+ * sizes its own text; `selfFit` is what tells every caller of `fitText` so.
  *
  * It is data rather than pure CSS because a look changes how the text is
  * *fitted* and not only how it is painted: one that sits low on the screen has
@@ -18,7 +22,17 @@ export interface Look {
   divisor: number;
   /** How much of the screen height the block may fill. */
   heightRatio: number;
+  /**
+   * This look sizes its own text and wants no pass over the slide as a whole.
+   * Only the custom template does: it is a set of boxes rather than one block,
+   * so each box is fitted inside its own rectangle and a single font size for
+   * all of them would mean nothing. Every caller of `fitText` checks it.
+   */
+  selfFit?: boolean;
 }
+
+/** The value `settings.projectorLook` carries when the custom template is on. */
+export const CUSTOM_LOOK = 'custom';
 
 /**
  * How a song slide is sized. Scaling to fit is what makes one line fill the
@@ -30,8 +44,8 @@ export interface Look {
 export type ScaleMode = 'both' | 'none';
 
 export const SCALE_MODES: { value: ScaleMode; label: string }[] = [
-  { value: 'both', label: 'Scale text up or down to fit' },
-  { value: 'none', label: 'No text scaling' },
+  { value: 'both', label: 'Scale to fit' },
+  { value: 'none', label: 'Hold the size' },
 ];
 
 /** The chosen size, as a percentage of the screen height. */
@@ -53,7 +67,6 @@ const LYRIC_FIT = { divisor: 4, heightRatio: 0.86 };
 
 export const VERSE_LOOKS: Look[] = [
   { value: 'below', label: 'Reference below', ...VERSE_FIT },
-  { value: 'corner', label: 'Reference in corner', ...VERSE_FIT },
   { value: 'heading', label: 'Heading above', ...VERSE_FIT },
   { value: 'headingbelow', label: 'Heading below', ...VERSE_FIT },
   { value: 'overline', label: 'Overline', ...VERSE_FIT },
@@ -61,6 +74,11 @@ export const VERSE_LOOKS: Look[] = [
   { value: 'plate', label: 'On a plate', divisor: 14, heightRatio: 0.8 },
   { value: 'rule', label: 'Ruled off', ...VERSE_FIT },
   { value: 'chip', label: 'Reference chip', ...VERSE_FIT },
+  // The operator's own arrangement, drawn from `lib/projector/template.ts`
+  // rather than from a block of CSS. The fit numbers are here so that a
+  // template that has somehow gone missing still falls through to something
+  // sensible, but nothing reads them while `selfFit` stands.
+  { value: CUSTOM_LOOK, label: 'Custom', ...VERSE_FIT, selfFit: true },
 ];
 
 export const LYRIC_LOOKS: Look[] = [
@@ -72,6 +90,10 @@ export const LYRIC_LOOKS: Look[] = [
   { value: 'upper', label: 'Upper third', divisor: 6, heightRatio: 0.42 },
   { value: 'plate', label: 'On a plate', divisor: 5, heightRatio: 0.76 },
   { value: 'column', label: 'Narrow column', divisor: 6, heightRatio: 0.86 },
+  // The operator's own, as above. Songs get their own template: a lyric slide
+  // has no reference and its languages are the song's rather than the armed
+  // ones, so one arrangement could not serve both.
+  { value: CUSTOM_LOOK, label: 'Custom', ...LYRIC_FIT, selfFit: true },
 ];
 
 export const DEFAULT_VERSE_LOOK = 'below';

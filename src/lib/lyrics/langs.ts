@@ -16,8 +16,15 @@ import { emptyShowData, type ShowData, type Song, type SongLang, type SongSlide 
  * bundle imports — a song with one language and nothing else to say.
  */
 
-/** Three blocks of text is what a projector at the back of a hall can hold. */
-export const MAX_SONG_LANGS = 3;
+/**
+ * A song is sung in one language, or in one and its translation.
+ *
+ * Two rather than three: a third block of sung text is a wall on the screen
+ * and nobody in the room is reading it — and the stage and the lower third
+ * each carry one language of their own besides, so a song already reaches the
+ * room three ways.
+ */
+export const MAX_SONG_LANGS = 2;
 
 /**
  * The id of the language a song already had before it was given any — the one

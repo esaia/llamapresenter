@@ -37,7 +37,7 @@ import {
 } from '@/lib/studio/mediaHeight';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
-import { DROP_ZONE } from './dropZone';
+import { DROP_ZONE, leftZone, useDragEnded } from './dropZone';
 
 /** The shelf that ships with the app and cannot be renamed or emptied. */
 const BUILT_IN = 'built-in';
@@ -67,6 +67,8 @@ export const MediaPane = () => {
   const [renaming, setRenaming] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<LocalFolder | null>(null);
   const [dropping, setDropping] = useState(false);
+
+  useDragEnded(dropping, () => setDropping(false));
   const [dragging, setDragging] = useState(false);
 
   const picker = useRef<HTMLInputElement>(null);
@@ -286,7 +288,7 @@ export const MediaPane = () => {
             setDropping(true);
           }}
           onDragLeave={event => {
-            if (event.currentTarget === event.target) setDropping(false);
+            if (leftZone(event)) setDropping(false);
           }}
           onDrop={event => {
             if (onBuiltIn || ![...event.dataTransfer.types].includes('Files')) return;

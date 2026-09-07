@@ -9,6 +9,7 @@ import { fitText, refitOnFontLoad } from '@/lib/projector/fitText';
 import { DEFAULT_FONT } from '@/lib/projector/fonts';
 import { keepSame, sameVerse } from '@/lib/projector/keepSame';
 import { DEFAULT_LYRIC_LOOK, DEFAULT_TEXT_SIZE, DEFAULT_VERSE_LOOK, fitTo, lookOf } from '@/lib/projector/looks';
+import { filesUsedBy } from '@/lib/projector/template';
 import { DEFAULT_THEME, DYNAMIC_THEME, LOCAL_THEME, themeSrc } from '@/lib/projector/themes';
 import { asTimerState, withSkew, type TimerState } from '@/lib/timer/model';
 import { emptyShowData, REQUIRED_LANG, type ProjectorStyle, type ShowData } from '@/lib/types';
@@ -16,7 +17,7 @@ import { emptyShowData, REQUIRED_LANG, type ProjectorStyle, type ShowData } from
 import { Slide } from './Slide';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
-import { useLocalBackground } from './useLocalBackground';
+import { useLocalBackground, useLocalFiles } from './useLocalBackground';
 
 const MIN_FONT_SIZE = 12;
 const MAX_FONT_SIZE = 64;
@@ -32,6 +33,9 @@ const defaultStyle: ProjectorStyle = {
   lyricsAlign: 'left',
   look: DEFAULT_VERSE_LOOK,
   lyricsLook: DEFAULT_LYRIC_LOOK,
+  template: null,
+  lyricsTemplate: null,
+  versions: {},
   lyricsScale: 'both',
   lyricsSize: DEFAULT_TEXT_SIZE,
   order: [REQUIRED_LANG],
@@ -109,6 +113,10 @@ export const Projector = ({ outputKey, initial }: { outputKey: string; initial: 
 
   const localUrl = useLocalBackground(style.theme === LOCAL_THEME ? style.localImage : null, transport);
 
+  // The pictures a custom template places, pulled over the same peer path the
+  // background uses — nothing about them is uploaded either.
+  const assets = useLocalFiles(useMemo(() => [...filesUsedBy(style.template), ...filesUsedBy(style.lyricsTemplate)], [style.lyricsTemplate, style.template]), transport);
+
   // The operator's own typefaces, fetched by this page rather than served to
   // it: a font is a link, which is why it needs none of the peer machinery a
   // background does.
@@ -159,6 +167,10 @@ export const Projector = ({ outputKey, initial }: { outputKey: string; initial: 
    * keeps a long passage legible.
    */
   const resize = useCallback(() => {
+    // The custom template fits each of its boxes inside its own rectangle, so
+    // there is no one font size for the slide to be given.
+    if (look.selfFit) return;
+
     const { available, min, max } = fitTo(look, window.innerHeight, {
       cap: lyrics ? LYRICS_MAX_FONT_SIZE : MAX_FONT_SIZE,
       min: MIN_FONT_SIZE,
@@ -221,7 +233,7 @@ export const Projector = ({ outputKey, initial }: { outputKey: string; initial: 
             transition: cut ? 'none' : `opacity ${style.transitionMs / 2}ms ease-in-out`,
           }}
         >
-          <Slide ref={textRef} showData={onScreen} style={style} className="max-w-[2000px]" />
+          <Slide ref={textRef} showData={onScreen} style={style} assets={assets} className="max-w-[2000px]" />
         </div>
       </div>
     </div>

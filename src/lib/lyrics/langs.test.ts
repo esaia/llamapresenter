@@ -145,21 +145,20 @@ describe('addLang', () => {
     expect(added.slides[0].group).toBe('Verse 1');
   });
 
-  it('refuses a fourth, and refuses one it already has', () => {
-    const three = addLang(addLang(plain(), en), { id: 'ru', label: 'Русский', on: true });
+  it('refuses one past the ceiling, and refuses one it already has', () => {
+    const full = addLang(plain(), en);
 
-    expect(langsOf(three)).toHaveLength(MAX_SONG_LANGS);
-    expect(addLang(three, { id: 'la', label: 'Latina', on: true })).toBe(three);
+    expect(langsOf(full)).toHaveLength(MAX_SONG_LANGS);
+    expect(addLang(full, { id: 'ru', label: 'Русский', on: true })).toBe(full);
     expect(addLang(bilingual(), en)).toEqual(bilingual());
   });
 });
 
 describe('removeLang', () => {
   it('takes a language’s words off every slide', () => {
-    const song = addLang(bilingual(), { id: 'ru', label: 'Русский', on: true });
-    const left = removeLang(song, 'en');
+    const left = removeLang(bilingual(), 'en');
 
-    expect(langsOf(left).map(lang => lang.id)).toEqual(['ka', 'ru']);
+    expect(langsOf(left).map(lang => lang.id)).toEqual(['ka']);
     expect(left.slides[0].alt).toBeUndefined();
     expect(left.slides[0].text).toBe('შენ ხარ ღირსი');
   });
@@ -198,17 +197,14 @@ describe('removeLang', () => {
     expect(left.stageLang).toBeUndefined();
   });
 
-  it('clears a pick that named it', () => {
-    const song = addLang({ ...bilingual(), stageLang: 'en', lower3rdLang: 'ka' }, {
-      id: 'ru',
-      label: 'Русский',
-      on: true,
-    });
-
-    const left = removeLang(song, 'en');
+  // Both picks go, not only the one that named the language taken away: with
+  // two languages the ceiling, removing one takes the song back to the plain
+  // kind, and a plain song has no language for an output to be pointed at.
+  it('clears the picks when the song goes back to one language', () => {
+    const left = removeLang({ ...bilingual(), stageLang: 'en', lower3rdLang: 'ka' }, 'en');
 
     expect(left.stageLang).toBeUndefined();
-    expect(left.lower3rdLang).toBe('ka');
+    expect(left.lower3rdLang).toBeUndefined();
   });
 });
 

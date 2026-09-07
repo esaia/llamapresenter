@@ -14,7 +14,7 @@ import { parseDroppedFiles } from '@/lib/lyrics/propresenter';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import type { Song } from '@/lib/types';
 
-import { DROP_ZONE } from './dropZone';
+import { DROP_ZONE, leftZone, useDragEnded } from './dropZone';
 import { NewSongModal } from './NewSongModal';
 import { SongRail } from './SongRail';
 import { SlideEditor } from './SlideEditor';
@@ -48,6 +48,8 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dropping, setDropping] = useState(false);
+
+  useDragEnded(dropping, () => setDropping(false));
 
   const active = songs.find(song => song.id === activeSongId) ?? songs[0] ?? null;
 
@@ -123,7 +125,7 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
         setDropping(true);
       }}
       onDragLeave={event => {
-        if (event.currentTarget === event.target) setDropping(false);
+        if (leftZone(event)) setDropping(false);
       }}
       onDrop={event => {
         if (!carriesFiles(event)) return;

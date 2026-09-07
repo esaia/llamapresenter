@@ -88,6 +88,8 @@ export interface Database {
         custom_fonts: Json;
         projector_look: string;
         projector_lyrics_look: string;
+        custom_template: Json;
+        custom_lyrics_template: Json;
         lyrics_scale: string;
         lyrics_size: number;
         transition_ms: number;

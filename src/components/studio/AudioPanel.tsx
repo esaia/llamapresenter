@@ -6,7 +6,7 @@ import { Check, Music, Play, Plus, Trash2, Upload } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAudio, type Track } from '@/lib/studio/AudioProvider';
 
-import { DROP_ZONE } from './dropZone';
+import { DROP_ZONE, leftZone, useDragEnded } from './dropZone';
 import { useLibraryReorder } from './libraryDrag';
 import { LIFTED_SLOT, type Sortable } from './sortable';
 import { useTrackReorder } from './trackDrag';
@@ -177,6 +177,8 @@ export const AudioPanel = () => {
   // Dragging: a file coming in from the desktop, and the row being moved —
   // onto a library to file it, or between rows to reorder the list.
   const [filesOver, setFilesOver] = useState(false);
+
+  useDragEnded(filesOver, () => setFilesOver(false));
 
   const open = categories.some(category => category.id === library) ? library : ALL;
   const shown = trackList(open === ALL ? null : open);
@@ -350,7 +352,7 @@ export const AudioPanel = () => {
             setFilesOver(true);
           }}
           onDragLeave={event => {
-            if (event.currentTarget === event.target) setFilesOver(false);
+            if (leftZone(event)) setFilesOver(false);
           }}
           onDrop={event => {
             if (reorder.lifted) return reorder.list().onDrop(event);

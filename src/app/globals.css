@@ -759,19 +759,6 @@ body {
   text-shadow: var(--show-shadow);
 }
 
-/* Reference in the corner: small, hard right, and clear of the verse whatever
-   the slide's own alignment is — the verse gets the width, the reference gets
-   out of the way. */
-.show-slide--corner {
-  --show-ref-size: 0.46em;
-  --show-ref: rgba(255, 255, 255, 0.7);
-}
-
-.show-slide--corner .show-refline {
-  margin-top: 0.5em;
-  text-align: right;
-}
-
 /* Reference as a heading, centred and ruled off from the verse — over it, or
    under it for a screen whose top edge is behind the band. The rule is on the
    line, not the words, so it runs the full measure. */

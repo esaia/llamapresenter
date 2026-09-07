@@ -15,6 +15,7 @@ import type { Lang } from '@/lib/bible/languages';
 import type { Colorway } from '@/lib/lower3rd/colors';
 import type { CustomFont } from '@/lib/projector/fonts';
 import type { ScaleMode } from '@/lib/projector/looks';
+import type { SlideTemplate } from '@/lib/projector/template';
 
 /**
  * A verse exactly as the scripture API returns it. The Georgian field names are
@@ -85,6 +86,19 @@ export interface ProjectorStyle {
   /** Which layout the slide is drawn in; see `lib/projector/looks.ts`. */
   look: string;
   lyricsLook: string;
+  /**
+   * The operator's own arrangement, and only when they are actually on it.
+   * Null on any of the eight shipped looks, so nobody pays for a feature they
+   * have not turned on — the same narrowing `fonts` does below.
+   */
+  template: SlideTemplate | null;
+  /** The same, for song slides, which keep an arrangement of their own. */
+  lyricsTemplate: SlideTemplate | null;
+  /**
+   * Which translation each language is being read in, so a template can print
+   * it. The shipped looks have never shown one; a custom one can say `(WEB)`.
+   */
+  versions: Partial<Record<Lang, string>>;
   /** How song text is sized: scaled to fit, or held at `lyricsSize`. */
   lyricsScale: ScaleMode;
   /** That size, as a percentage of the screen height. */

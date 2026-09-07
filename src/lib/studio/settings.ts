@@ -1,14 +1,13 @@
 import { defaultVersionOf, isLang, MAX_LANGS, REQUIRED_LANG, specOf, type Lang } from '@/lib/bible/languages';
 import { asStreamColors, migrated, type StreamColors } from '@/lib/lower3rd/colors';
 import { asCustomFonts, DEFAULT_FONT, fontsUsedBy, type CustomFont } from '@/lib/projector/fonts';
+import { asScaleMode, clampTextSize, CUSTOM_LOOK, DEFAULT_TEXT_SIZE, lookOf, type ScaleMode } from '@/lib/projector/looks';
 import {
-  asScaleMode,
-  clampTextSize,
-  DEFAULT_LYRIC_LOOK,
-  DEFAULT_TEXT_SIZE,
-  DEFAULT_VERSE_LOOK,
-  type ScaleMode,
-} from '@/lib/projector/looks';
+  asTemplate,
+  DEFAULT_LYRIC_TEMPLATE,
+  fontsNamedBy,
+  type SlideTemplate,
+} from '@/lib/projector/template';
 import { DEFAULT_THEME } from '@/lib/projector/themes';
 import { clampTransition, DEFAULT_TRANSITION_MS } from '@/lib/projector/transition';
 import type { Database } from '@/lib/supabase/types';
@@ -53,6 +52,13 @@ export interface Settings {
   customFonts: CustomFont[];
   projectorLook: string;
   projectorLyricsLook: string;
+  /**
+   * The ninth verse look, drawn rather than shipped. Held whole here and sent
+   * only when it is the look in use; see `lib/projector/template.ts`.
+   */
+  customTemplate: SlideTemplate;
+  /** And the one song slides are drawn in, which is not the same arrangement. */
+  customLyricsTemplate: SlideTemplate;
   lyricsScale: ScaleMode;
   lyricsSize: number;
   transitionMs: number;
@@ -141,13 +147,17 @@ export const fromRow = (row: SettingsRow): Settings => {
     streamLyricsFont: row.stream_lyrics_font || row.lyrics_font || row.font || DEFAULT_FONT,
     streamLyricsAlign: asAlign(row.stream_lyrics_align || row.lyrics_align || row.align),
     customFonts: asCustomFonts(row.custom_fonts),
-    projectorLook: row.projector_look || DEFAULT_VERSE_LOOK,
+    // Through the registry, not straight out of the row: a settings row
+    // outlives the catalogue it was written against, and a look we have since
+    // dropped would otherwise sit there looking valid while the projector drew
+    // something else — the picker showing nothing selected and no way to tell
+    // why. Same reasoning as `asVersion` above.
+    projectorLook: lookOf(row.projector_look, false).value,
     // 'steady' was a layout before song text got its own scaling control; it
     // said "hold the size still", which is now a mode rather than a look.
-    projectorLyricsLook:
-      !row.projector_lyrics_look || row.projector_lyrics_look === 'steady'
-        ? DEFAULT_LYRIC_LOOK
-        : row.projector_lyrics_look,
+    projectorLyricsLook: lookOf(row.projector_lyrics_look === 'steady' ? '' : row.projector_lyrics_look, true).value,
+    customTemplate: asTemplate(row.custom_template),
+    customLyricsTemplate: asTemplate(row.custom_lyrics_template, DEFAULT_LYRIC_TEMPLATE),
     lyricsScale: row.projector_lyrics_look === 'steady' ? 'none' : asScaleMode(row.lyrics_scale),
     lyricsSize: clampTextSize(row.lyrics_size ?? DEFAULT_TEXT_SIZE),
     transitionMs: clampTransition(row.transition_ms ?? DEFAULT_TRANSITION_MS),
@@ -181,6 +191,8 @@ export const toRow = (settings: Settings) => ({
   custom_fonts: settings.customFonts,
   projector_look: settings.projectorLook,
   projector_lyrics_look: settings.projectorLyricsLook,
+  custom_template: settings.customTemplate,
+  custom_lyrics_template: settings.customLyricsTemplate,
   lyrics_scale: settings.lyricsScale,
   lyrics_size: settings.lyricsSize,
   transition_ms: settings.transitionMs,
@@ -194,24 +206,43 @@ export const toRow = (settings: Settings) => ({
   stage_lang: settings.stageLang,
 });
 
-/** Everything /show needs to draw a slide. */
-export const projectorStyle = (settings: Settings): ProjectorStyle => ({
-  theme: settings.theme,
-  dynamicImage: settings.dynamicImage,
-  localImage: settings.localImage,
-  font: settings.font,
-  align: settings.align,
-  lyricsFont: settings.lyricsFont,
-  lyricsAlign: settings.lyricsAlign,
-  look: settings.projectorLook,
-  lyricsLook: settings.projectorLyricsLook,
-  lyricsScale: settings.lyricsScale,
-  lyricsSize: settings.lyricsSize,
-  order: settings.langOrder,
-  enabled: settings.enabled,
-  transitionMs: settings.transitionMs,
-  fonts: fontsUsedBy([settings.font, settings.lyricsFont], settings.customFonts),
-});
+/**
+ * Everything /show needs to draw a slide.
+ *
+ * The template rides only when the operator is actually on it: a console on
+ * one of the eight shipped looks sends nothing extra, and an output handed no
+ * template falls back to the look it was given.
+ */
+export const projectorStyle = (settings: Settings): ProjectorStyle => {
+  const template = settings.projectorLook === CUSTOM_LOOK ? settings.customTemplate : null;
+  const lyricsTemplate = settings.projectorLyricsLook === CUSTOM_LOOK ? settings.customLyricsTemplate : null;
+
+  return {
+    theme: settings.theme,
+    dynamicImage: settings.dynamicImage,
+    localImage: settings.localImage,
+    font: settings.font,
+    align: settings.align,
+    lyricsFont: settings.lyricsFont,
+    lyricsAlign: settings.lyricsAlign,
+    look: settings.projectorLook,
+    lyricsLook: settings.projectorLyricsLook,
+    template,
+    lyricsTemplate,
+    versions: settings.versions,
+    lyricsScale: settings.lyricsScale,
+    lyricsSize: settings.lyricsSize,
+    order: settings.langOrder,
+    enabled: settings.enabled,
+    transitionMs: settings.transitionMs,
+    // A face named only inside the template still has to reach the output, or
+    // the words come up in the fallback on the wall and nowhere else.
+    fonts: fontsUsedBy(
+      [settings.font, settings.lyricsFont, ...fontsNamedBy(template), ...fontsNamedBy(lyricsTemplate)],
+      settings.customFonts,
+    ),
+  };
+};
 
 /** The armed languages, in the order the operator has them. */
 const armedLangs = (settings: Settings): Lang[] =>
