@@ -136,6 +136,15 @@ export interface StreamStyle {
   colors: Colorway;
   lyricsColors: Colorway;
   hidden: boolean;
+  /**
+   * The operator's own arrangement, when the overlay is on it — the same
+   * templates the projector draws, over a transparent stage instead of a
+   * photograph. Null on any of the shipped looks.
+   */
+  template: SlideTemplate | null;
+  lyricsTemplate: SlideTemplate | null;
+  /** Which translation the language it carries is being read in. */
+  versions: Partial<Record<Lang, string>>;
   /** As on `ProjectorStyle`: the added faces this overlay draws, and no more. */
   fonts: CustomFont[];
 }

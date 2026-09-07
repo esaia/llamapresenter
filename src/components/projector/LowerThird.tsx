@@ -1,21 +1,26 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import { newPeerId, openLiveChannel } from '@/lib/live/channel';
+import { newPeerId, openLiveChannel, type LiveChannel } from '@/lib/live/channel';
+import type { SignalTransport } from '@/lib/live/protocol';
 import { asCardRun, isShowing, remainingOf, withSkew, type CardRun } from '@/lib/lower3rd/card';
 import { varsFor } from '@/lib/lower3rd/colors';
 import { lyricFor } from '@/lib/lyrics/langs';
 import { fitText, refitOnFontLoad } from '@/lib/projector/fitText';
 import { DEFAULT_FONT, fontStyleOf } from '@/lib/projector/fonts';
 import { keepSame } from '@/lib/projector/keepSame';
+import { CUSTOM_LOOK } from '@/lib/projector/looks';
+import { filesUsedBy } from '@/lib/projector/template';
 import { apiBookName } from '@/lib/bible/passage';
 import { asTimerState, withSkew as withTimerSkew, type TimerState } from '@/lib/timer/model';
 import { emptyShowData, LANGS, REQUIRED_LANG, type Align, type Lang, type ShowData, type StreamStyle } from '@/lib/types';
 
+import { CustomSlide } from './CustomSlide';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
+import { useLocalFiles } from './useLocalBackground';
 
 const ALIGN_CLASS: Record<Align, string> = { left: 'text-left', center: 'text-center', right: 'text-right' };
 
@@ -57,6 +62,9 @@ const defaultStyle: StreamStyle = {
   colors: {},
   lyricsColors: {},
   hidden: false,
+  template: null,
+  lyricsTemplate: null,
+  versions: {},
   fonts: [],
 };
 
@@ -145,6 +153,21 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
     showData: initial.showData ?? emptyShowData(),
     style: { ...defaultStyle, ...initial.style },
   });
+
+  // The channel, kept so a picture in a custom strap can be asked for over it.
+  // Nothing else here needs one: until a template could name a picture, the
+  // overlay had only ever listened.
+  const channelRef = useRef<LiveChannel | null>(null);
+  const [peerId] = useState(newPeerId);
+
+  const transport = useMemo<SignalTransport>(
+    () => ({
+      peerId,
+      send: payload => channelRef.current?.sendSignal(payload),
+      subscribe: handler => channelRef.current?.onSignal(handler) ?? (() => {}),
+    }),
+    [peerId],
+  );
 
   // What is drawn right now, which lags `slide` by half a transition. Swapping
   // only while the bar is hidden means the refit measures the incoming text
@@ -240,7 +263,8 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
     // has joined the service, so it listens without putting a hand up.
     const preview = new URLSearchParams(window.location.search).has('preview');
 
-    const channel = openLiveChannel(outputKey, 'lower3rd', newPeerId(), !preview);
+    const channel = openLiveChannel(outputKey, 'lower3rd', peerId, !preview);
+    channelRef.current = channel;
 
     const off = channel.onSlide(payload => {
       const next = { showData: payload.showData ?? emptyShowData(), style: { ...defaultStyle, ...payload.style } };
@@ -276,8 +300,9 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
     return () => {
       off();
       channel.close();
+      channelRef.current = null;
     };
-  }, [outputKey]);
+  }, [outputKey, peerId]);
 
   useEffect(() => {
     if (slide === displayed) return;
@@ -342,6 +367,14 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
   const align = (lyrics ? style.lyricsAlign : style.align) ?? 'left';
   const look = (lyrics ? style.lyricsVariant : style.variant) || 'scrim';
 
+  // The operator's own strap. It takes the bar's place rather than restyling
+  // it: a template says where everything sits, so the bar's position, its
+  // colourway and its single fit have nothing left to decide.
+  const template = lyrics ? style.lyricsTemplate : style.template;
+  const custom = look === CUSTOM_LOOK && template ? template : null;
+
+  const assets = useLocalFiles(useMemo(() => filesUsedBy(custom), [custom]), transport);
+
   // A name card takes the bar's place while it holds, and the bar comes
   // straight back underneath when it goes — the verse was never taken down,
   // only covered. Two straps stacked on one shot is the thing to avoid.
@@ -365,6 +398,30 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
         </div>
       ) : null}
 
+      {custom ? (
+        <div
+          className="lower3rd-custom"
+          style={{
+            opacity: visible && !cardShowing && !timerShowing ? 1 : 0,
+            transition: transitionMs === 0 ? 'none' : `opacity ${transitionMs / 2}ms ease-in-out`,
+          }}
+        >
+          <CustomSlide
+            template={custom}
+            showData={showData}
+            style={{
+              order: style.order,
+              enabled: style.enabled ?? {},
+              versions: style.versions,
+              fonts: style.fonts,
+              // The stream carries one language of a song, the one the song
+              // points at it — so a box repeating per language repeats once.
+              lyricsLang: lyrics?.lower3rd,
+            }}
+            assets={assets}
+          />
+        </div>
+      ) : (
       <div
         className={`lower3rd-bar lower3rd-bar--${look} ${top ? 'lower3rd-bar--top' : ''} ${ALIGN_CLASS[align]}`}
         // Opacity only. The bar used to slide in as well, but a lower third
@@ -389,6 +446,7 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
           )}
         </div>
       </div>
+      )}
 
       {debug ? (
         <div className="lower3rd-debug">

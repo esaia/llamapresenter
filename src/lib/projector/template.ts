@@ -287,6 +287,58 @@ export const DEFAULT_LYRIC_TEMPLATE: SlideTemplate = {
   ],
 };
 
+/**
+ * What a fresh custom stream look is: a strap across the foot of the frame.
+ *
+ * Low, and on a plate, because the overlay composites over live video — there
+ * is no scrim under it and no photograph to sit on, so the words carry their
+ * own ground or they are lost in whatever the camera is pointed at. The rest
+ * of the frame stays empty and therefore transparent.
+ */
+export const DEFAULT_STREAM_TEMPLATE: SlideTemplate = {
+  elements: [
+    {
+      ...DEFAULT_TEXT,
+      id: 'verses',
+      frame: { x: 0.06, y: 0.68, w: 0.88, h: 0.14 },
+      content: '{{verses}}',
+      size: 5,
+      plateKind: 'color',
+      plate: '#0a0c11cc',
+      padding: 1.6,
+      radius: 0.8,
+    },
+    {
+      ...DEFAULT_TEXT,
+      id: 'reference',
+      frame: { x: 0.06, y: 0.83, w: 0.88, h: 0.06 },
+      content: '{{reference}}',
+      size: 2.6,
+      italic: true,
+      color: '#ffffffd1',
+      valign: 'top',
+    },
+  ],
+};
+
+/** The same, for a song: no reference to carry, so the words take the room. */
+export const DEFAULT_STREAM_LYRIC_TEMPLATE: SlideTemplate = {
+  elements: [
+    {
+      ...DEFAULT_TEXT,
+      id: 'lyrics',
+      frame: { x: 0.06, y: 0.7, w: 0.88, h: 0.16 },
+      content: '{{lyrics}}',
+      size: 5.5,
+      align: 'center',
+      plateKind: 'color',
+      plate: '#0a0c11cc',
+      padding: 1.6,
+      radius: 0.8,
+    },
+  ],
+};
+
 /** A new element of each kind, dropped in the middle of the frame. */
 export const newElement = (kind: ElementKind, id: string): TemplateElement => {
   if (kind === 'text') {
@@ -624,6 +676,12 @@ export interface TokenContext {
   order: Lang[];
   enabled: Partial<Record<Lang, boolean>>;
   versions: Partial<Record<Lang, string>>;
+  /**
+   * The one song language this reader draws, when it draws only one. The
+   * stream carries a single language — the song says which — so a box there
+   * repeats for nothing however many the song is sung in.
+   */
+  lyricsLang?: string;
 }
 
 /**
@@ -669,7 +727,13 @@ const passesOf = (ctx: TokenContext): Pass[] => {
     // The line breaks a song was written with are ignored, exactly as the
     // shipped looks ignore them: at projector size they wrap anyway, and
     // honouring both gives a ragged block.
-    return lyricBlocks(lyrics).map(block => ({
+    const blocks = lyricBlocks(lyrics);
+    // The stream is pointed at one of them; the projector draws them all.
+    const drawn = ctx.lyricsLang
+      ? [blocks.find(block => block.id === ctx.lyricsLang) ?? blocks[0]].filter(Boolean)
+      : blocks;
+
+    return drawn.map(block => ({
       id: block.id,
       lines: [escapeHtml(block.text.split('\n').join(' '))],
       reference: '',

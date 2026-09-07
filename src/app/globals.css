@@ -931,6 +931,15 @@ body {
   background: transparent;
 }
 
+/* The operator's own strap: a template on the whole frame, over the same
+   transparent stage. It takes the bar's place rather than sitting inside it,
+   so nothing here re-points the bar's knobs — the template carries its own
+   plates and colours. */
+.lower3rd-custom {
+  position: absolute;
+  inset: 0;
+}
+
 .lower3rd-bar {
   position: absolute;
   left: 0;
@@ -1301,6 +1310,12 @@ body {
   /* Stands in for the video the overlay composites over. Deliberately carries
      both a bright and a dark region, so a white plate and a black one are each
      visibly doing something. */
+  background: linear-gradient(118deg, #46586b 0%, #b9c4cf 46%, #79879a 68%, #2c3540 100%);
+}
+
+/* The same stand-in, for the template editor's canvas when it is drawing a
+   strap rather than a slide. Named on its own so the two cannot drift. */
+.l3-ground {
   background: linear-gradient(118deg, #46586b 0%, #b9c4cf 46%, #79879a 68%, #2c3540 100%);
 }
 

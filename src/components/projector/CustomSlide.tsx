@@ -16,6 +16,16 @@ import {
 } from '@/lib/projector/template';
 import type { ProjectorStyle, ShowData } from '@/lib/types';
 
+/** What a template is resolved against, whichever output is drawing it. */
+export interface SlideStyle {
+  order: ProjectorStyle['order'];
+  enabled: ProjectorStyle['enabled'];
+  versions?: ProjectorStyle['versions'];
+  fonts: ProjectorStyle['fonts'];
+  /** The one song language this output carries, when it carries only one. */
+  lyricsLang?: string;
+}
+
 /** The aspect a template is drawn on, and the one every church screen is. */
 const FRAME_RATIO = 16 / 9;
 
@@ -314,7 +324,12 @@ export const CustomSlide = ({
 }: {
   template: SlideTemplate;
   showData: ShowData;
-  style: ProjectorStyle;
+  /**
+   * Only what a template needs, rather than a whole `ProjectorStyle`: the
+   * stream draws the same templates from a `StreamStyle`, and neither reader
+   * should have to pretend to be the other to do it.
+   */
+  style: SlideStyle;
   /** Object URLs for the pictures the template names, by file id. */
   assets?: Record<string, string>;
 }) => {
@@ -334,6 +349,7 @@ export const CustomSlide = ({
     order: style.order ?? [],
     enabled: style.enabled ?? {},
     versions: style.versions ?? {},
+    lyricsLang: style.lyricsLang,
   };
 
   const drawn = template.elements.flatMap((element): { element: TemplateElement; share: Share | null }[] => {

@@ -90,6 +90,8 @@ export interface Database {
         projector_lyrics_look: string;
         custom_template: Json;
         custom_lyrics_template: Json;
+        custom_stream_template: Json;
+        custom_stream_lyrics_template: Json;
         lyrics_scale: string;
         lyrics_size: number;
         transition_ms: number;

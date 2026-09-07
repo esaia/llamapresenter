@@ -5,6 +5,8 @@ import { asScaleMode, clampTextSize, CUSTOM_LOOK, DEFAULT_TEXT_SIZE, lookOf, typ
 import {
   asTemplate,
   DEFAULT_LYRIC_TEMPLATE,
+  DEFAULT_STREAM_LYRIC_TEMPLATE,
+  DEFAULT_STREAM_TEMPLATE,
   fontsNamedBy,
   type SlideTemplate,
 } from '@/lib/projector/template';
@@ -59,6 +61,13 @@ export interface Settings {
   customTemplate: SlideTemplate;
   /** And the one song slides are drawn in, which is not the same arrangement. */
   customLyricsTemplate: SlideTemplate;
+  /**
+   * The stream's own two. Separate from the projector's because the overlay
+   * is a different shape of thing — a strap over live video rather than a wall
+   * of words — and an operator who has drawn one has not drawn the other.
+   */
+  customStreamTemplate: SlideTemplate;
+  customStreamLyricsTemplate: SlideTemplate;
   lyricsScale: ScaleMode;
   lyricsSize: number;
   transitionMs: number;
@@ -158,6 +167,8 @@ export const fromRow = (row: SettingsRow): Settings => {
     projectorLyricsLook: lookOf(row.projector_lyrics_look === 'steady' ? '' : row.projector_lyrics_look, true).value,
     customTemplate: asTemplate(row.custom_template),
     customLyricsTemplate: asTemplate(row.custom_lyrics_template, DEFAULT_LYRIC_TEMPLATE),
+    customStreamTemplate: asTemplate(row.custom_stream_template, DEFAULT_STREAM_TEMPLATE),
+    customStreamLyricsTemplate: asTemplate(row.custom_stream_lyrics_template, DEFAULT_STREAM_LYRIC_TEMPLATE),
     lyricsScale: row.projector_lyrics_look === 'steady' ? 'none' : asScaleMode(row.lyrics_scale),
     lyricsSize: clampTextSize(row.lyrics_size ?? DEFAULT_TEXT_SIZE),
     transitionMs: clampTransition(row.transition_ms ?? DEFAULT_TRANSITION_MS),
@@ -193,6 +204,8 @@ export const toRow = (settings: Settings) => ({
   projector_lyrics_look: settings.projectorLyricsLook,
   custom_template: settings.customTemplate,
   custom_lyrics_template: settings.customLyricsTemplate,
+  custom_stream_template: settings.customStreamTemplate,
+  custom_stream_lyrics_template: settings.customStreamLyricsTemplate,
   lyrics_scale: settings.lyricsScale,
   lyrics_size: settings.lyricsSize,
   transition_ms: settings.transitionMs,
@@ -275,6 +288,8 @@ export const stageLangOf = (settings: Settings): Lang => {
  */
 export const streamStyle = (settings: Settings): StreamStyle => {
   const chosen = streamLangOf(settings);
+  const template = settings.lowerThirdVariant === CUSTOM_LOOK ? settings.customStreamTemplate : null;
+  const lyricsTemplate = settings.lyricsVariant === CUSTOM_LOOK ? settings.customStreamLyricsTemplate : null;
 
   return {
     font: settings.streamFont,
@@ -287,9 +302,20 @@ export const streamStyle = (settings: Settings): StreamStyle => {
     position: settings.lowerThirdPosition,
     variant: settings.lowerThirdVariant,
     lyricsVariant: settings.lyricsVariant,
+    template,
+    lyricsTemplate,
+    versions: settings.versions,
     colors: settings.streamColors.verses,
     lyricsColors: settings.streamColors.lyrics,
     hidden: settings.obsHidden,
-    fonts: fontsUsedBy([settings.streamFont, settings.streamLyricsFont], settings.customFonts),
+    fonts: fontsUsedBy(
+      [
+        settings.streamFont,
+        settings.streamLyricsFont,
+        ...fontsNamedBy(template),
+        ...fontsNamedBy(lyricsTemplate),
+      ],
+      settings.customFonts,
+    ),
   };
 };

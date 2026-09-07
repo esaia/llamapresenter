@@ -40,6 +40,8 @@ import { fontOptions, type CustomFont } from '@/lib/projector/fonts';
 import {
   DEFAULT_GRADIENT,
   DEFAULT_LYRIC_TEMPLATE,
+  DEFAULT_STREAM_LYRIC_TEMPLATE,
+  DEFAULT_STREAM_TEMPLATE,
   DEFAULT_TEMPLATE,
   filesUsedBy,
   MAX_ELEMENTS,
@@ -106,19 +108,30 @@ const KIND_LABELS: Record<ElementKind, string> = {
   picture: 'Picture',
 };
 
-/** Which of the two templates is being drawn. */
-export type TemplateTarget = 'verses' | 'lyrics';
+/**
+ * Which of the four templates is being drawn.
+ *
+ * The projector's two sit over a photograph and carry every armed language;
+ * the stream's two composite over live video and carry one. Same document,
+ * same editor, different ground under it.
+ */
+export type TemplateTarget = 'verses' | 'lyrics' | 'stream' | 'streamLyrics';
 
 /** What a text box can be told to say, for each kind of slide. */
+const VERSE_TOKENS = [
+  { name: 'verses', label: 'Verse text' },
+  { name: 'reference', label: 'Reference' },
+  { name: 'translation', label: 'Translation' },
+];
+
+// A song slide has one thing to say: the words.
+const LYRIC_TOKENS = [{ name: 'lyrics', label: 'Words' }];
+
 const TOKEN_ROWS: Record<TemplateTarget, { name: string; label: string }[]> = {
-  verses: [
-    { name: 'verses', label: 'Verse text' },
-    { name: 'reference', label: 'Reference' },
-    { name: 'translation', label: 'Translation' },
-  ],
-  // A song slide has one thing to say, in one language: the words. Its other
-  // languages belong to the stage and the lower third, which each carry one.
-  lyrics: [{ name: 'lyrics', label: 'Words' }],
+  verses: VERSE_TOKENS,
+  lyrics: LYRIC_TOKENS,
+  stream: VERSE_TOKENS,
+  streamLyrics: LYRIC_TOKENS,
 };
 
 /**
@@ -1183,7 +1196,26 @@ const boxStyle = (frame: Frame, rotation = 0): React.CSSProperties => ({
 export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; onClose: () => void }) => {
   const { settings, update } = useStudio();
 
-  const lyrics = target === 'lyrics';
+  const lyrics = target === 'lyrics' || target === 'streamLyrics';
+  // The stream composites over live video, so its canvas has no photograph
+  // under it and its templates are the operator's other two.
+  const stream = target === 'stream' || target === 'streamLyrics';
+
+  const saved = stream
+    ? lyrics
+      ? settings.customStreamLyricsTemplate
+      : settings.customStreamTemplate
+    : lyrics
+      ? settings.customLyricsTemplate
+      : settings.customTemplate;
+
+  const fallback = stream
+    ? lyrics
+      ? DEFAULT_STREAM_LYRIC_TEMPLATE
+      : DEFAULT_STREAM_TEMPLATE
+    : lyrics
+      ? DEFAULT_LYRIC_TEMPLATE
+      : DEFAULT_TEMPLATE;
 
   /**
    * The draft, and every state it has been in.
@@ -1194,9 +1226,7 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
    * behind. An undo that walked back through a hundred pointer moves would be
    * no undo at all.
    */
-  const [history, setHistory] = useState(() =>
-    start(lyrics ? settings.customLyricsTemplate : settings.customTemplate),
-  );
+  const [history, setHistory] = useState(() => start(saved));
 
   const draft = history.present;
 
@@ -1357,8 +1387,11 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
 
   const sample = lyrics ? SAMPLE_LYRICS : sampleShowData(bibleLangs);
 
+  // The stream has no background of its own — it composites over whatever the
+  // camera is pointed at — so its canvas stands in for that rather than
+  // showing a picture the overlay will never sit on.
   const background =
-    settings.theme === LOCAL_THEME
+    stream || settings.theme === LOCAL_THEME
       ? ''
       : settings.theme === DYNAMIC_THEME
         ? settings.dynamicImage
@@ -1625,7 +1658,15 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
   });
 
   const save = () => {
-    update(lyrics ? { customLyricsTemplate: draft } : { customTemplate: draft });
+    update(
+      stream
+        ? lyrics
+          ? { customStreamLyricsTemplate: draft }
+          : { customStreamTemplate: draft }
+        : lyrics
+          ? { customLyricsTemplate: draft }
+          : { customTemplate: draft },
+    );
     onClose();
   };
 
@@ -1638,7 +1679,13 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
       >
         <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-studio-border px-4">
           <h2 className="min-w-0 truncate text-sm font-semibold text-studio-text">
-            {lyrics ? 'Custom song slide' : 'Custom slide'}
+            {stream
+              ? lyrics
+                ? 'Custom song strap'
+                : 'Custom strap'
+              : lyrics
+                ? 'Custom song slide'
+                : 'Custom slide'}
           </h2>
 
           <div className="flex items-center gap-2">
@@ -1681,11 +1728,20 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
               onPointerCancel={endDrag}
-              className="relative aspect-video w-full max-w-4xl touch-none overflow-hidden rounded-studio
-                bg-studio-slide bg-cover bg-center ring-1 ring-studio-border"
+              className={cn(
+                'relative aspect-video w-full max-w-4xl touch-none overflow-hidden rounded-studio',
+                'bg-cover bg-center ring-1 ring-studio-border',
+                // The same stand-in the stream's look tiles use: a picture with
+                // a bright half and a dark one, so a white plate and a black
+                // one are each visibly doing something.
+                stream ? 'l3-ground' : 'bg-studio-slide',
+              )}
               style={background ? { backgroundImage: `url(${background})` } : undefined}
             >
-              <div className="absolute inset-0 bg-black/55" />
+              {/* The projector's scrim, so the sample reads the way the slide
+                  will over the same picture. The stream has none: nothing is
+                  laid over the video but the strap itself. */}
+              {stream ? null : <div className="absolute inset-0 bg-black/55" />}
 
               <CustomSlide template={draft} showData={sample} style={style} assets={assets} />
 
@@ -1965,7 +2021,7 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
           <button
             type="button"
             onClick={() => {
-              act(() => (lyrics ? DEFAULT_LYRIC_TEMPLATE : DEFAULT_TEMPLATE));
+              act(() => fallback);
               setSelected(null);
             }}
             className="rounded-studio border border-studio-border px-3 py-1.5 text-xs font-medium text-studio-muted

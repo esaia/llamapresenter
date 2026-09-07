@@ -6,6 +6,8 @@ import { cn } from '@/lib/cn';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
 import { LowerThirdStylePicker } from './LowerThirdStylePicker';
+import { CUSTOM_LOOK } from '@/lib/projector/looks';
+
 import { Field, TypeRow } from './StyleSection';
 
 const POSITIONS = [
@@ -33,6 +35,9 @@ export const StreamSection = () => {
     <div className="space-y-6">
       <LowerThirdStylePicker />
 
+      {/* Both straps drawn from a template of their own place everything
+          themselves, so top and bottom has nothing left to decide. */}
+      {settings.lowerThirdVariant === CUSTOM_LOOK && settings.lyricsVariant === CUSTOM_LOOK ? null : (
       <Field label="Position on screen">
         <div className="grid grid-cols-2 gap-2">
           {POSITIONS.map(({ value, label, Icon }) => (
@@ -55,31 +60,38 @@ export const StreamSection = () => {
           ))}
         </div>
       </Field>
+      )}
 
       {/* Side by side, because these two are read against each other. Its own
           type, not the projector's — the wall and the camera shot are read from
           different distances and almost never want the same setting — and a
           typeface name needs the room to be read as one. */}
+      {/* A custom strap names a typeface and an alignment on every box it has,
+          so one setting for the whole strap has nothing left to say. */}
       <div className="grid gap-4 sm:grid-cols-2">
-        <TypeRow
-          label="Verse type"
-          hint="Typeface and alignment for Bible slides on the stream."
-          font={settings.streamFont}
-          fonts={settings.customFonts}
-          setFont={value => update({ streamFont: value })}
-          align={settings.streamAlign}
-          setAlign={value => update({ streamAlign: value })}
-        />
+        {settings.lowerThirdVariant === CUSTOM_LOOK ? null : (
+          <TypeRow
+            label="Verse type"
+            hint="Typeface and alignment for Bible slides on the stream."
+            font={settings.streamFont}
+            fonts={settings.customFonts}
+            setFont={value => update({ streamFont: value })}
+            align={settings.streamAlign}
+            setAlign={value => update({ streamAlign: value })}
+          />
+        )}
 
-        <TypeRow
-          label="Lyric type"
-          hint="Song slides on the stream get their own look."
-          font={settings.streamLyricsFont}
-          fonts={settings.customFonts}
-          setFont={value => update({ streamLyricsFont: value })}
-          align={settings.streamLyricsAlign}
-          setAlign={value => update({ streamLyricsAlign: value })}
-        />
+        {settings.lyricsVariant === CUSTOM_LOOK ? null : (
+          <TypeRow
+            label="Lyric type"
+            hint="Song slides on the stream get their own look."
+            font={settings.streamLyricsFont}
+            fonts={settings.customFonts}
+            setFont={value => update({ streamLyricsFont: value })}
+            align={settings.streamLyricsAlign}
+            setAlign={value => update({ streamLyricsAlign: value })}
+          />
+        )}
       </div>
     </div>
   );

@@ -463,3 +463,34 @@ describe('a second language with a style of its own', () => {
     expect(asTemplate({ elements: [box] }).elements[0]).toEqual(box);
   });
 });
+
+describe('a song on the stream', () => {
+  const song = (lyricsLang?: string): TokenContext => ({
+    showData: {
+      lyrics: {
+        title: 'Amazing Grace',
+        text: 'english',
+        langs: [
+          { id: 'l0', label: 'English', text: 'english' },
+          { id: 'l1', label: 'ქართული', text: 'georgian' },
+        ],
+      },
+    },
+    order: ['eng'],
+    enabled: { eng: true },
+    versions: {},
+    lyricsLang,
+  });
+
+  it('draws only the language the overlay is pointed at', () => {
+    expect(renderBox('{{lyrics}}', song('l1'))).toEqual([['georgian']]);
+  });
+
+  it('falls back to the first when the song no longer has the one it names', () => {
+    expect(renderBox('{{lyrics}}', song('gone'))).toEqual([['english']]);
+  });
+
+  it('still draws them all where nothing has been pointed at one', () => {
+    expect(renderBox('{{lyrics}}', song())).toEqual([['english'], ['georgian']]);
+  });
+});

@@ -11,10 +11,23 @@ import {
   type Colorway,
 } from "@/lib/lower3rd/colors";
 import { fontStyleOf, type CustomFont } from "@/lib/projector/fonts";
+import { CUSTOM_LOOK } from "@/lib/projector/looks";
+import {
+  filesUsedBy,
+  SAMPLE_LYRICS as SAMPLE_LYRIC_SLIDE,
+  SAMPLE_VERSE as SAMPLE_VERSE_SLIDE,
+} from "@/lib/projector/template";
+import { streamStyle } from "@/lib/studio/settings";
+import { CustomSlide } from "@/components/projector/CustomSlide";
+import { useLocalFiles } from "@/components/projector/useLocalBackground";
+import { IconButton } from "@/components/ui/IconButton";
+import { HiOutlinePencil } from "react-icons/hi";
+import { useMemo } from "react";
 import { useStudio } from "@/lib/studio/StudioProvider";
 import type { Align } from "@/lib/types";
 
 import { ColorField } from "./ColorField";
+import { TemplateEditor } from "./TemplateEditor";
 
 // Each look re-points the CSS variables on `.lower3rd-bar`; see globals.css.
 // A look here is an arrangement only — what it is painted in is picked below
@@ -26,6 +39,10 @@ export const VARIANTS = [
   { value: "card", label: "Reference card" },
   { value: "split", label: "Split bar" },
   { value: "plain", label: "Text only" },
+  // The one the operator draws. Not a `.lower3rd-bar` variant at all: it
+  // replaces the bar with a template on the whole frame, which is why the
+  // colourway below the grid has nothing to say about it.
+  { value: CUSTOM_LOOK, label: "Custom" },
 ];
 
 export const variantLabel = (value: string) =>
@@ -131,6 +148,25 @@ export const LowerThirdStylePicker = () => {
   const { settings, update } = useStudio();
 
   const [target, setTarget] = useState("verses");
+  const [editing, setEditing] = useState(false);
+
+  // What the custom tile draws its sample against: the stream's own wire
+  // style, which already reduces the armed set to the one language the
+  // overlay carries.
+  const wire = streamStyle(settings);
+
+  // A picture placed in a strap is in this browser's IndexedDB, so unlike a
+  // projector's background it can be minted here.
+  const assets = useLocalFiles(
+    useMemo(
+      () => [
+        ...filesUsedBy(settings.customStreamTemplate),
+        ...filesUsedBy(settings.customStreamLyricsTemplate),
+      ],
+      [settings.customStreamLyricsTemplate, settings.customStreamTemplate],
+    ),
+    null,
+  );
 
   const lyrics = target === "lyrics";
   const selected = lyrics ? settings.lyricsVariant : settings.lowerThirdVariant;
@@ -200,43 +236,83 @@ export const LowerThirdStylePicker = () => {
 
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {VARIANTS.map(({ value, label }) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={selected === value}
-            onClick={() => select(value)}
-            className={cn(
-              "group overflow-hidden rounded-studio border text-left transition-colors duration-150",
-              "focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40",
-              selected === value
-                ? "border-studio-accent ring-1 ring-studio-accent"
-                : "border-studio-border hover:border-studio-faint",
-            )}
-          >
-            <Preview
-              variant={value}
-              top={top}
-              lyrics={lyrics}
-              font={font}
-              fonts={settings.customFonts}
-              align={align}
-              colors={colors}
-            />
-
-            <span
+          // The custom tile carries a second control, and a button cannot hold
+          // another one — so the tile is a box with the two side by side.
+          <div key={value} className="relative">
+            <button
+              type="button"
+              aria-pressed={selected === value}
+              onClick={() => select(value)}
               className={cn(
-                "block truncate px-1.5 py-1 text-[11px] font-medium",
+                "group block w-full overflow-hidden rounded-studio border text-left transition-colors duration-150",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40",
                 selected === value
-                  ? "bg-studio-accent text-studio-onaccent"
-                  : "bg-studio-bg text-studio-muted",
+                  ? "border-studio-accent ring-1 ring-studio-accent"
+                  : "border-studio-border hover:border-studio-faint",
               )}
             >
-              {label}
-            </span>
-          </button>
+              {value === CUSTOM_LOOK ? (
+                <div className="l3-preview">
+                  <CustomSlide
+                    template={
+                      lyrics
+                        ? settings.customStreamLyricsTemplate
+                        : settings.customStreamTemplate
+                    }
+                    showData={lyrics ? SAMPLE_LYRIC_SLIDE : SAMPLE_VERSE_SLIDE}
+                    style={{ ...wire, fonts: settings.customFonts }}
+                    assets={assets}
+                  />
+                </div>
+              ) : (
+                <Preview
+                  variant={value}
+                  top={top}
+                  lyrics={lyrics}
+                  font={font}
+                  fonts={settings.customFonts}
+                  align={align}
+                  colors={colors}
+                />
+              )}
+
+              <span
+                className={cn(
+                  "block truncate px-1.5 py-1 text-[11px] font-medium",
+                  selected === value
+                    ? "bg-studio-accent text-studio-onaccent"
+                    : "bg-studio-bg text-studio-muted",
+                )}
+              >
+                {label}
+              </span>
+            </button>
+
+            {value === CUSTOM_LOOK ? (
+              <IconButton
+                label="Edit the custom strap"
+                tone="onDark"
+                onClick={() => setEditing(true)}
+                className="absolute top-1 right-1 size-6 bg-black/55 backdrop-blur-sm"
+              >
+                <HiOutlinePencil className="text-xs" />
+              </IconButton>
+            ) : null}
+          </div>
         ))}
       </div>
 
+      {editing ? (
+        <TemplateEditor
+          target={lyrics ? "streamLyrics" : "stream"}
+          onClose={() => setEditing(false)}
+        />
+      ) : null}
+
+      {/* A template carries its own plates and colours on every box, so the
+          colourway has nothing to re-point under the custom strap. */}
+      {selected === CUSTOM_LOOK ? null : (
+        <>
       <div className="mt-4 flex items-baseline justify-between gap-2">
         <span className="block text-xs font-semibold text-studio-text">
           Colours
@@ -277,6 +353,8 @@ export const LowerThirdStylePicker = () => {
           />
         ))}
       </div>
+        </>
+      )}
     </div>
   );
 };
