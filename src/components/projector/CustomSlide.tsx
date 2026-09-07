@@ -84,13 +84,40 @@ const gradientCss = (gradient: Gradient) =>
   // makes 0 point up here too, so one dial means one thing.
   `linear-gradient(${gradient.angle + 180}deg, ${gradient.from}, ${gradient.to})`;
 
-/** The panel behind a line of text: nothing, a flat colour, or a gradient. */
+/** The panel behind the words: nothing, a flat colour, or a gradient. */
 const plateOf = (element: TextElement): CSSProperties => {
-  if (element.plateKind === 'none') return {};
+  // Bands are painted on the lines themselves, not on the box behind them.
+  if (element.plateKind === 'none' || element.plateSpan === 'line') return {};
 
   if (element.plateKind === 'gradient') return { background: gradientCss(element.plateGradient) };
 
   return { background: element.plate || undefined };
+};
+
+/**
+ * A plate behind each line, with the picture showing through between them.
+ *
+ * A stripe on the block rather than a background on the words: an inline
+ * background could only ever be as wide as its own words, and what this is
+ * for is a band running the full width of the box. The stripe's period is the
+ * line height, so it lands on the line boxes whatever the text says and
+ * however it wraps; the leading left over at each end of the period is the
+ * gap, and starting the stripe inside it keeps the words centred on their own
+ * band. The same arrangement the shipped Bands look uses.
+ *
+ * A flat colour only. The stripe *is* the background image, so there is
+ * nowhere for a gradient to go — masking one would take the words with it.
+ */
+const bandsOf = (element: TextElement): CSSProperties => {
+  if (element.plateKind !== 'color' || element.plateSpan !== 'line' || !element.plate) return {};
+
+  const period = element.lineHeight;
+  const half = Math.min(element.plateGap, period * 0.8) / 2;
+  const fill = element.plate;
+
+  return {
+    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${half}em, ${fill} ${half}em, ${fill} ${period - half}em, transparent ${period - half}em, transparent ${period}em)`,
+  };
 };
 
 const fillOf = (element: ShapeElement, url: string | undefined): CSSProperties => {
@@ -210,6 +237,7 @@ const Text = ({
           textAlign: element.align,
           lineHeight: element.lineHeight,
           textShadow: SHADOW[element.shadow],
+          ...bandsOf(element),
           // Behind the letter rather than straddling its edge: a centred
           // stroke eats into the glyph and a thick one closes up the
           // counters, which at projector size turns an `e` into a blob.
@@ -223,6 +251,9 @@ const Text = ({
         }}
       >
         {lines.map((line, index) => (
+          // Each line is its own block, so a band lands on it rather than on
+          // the run of them: `display: block` is what a stripe needs to sit
+          // against, and `<p>` is one already.
           <p key={index} dangerouslySetInnerHTML={{ __html: line }} />
         ))}
       </div>

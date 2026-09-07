@@ -494,3 +494,26 @@ describe('a song on the stream', () => {
     expect(renderBox('{{lyrics}}', song())).toEqual([['english'], ['georgian']]);
   });
 });
+
+describe('a plate behind each line', () => {
+  const text = (over: Record<string, unknown> = {}) =>
+    asTemplate({ elements: [{ kind: 'text', id: 't', ...over }] }).elements[0] as TextElement;
+
+  it('is one panel unless the template asks for bands', () => {
+    expect(text().plateSpan).toBe('box');
+    expect(text({ plateSpan: 'nonsense' }).plateSpan).toBe('box');
+    expect(text({ plateSpan: 'line' }).plateSpan).toBe('line');
+  });
+
+  it('clamps the gap, which is in em of the words', () => {
+    expect(text().plateGap).toBe(0.16);
+    expect(text({ plateGap: 9 }).plateGap).toBe(1);
+    expect(text({ plateGap: -1 }).plateGap).toBe(0);
+  });
+
+  it('travels with a second language’s style of its own', () => {
+    const box = text({ plateSpan: 'line', plateGap: 0.3 });
+
+    expect(textStyleOf(box)).toMatchObject({ plateSpan: 'line', plateGap: 0.3 });
+  });
+});

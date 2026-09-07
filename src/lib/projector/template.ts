@@ -95,6 +95,10 @@ export interface TextStyle {
   strokeWidth: number;
   /** What the panel behind the words is painted with. */
   plateKind: PlateKind;
+  /** One panel behind the box, or a band behind each line. */
+  plateSpan: PlateSpan;
+  /** Between the bands, in `em` of the words — so it scales with them. */
+  plateGap: number;
   /** That panel's colour, when it is a flat one. */
   plate: string;
   plateGradient: Gradient;
@@ -151,6 +155,17 @@ export type FillKind = 'none' | 'color' | 'gradient' | 'image';
  * one — offering it here would be a second, worse way to set it.
  */
 export type PlateKind = 'none' | 'color' | 'gradient';
+
+/**
+ * Whether the plate is one panel behind the whole box, or a band behind each
+ * line with the picture showing through between them.
+ *
+ * Bands are drawn as a stripe keyed to the line height rather than as a
+ * background on the words — which is what lets a band run the full width of
+ * the box while an inline one could only ever be as wide as its own words.
+ * The same trick the shipped Bands look uses.
+ */
+export type PlateSpan = 'box' | 'line';
 
 /** Two stops and an angle, which is as much gradient as a slide ever needs. */
 export interface Gradient {
@@ -228,6 +243,8 @@ export const DEFAULT_TEXT: Omit<TextElement, 'id' | 'frame' | 'content'> = {
   perLanguage: 'stack',
   gap: 1.5,
   plateKind: 'none',
+  plateSpan: 'box',
+  plateGap: 0.16,
   plate: '',
   plateGradient: DEFAULT_GRADIENT,
   plateStroke: '',
@@ -504,6 +521,8 @@ export const textStyleOf = (style: TextStyle): TextStyle => ({
   stroke: style.stroke,
   strokeWidth: style.strokeWidth,
   plateKind: style.plateKind,
+  plateSpan: style.plateSpan,
+  plateGap: style.plateGap,
   plate: style.plate,
   plateGradient: { ...style.plateGradient },
   plateStroke: style.plateStroke,
@@ -531,6 +550,8 @@ const asTextStyle = (raw: Record<string, unknown>): TextStyle => {
     // A row written before a plate could be anything but a flat colour says
     // nothing here: a colour meant a plate, and no colour meant no plate.
     plateKind: asOne(raw.plateKind, ['none', 'color', 'gradient'] as const, plate ? 'color' : 'none'),
+    plateSpan: asOne(raw.plateSpan, ['box', 'line'] as const, 'box'),
+    plateGap: clamp(raw.plateGap as number, 0, 1, 0.16),
     plate,
     plateGradient: asGradient(raw.plateGradient),
     plateStroke: asColor(raw.plateStroke),

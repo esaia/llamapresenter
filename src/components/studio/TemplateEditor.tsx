@@ -665,16 +665,46 @@ const TextStyleRows = ({
     </Row>
 
     {style.plateKind === 'color' ? (
-      <Row label="Colour" stack>
-        <ColorField
-          label="Plate"
-          hint="What the panel is painted in"
-          value={style.plate || undefined}
-          fallback="#00000000"
-          onPick={plate => patch({ plate })}
-          onClear={() => patch({ plate: '' })}
-        />
-      </Row>
+      <>
+        <Row label="Colour" stack>
+          <ColorField
+            label="Plate"
+            hint="What the panel is painted in"
+            value={style.plate || undefined}
+            fallback="#00000000"
+            onPick={plate => patch({ plate })}
+            onClear={() => patch({ plate: '' })}
+          />
+        </Row>
+
+        {/* One panel, or a band behind each line with the picture showing
+            through between them. Offered for a flat colour only: the bands are
+            drawn as a stripe, which *is* the background, so there is nowhere
+            for a gradient to go. */}
+        <Row label="Behind">
+          <Toggles
+            value={style.plateSpan}
+            options={[
+              { value: 'box' as const, label: 'One panel behind the whole box', text: 'The box' },
+              { value: 'line' as const, label: 'A band behind each line', text: 'Each line' },
+            ]}
+            onPick={plateSpan => patch({ plateSpan })}
+          />
+        </Row>
+
+        {style.plateSpan === 'line' ? (
+          <Row label="Band gap">
+            <Slider
+              label="Gap between the bands"
+              value={style.plateGap}
+              min={0}
+              max={0.6}
+              step={0.01}
+              onChange={plateGap => patch({ plateGap })}
+            />
+          </Row>
+        ) : null}
+      </>
     ) : null}
 
     {style.plateKind === 'gradient' ? (
