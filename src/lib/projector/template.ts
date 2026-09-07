@@ -311,13 +311,17 @@ export const DEFAULT_LYRIC_TEMPLATE: SlideTemplate = {
  * is no scrim under it and no photograph to sit on, so the words carry their
  * own ground or they are lost in whatever the camera is pointed at. The rest
  * of the frame stays empty and therefore transparent.
+ *
+ * Down in the last quarter rather than near the middle: a lower third is
+ * named for where it sits, and a strap the speaker's face is behind is not
+ * one. Clear of the very bottom too, which a broadcast crops.
  */
 export const DEFAULT_STREAM_TEMPLATE: SlideTemplate = {
   elements: [
     {
       ...DEFAULT_TEXT,
       id: 'verses',
-      frame: { x: 0.06, y: 0.68, w: 0.88, h: 0.14 },
+      frame: { x: 0.06, y: 0.74, w: 0.88, h: 0.14 },
       content: '{{verses}}',
       size: 5,
       plateKind: 'color',
@@ -328,7 +332,7 @@ export const DEFAULT_STREAM_TEMPLATE: SlideTemplate = {
     {
       ...DEFAULT_TEXT,
       id: 'reference',
-      frame: { x: 0.06, y: 0.83, w: 0.88, h: 0.06 },
+      frame: { x: 0.06, y: 0.885, w: 0.88, h: 0.055 },
       content: '{{reference}}',
       size: 2.6,
       italic: true,
@@ -344,7 +348,7 @@ export const DEFAULT_STREAM_LYRIC_TEMPLATE: SlideTemplate = {
     {
       ...DEFAULT_TEXT,
       id: 'lyrics',
-      frame: { x: 0.06, y: 0.7, w: 0.88, h: 0.16 },
+      frame: { x: 0.06, y: 0.76, w: 0.88, h: 0.16 },
       content: '{{lyrics}}',
       size: 5.5,
       align: 'center',
