@@ -23,7 +23,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
   return (
     <div className="site flex min-h-dvh flex-col">
       <header className="sticky top-0 z-50 border-b border-site-rule bg-site-bg/85 backdrop-blur-sm">
-        <nav className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3.5 sm:gap-8 sm:py-4">
+        <nav className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-3.5 sm:gap-8 sm:py-4">
           <Link
             href="/"
             aria-label="LlamaPresenter — home"
@@ -53,7 +53,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
       <div className="flex-1">{children}</div>
 
       <footer className="border-t border-site-rule">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Wordmark on="light" className="text-[17px] sm:text-[19px]" />
             <p className="mt-2 max-w-sm text-sm text-site-muted">

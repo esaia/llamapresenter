@@ -47,7 +47,7 @@ export const Frame = ({
 
     <div className={cn('relative overflow-hidden rounded-studio bg-studio-slide', paneClassName)}>
       {src ? (
-        <Image src={src} alt={alt ?? ''} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 60vw" />
+        <Image src={src} alt={alt ?? ''} fill className="object-cover" sizes="(max-width: 1280px) 100vw, 1280px" />
       ) : (
         (children ?? <Placeholder label={label} />)
       )}

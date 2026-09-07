@@ -1,16 +1,32 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { Frame } from '@/components/marketing/Frame';
-import { NameCardMock } from '@/components/marketing/NameCardMock';
 import { HeroScene } from '@/components/marketing/HeroScene';
-import { ScreenTiles } from '@/components/marketing/ScreenTiles';
-import { SlideMock } from '@/components/marketing/SlideMock';
-import { StageMock } from '@/components/marketing/StageMock';
 import { PLANS } from '@/lib/billing/plans';
 
 /* The two type roles for the page: the rounded display face the brand is drawn
    in, and the interface stack for everything read as a sentence. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
+
+/**
+ * The drawing beside a feature: screens of the app, arranged and annotated by
+ * hand rather than screenshotted.
+ *
+ * Every one is the same 1000x700 artboard on a transparent ground, so they
+ * share a column width and need no frame around them — the shadows and the
+ * coloured card behind each are part of the picture.
+ */
+const Art = ({ src, alt }: { src: string; alt: string }) => (
+  <Image
+    src={src}
+    alt={alt}
+    width={1000}
+    height={700}
+    sizes="(min-width: 1024px) 38rem, 100vw"
+    className="h-auto w-full"
+  />
+);
 
 /** A feature: a paragraph on one side, a screen on the other. */
 const Feature = ({
@@ -26,7 +42,9 @@ const Feature = ({
   visual: React.ReactNode;
   flip?: boolean;
 }) => (
-  <section id={id} className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16 sm:py-24">
+  // Half the padding a standalone section carries: two of these meet, so the
+  // gap between one feature and the next is twice whatever is set here.
+  <section id={id} className="mx-auto max-w-7xl scroll-mt-20 px-6 py-8 sm:py-12">
     <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
       <div className={flip ? 'lg:order-last' : undefined}>
         <h2 className={`${DISPLAY} max-w-md text-3xl leading-[1.1] sm:text-4xl`}>{title}</h2>
@@ -91,7 +109,7 @@ export default function HomePage() {
   return (
     <main>
       {/* ------------------------------------------------------------- hero */}
-      <section className="mx-auto max-w-6xl px-6 pt-12 pb-8 sm:pt-16">
+      <section className="mx-auto max-w-7xl px-6 pt-12 pb-8 sm:pt-16">
         <div className="grid items-center gap-14 lg:grid-cols-[1fr_0.9fr] lg:gap-12">
           <div>
             <h1 className={`${DISPLAY} text-[clamp(2.4rem,4.6vw,3.6rem)] leading-[1.0]`}>
@@ -129,49 +147,31 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* -------------------------------------------------------- the links */}
-      <section id="room" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16 sm:py-20">
-        <div className="max-w-2xl">
-          <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>One console, and three links.</h2>
-          <p className="mt-5 text-[17px] leading-relaxed text-site-muted">
-            You sign in. Nothing else does. Every other screen in the building opens an address of its own and starts
-            following the console — so the projector machine, the streaming laptop and the stage monitor need a browser
-            and nothing more.
-          </p>
-        </div>
-
-        <div className="mt-12">
-          <ScreenTiles />
-        </div>
-      </section>
-
       {/* ------------------------------------------------- what they see */}
-      <section className="mt-16 border-y border-site-rule bg-site-band">
-        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.3fr] lg:gap-16">
-            <div>
-              <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
-                Built for the person at the back of the room.
-              </h2>
-              <div className="mt-5 max-w-prose space-y-4 text-[17px] leading-relaxed text-site-muted">
-                <p>
-                  Type “John 14:6-7” and it is on the wall. The whole chapter loads with it, so stepping to the next
-                  verse costs nothing — no waiting, no second search, no dead air while somebody finds the passage.
-                </p>
-                <p>
-                  The console is dark because a volunteer sits in front of it for an hour in a dim room, and the keys
-                  are the ones your hands already know: arrows to step, space to hold, a single key to go to black.
-                </p>
-              </div>
-            </div>
-
-            <Frame
-              url="llamapresenter.com/studio"
-              label="Screenshot of the console — the passage box, the slide list and the live preview"
-              paneClassName="aspect-16/10"
-              className="shadow-site-frame"
-            />
+      <section id="room" className="mt-16 scroll-mt-20 border-y border-site-rule bg-site-band">
+        {/* The console gets the whole width. It is one picture of the whole
+            product, and a column of prose beside it only made it smaller —
+            what a volunteer sees for an hour on a Sunday is the argument. */}
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
+              Built for the person at the back of the room.
+            </h2>
+            <p className="mt-5 text-[17px] leading-relaxed text-site-muted">
+              Type “John 14:6-7” and it is on the wall. The whole chapter loads with it, so stepping to the next verse
+              costs nothing — no waiting, no second search, no dead air while somebody finds the passage.
+            </p>
           </div>
+
+          <Frame
+            url="llamapresenter.com/studio"
+            src="/images/console-studio.png"
+            alt="The console: the language panel on the left, Philippians and Luke broken into verse cards in the
+              middle, and the live projector preview, outputs and audio playlist on the right"
+            // The screenshot's own shape, so the pane crops none of it.
+            paneClassName="aspect-[500/267]"
+            className="mt-12 shadow-site-frame"
+          />
         </div>
       </section>
 
@@ -180,9 +180,10 @@ export default function HomePage() {
         id="languages"
         title="Several languages, stacked the way your congregation reads them."
         visual={
-          <Frame url="llamapresenter.com/show/8f3c…" className="shadow-site-frame">
-            <SlideMock />
-          </Frame>
+          <Art
+            src="/images/features/languages.png"
+            alt="A slide carrying the same verse in Georgian and English, beside the panel that arms each language and picks its translation"
+          />
         }
       >
         <p>
@@ -200,9 +201,10 @@ export default function HomePage() {
         flip
         title="A clock the person on stage can trust."
         visual={
-          <Frame url="llamapresenter.com/stage/8f3c…" className="shadow-site-frame">
-            <StageMock />
-          </Frame>
+          <Art
+            src="/images/features/stage-timer.png"
+            alt="The stage display: the verse on screen now, the one coming next, the clock, the agenda and a countdown"
+          />
         }
       >
         <p>
@@ -215,27 +217,49 @@ export default function HomePage() {
         </p>
       </Feature>
 
-      <Feature
-        title="Name the person speaking, then forget about it."
+      <Feature title="Or draw the slide yourself."
         visual={
-          <Frame url="llamapresenter.com/lower3rd/8f3c…" className="shadow-site-frame">
-            <NameCardMock />
-          </Frame>
+          <Art
+            src="/images/features/template-editor.png"
+            alt="The template editor: a text box selected on the canvas, with its size, case, colour, alignment, outline and plate in the panel beside it"
+          />
         }
       >
         <p>
-          Keep your preachers, worship leaders and guests in a list, pick one of five finished designs, and send their
-          name to the lower third. It holds for a few seconds and takes itself away.
+          Eight finished layouts ship with it, and when none of them is your church, there is a canvas. Drag boxes,
+          shapes and pictures where you want them, set the type, and keep as many layouts as you have Sundays that need
+          one — a Christmas slide and an ordinary one, each under its own name.
         </p>
         <p>
-          The card goes to the stream alone. The projector keeps its verse and the stage keeps its clock, so nobody in
-          the hall sees a graphic meant for the people at home.
+          Text is fitted inside the box you drew rather than spilling out of it, so a long passage comes down a size and
+          a short one fills the frame. The projector, the preview and the tile in your settings all run the same fit.
+        </p>
+      </Feature>
+
+      <Feature
+        flip
+        title="One link, and the screen is in the service."
+        visual={
+          <Art
+            src="/images/features/outputs.png"
+            alt="One link feeding the stage display, the projector slide and a stream overlay on a transparent background"
+          />
+        }
+      >
+        <p>
+          Send the address to the projector machine, the stage monitor and OBS — or point a phone at the code and hand
+          it over. Each screen starts following the console the moment it opens, with nothing installed and nobody
+          signed in.
+        </p>
+        <p>
+          The stream overlay comes through on a transparent background, so it drops onto the camera shot as a browser
+          source and nothing else in your scene has to move.
         </p>
       </Feature>
 
       {/* ------------------------------------------------------- small print */}
       <section className="border-y border-site-rule bg-site-band">
-        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
           <h2 className={`${DISPLAY} max-w-lg text-3xl leading-[1.1] sm:text-4xl`}>
             The small things a service actually turns on.
           </h2>
@@ -252,7 +276,7 @@ export default function HomePage() {
       </section>
 
       {/* ------------------------------------------------------------ price */}
-      <section className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
+      <section className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
           <div>
             <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Free is a real plan.</h2>
@@ -315,7 +339,7 @@ export default function HomePage() {
 
       {/* -------------------------------------------------------- last word */}
       <section className="bg-studio-bg">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 px-6 py-20 sm:py-24 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mx-auto flex max-w-7xl flex-col items-start gap-8 px-6 py-20 sm:py-24 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="font-valera text-3xl leading-[1.1] tracking-tight text-studio-text sm:text-4xl">
               Sunday is in six days.
