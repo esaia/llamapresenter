@@ -273,8 +273,13 @@ const Text = ({
           textAlign: element.align,
           lineHeight: element.lineHeight,
           textShadow: SHADOW[element.shadow],
-          // So the bands, which are absolute, hang off this box.
+          // So the bands, which are absolute, hang off this box — and
+          // `isolate` so they stay in it. `position: relative` alone is not a
+          // stacking context, so a child below the words climbed to the
+          // nearest ancestor that was one and painted behind *its* background:
+          // the bands went under the slide and vanished.
           position: 'relative',
+          isolation: 'isolate',
           // Behind the letter rather than straddling its edge: a centred
           // stroke eats into the glyph and a thick one closes up the
           // counters, which at projector size turns an `e` into a blob.
