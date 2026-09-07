@@ -279,6 +279,8 @@ export const BrowseModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
         className="flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-studio-lg bg-studio-bg shadow-studio-modal"
         onClick={event => event.stopPropagation()}
       >

@@ -10,7 +10,7 @@ import { varsFor } from '@/lib/lower3rd/colors';
 import { lyricFor } from '@/lib/lyrics/langs';
 import { fitText, refitOnFontLoad } from '@/lib/projector/fitText';
 import { DEFAULT_FONT, fontStyleOf } from '@/lib/projector/fonts';
-import { keepSame } from '@/lib/projector/keepSame';
+import { keepSame, sameVerse } from '@/lib/projector/keepSame';
 import { CUSTOM_LOOK } from '@/lib/projector/looks';
 import { filesUsedBy } from '@/lib/projector/template';
 import { apiBookName } from '@/lib/bible/passage';
@@ -224,7 +224,14 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
 
   const transitionMs = displayed.style.transitionMs;
   const cut = transitionMs === 0;
-  const onScreen = cut ? slide : displayed;
+
+  // Disarming a language rebuilds the slide without it, and the words that
+  // remain are the ones already on the stream — a block being dropped, not a
+  // slide being changed. The projector has always let that go up at once;
+  // the overlay was crossfading out and back for it, which over a camera shot
+  // reads as the strap having blinked while the speaker carried on.
+  const restyled = slide !== displayed && sameVerse(displayed.showData, slide.showData);
+  const onScreen = cut || restyled ? slide : displayed;
 
   const { showData, style } = onScreen;
   const lyrics = showData?.lyrics;
@@ -238,7 +245,7 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
   const shown = !blanked && hasContent(slide.showData, slide.style.enabled);
 
   // Mid-transition is "a new slide has arrived and is not on screen yet".
-  const visible = shown && (cut || slide === displayed);
+  const visible = shown && (cut || restyled || slide === displayed);
 
   useEffect(() => {
     // Every other route paints a background; over live video any paint at all
@@ -307,10 +314,10 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
   useEffect(() => {
     if (slide === displayed) return;
 
-    const swap = setTimeout(() => setDisplayed(slide), cut ? 0 : transitionMs / 2);
+    const swap = setTimeout(() => setDisplayed(slide), cut || restyled ? 0 : transitionMs / 2);
 
     return () => clearTimeout(swap);
-  }, [cut, displayed, slide, transitionMs]);
+  }, [cut, displayed, restyled, slide, transitionMs]);
 
   const resize = useCallback(() => {
     const element = textRef.current;

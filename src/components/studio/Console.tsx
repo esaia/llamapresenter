@@ -16,6 +16,7 @@ import { Lower3rdPanel } from './Lower3rdPanel';
 import { LyricsPanel } from './LyricsPanel';
 import { SongSearch } from './SongSearch';
 import { PassageBlock } from './PassageBlock';
+import { modalOpen } from './modal';
 import { useSortable } from './sortable';
 import { RightRail } from './RightRail';
 import { SearchBar } from './SearchBar';
@@ -91,6 +92,13 @@ export const Console = () => {
         setBrowsing(false);
         return;
       }
+
+      // Nothing below here belongs to a dialog. These shortcuts are global
+      // because an operator's hands are never in one place — but a dialog is
+      // the one time that is wrong: ⌘F over the template editor opened the
+      // song finder across it, and an arrow meant for a slider went to the
+      // projector. Below the Escape above, so a finder can always be put away.
+      if (modalOpen()) return;
 
       // Find, meaning "find me something to put up" — which is a different
       // thing on each tab: the songs on the lyrics tab, and the books on the

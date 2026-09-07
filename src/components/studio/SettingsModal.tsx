@@ -35,6 +35,8 @@ export const SettingsModal = ({ tab: opened, onClose }: { tab: string; onClose: 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-6" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
         className="flex h-full max-h-[44rem] w-full max-w-6xl flex-col overflow-hidden rounded-studio-lg bg-studio-bg
           shadow-studio-modal sm:flex-row"
         onClick={event => event.stopPropagation()}

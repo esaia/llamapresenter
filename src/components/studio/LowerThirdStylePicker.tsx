@@ -145,9 +145,12 @@ const Preview = ({
  * operator whose church is not black or white was out of luck.
  */
 export const LowerThirdStylePicker = () => {
-  const { settings, update } = useStudio();
+  const { settings, showData, update } = useStudio();
 
-  const [target, setTarget] = useState("verses");
+  // Opens on whichever kind of slide is live. An operator who hits the pencil
+  // over a song is there about the song, and landing on the verse grid means
+  // finding the tab before finding the tile.
+  const [target, setTarget] = useState(showData?.lyrics ? "lyrics" : "verses");
   const [editing, setEditing] = useState(false);
 
   // What the custom tile draws its sample against: the stream's own wire

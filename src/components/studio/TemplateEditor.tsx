@@ -78,7 +78,7 @@ import {
   type Guide,
   type Handle,
 } from '@/lib/studio/canvas';
-import { projectorStyle } from '@/lib/studio/settings';
+import { projectorStyle, streamLangOf } from '@/lib/studio/settings';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { LANG_LABELS, type Align, type Lang, type ProjectorStyle } from '@/lib/types';
 
@@ -768,7 +768,9 @@ const TextInspector = ({
       </div>
 
       <p className="mt-1 text-[10px] leading-snug text-studio-faint">
-        {target === 'lyrics'
+        {target === 'stream' || target === 'streamLyrics'
+          ? 'The stream carries one language — the one the rail points at it, and the one the song points at it — so a box here holds that and nothing else.'
+          : target === 'lyrics'
           ? 'Words covers every language the song is sung in — there is nothing to name, because a song’s languages are its own. Stack runs them together inside the box; a box each cuts the box into equal shares, and a song with one language fills the box the pair were sharing. The canvas shows two so you can see how they sit.'
           : armed.length > 1
             ? 'All draws the box once per language, each in its own. Stack runs them together inside the box; a box each cuts the box into equal shares — so a language switched off gives its share back and what is left re-centres, which two hand-placed boxes cannot do. A numbered token pins a box to one language instead, for giving it a font and colour of its own.'
@@ -1310,8 +1312,14 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
    * whatever the song has. The arranging controls still apply, which is why
    * the count is here and the names are not.
    */
-  const armed: string[] = lyrics ? [] : bibleLangs.map(lang => LANG_LABELS[lang]);
-  const holds = lyrics ? 2 : armed.length;
+  // The stream carries one language — the one the rail points at it, and the
+  // one the song points at it — so nothing there stacks, shares a box, or can
+  // be named by a numbered token.
+  const armed: string[] = stream || lyrics ? [] : bibleLangs.map(lang => LANG_LABELS[lang]);
+  const holds = stream ? 1 : lyrics ? 2 : armed.length;
+
+  /** The languages the canvas draws: every armed one, or the stream's single. */
+  const canvasLangs: Lang[] = stream ? [streamLangOf(settings)] : bibleLangs;
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
@@ -1380,12 +1388,14 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
     fonts: settings.customFonts,
     // The languages the canvas is being drawn for, which is the operator's own
     // set unless they are checking what a shorter one looks like.
-    order: lyrics ? [] : bibleLangs,
-    enabled: lyrics ? {} : Object.fromEntries(bibleLangs.map(lang => [lang, true])),
+    order: lyrics ? [] : canvasLangs,
+    enabled: lyrics ? {} : Object.fromEntries(canvasLangs.map(lang => [lang, true])),
+    // On the stream a song is drawn in one language, so the sample is too.
+    ...(stream ? { lyricsLang: 'sample-1' } : {}),
     ...(lyrics ? { lyricsTemplate: draft, lyricsLook: CUSTOM_LOOK } : { look: CUSTOM_LOOK }),
   };
 
-  const sample = lyrics ? SAMPLE_LYRICS : sampleShowData(bibleLangs);
+  const sample = lyrics ? SAMPLE_LYRICS : sampleShowData(canvasLangs);
 
   // The stream has no background of its own — it composites over whatever the
   // camera is pointed at — so its canvas stands in for that rather than
@@ -1673,6 +1683,8 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 sm:p-6" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
         className="flex h-full max-h-[46rem] w-full max-w-7xl flex-col overflow-hidden rounded-studio-lg bg-studio-bg
           shadow-studio-modal"
         onClick={event => event.stopPropagation()}
