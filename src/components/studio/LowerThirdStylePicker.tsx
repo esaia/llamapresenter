@@ -263,7 +263,10 @@ export const LowerThirdStylePicker = () => {
                         : settings.customStreamTemplate
                     }
                     showData={lyrics ? SAMPLE_LYRIC_SLIDE : SAMPLE_VERSE_SLIDE}
-                    style={{ ...wire, fonts: settings.customFonts }}
+                    // One language, as the overlay itself carries: without
+                    // this the tile drew both of the sample's and wrapped
+                    // differently from the thing it is a picture of.
+                    style={{ ...wire, fonts: settings.customFonts, lyricsLang: "sample-1" }}
                     assets={assets}
                   />
                 </div>

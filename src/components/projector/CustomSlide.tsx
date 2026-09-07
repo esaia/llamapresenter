@@ -29,8 +29,17 @@ export interface SlideStyle {
 /** The aspect a template is drawn on, and the one every church screen is. */
 const FRAME_RATIO = 16 / 9;
 
-/** A shrunken box will not go below this, however long the passage. */
-const MIN_FONT_SIZE = 6;
+/**
+ * How far a shrinking box may go, as a fraction of the frame's height.
+ *
+ * A fraction rather than a count of pixels, because the same template is
+ * fitted against a projector, against the preview panel and against a tile in
+ * the settings dialog — and a floor of six pixels is nothing on a screen and
+ * a fifth of the type in a tile, so a passage that shrank on the wall stopped
+ * shrinking in the tile and the two drew different slides. Every other length
+ * here is proportional for the same reason.
+ */
+const MIN_FONT_RATIO = 0.006;
 
 const SHADOW: Record<TextElement['shadow'], string | undefined> = {
   none: undefined,
@@ -97,29 +106,56 @@ const plateOf = (element: TextElement): CSSProperties => {
 /**
  * A plate behind each line, with the picture showing through between them.
  *
- * A stripe on the block rather than a background on the words: an inline
- * background could only ever be as wide as its own words, and what this is
- * for is a band running the full width of the box. The stripe's period is the
- * line height, so it lands on the line boxes whatever the text says and
- * however it wraps; the leading left over at each end of the period is the
- * gap, and starting the stripe inside it keeps the words centred on their own
- * band. The same arrangement the shipped Bands look uses.
+ * A layer of its own behind the words, masked into stripes, rather than a
+ * background on them: an inline background could only ever be as wide as its
+ * own words, and what this is for is a band running the full width of the box.
+ * The mask goes on the layer and not on the text's own box — a mask takes the
+ * contents with it, so masking the box would slice the letters into bands too.
  *
- * A flat colour only. The stripe *is* the background image, so there is
- * nowhere for a gradient to go — masking one would take the words with it.
+ * The stripe's period is the line height, so it lands on the line boxes
+ * whatever the text says and however it wraps; the leading left over at each
+ * end of the period is the gap, and starting the stripe inside it keeps the
+ * words centred on their own band. Sized in `em`, which resolves against the
+ * words' own size — so the bands follow a box that has shrunk to fit.
  */
-const bandsOf = (element: TextElement): CSSProperties => {
-  if (element.plateKind !== 'color' || element.plateSpan !== 'line' || !element.plate) return {};
+const Bands = ({ element }: { element: TextElement }) => {
+  if (element.plateKind === 'none' || element.plateSpan !== 'line') return null;
 
   const period = element.lineHeight;
   const half = Math.min(element.plateGap, period * 0.8) / 2;
-  const fill = element.plate;
+  const stripe =
+    `repeating-linear-gradient(to bottom, transparent 0, transparent ${half}em, ` +
+    `#000 ${half}em, #000 ${period - half}em, transparent ${period - half}em, transparent ${period}em)`;
 
-  return {
-    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${half}em, ${fill} ${half}em, ${fill} ${period - half}em, transparent ${period - half}em, transparent ${period}em)`,
-  };
+  const paint =
+    element.plateKind === 'gradient' ? gradientCss(element.plateGradient) : element.plate;
+
+  if (!paint) return null;
+
+  return (
+    <span
+      aria-hidden
+      style={{
+        position: 'absolute',
+        inset: 0,
+        // Behind the words, which are in the normal flow above it.
+        zIndex: -1,
+        background: paint,
+        maskImage: stripe,
+        WebkitMaskImage: stripe,
+      }}
+    />
+  );
 };
 
+/**
+ * What a shape is filled with: nothing, a colour, a gradient, or a picture.
+ *
+ * The picture rides in `background-image` rather than an `<img>` so it is
+ * clipped by the shape's own corners — which is the point of offering it at
+ * all: an ellipse filled with a photograph is a round photograph, and there is
+ * no other way to get one onto a slide.
+ */
 const fillOf = (element: ShapeElement, url: string | undefined): CSSProperties => {
   if (element.fillKind === 'none') return {};
 
@@ -237,7 +273,8 @@ const Text = ({
           textAlign: element.align,
           lineHeight: element.lineHeight,
           textShadow: SHADOW[element.shadow],
-          ...bandsOf(element),
+          // So the bands, which are absolute, hang off this box.
+          position: 'relative',
           // Behind the letter rather than straddling its edge: a centred
           // stroke eats into the glyph and a thick one closes up the
           // counters, which at projector size turns an `e` into a blob.
@@ -250,10 +287,9 @@ const Text = ({
             : {}),
         }}
       >
+        <Bands element={element} />
+
         {lines.map((line, index) => (
-          // Each line is its own block, so a band lands on it rather than on
-          // the run of them: `display: block` is what a stripe needs to sit
-          // against, and `<p>` is one already.
           <p key={index} dangerouslySetInnerHTML={{ __html: line }} />
         ))}
       </div>
@@ -415,8 +451,9 @@ export const CustomSlide = ({
       }
 
       const available = share.frame.h * size.height - share.element.padding * unit * 2;
+      const floor = Math.max(1, size.height * MIN_FONT_RATIO);
 
-      fitText(node, available, { min: Math.min(MIN_FONT_SIZE, max), max });
+      fitText(node, available, { min: Math.min(floor, max), max });
 
       // Only when the shares are meant to match. A box whose translation has
       // a style of its own has been given a size on purpose, and levelling the

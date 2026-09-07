@@ -665,22 +665,28 @@ const TextStyleRows = ({
     </Row>
 
     {style.plateKind === 'color' ? (
-      <>
-        <Row label="Colour" stack>
-          <ColorField
-            label="Plate"
-            hint="What the panel is painted in"
-            value={style.plate || undefined}
-            fallback="#00000000"
-            onPick={plate => patch({ plate })}
-            onClear={() => patch({ plate: '' })}
-          />
-        </Row>
+      <Row label="Colour" stack>
+        <ColorField
+          label="Plate"
+          hint="What the panel is painted in"
+          value={style.plate || undefined}
+          fallback="#00000000"
+          onPick={plate => patch({ plate })}
+          onClear={() => patch({ plate: '' })}
+        />
+      </Row>
+    ) : null}
 
-        {/* One panel, or a band behind each line with the picture showing
-            through between them. Offered for a flat colour only: the bands are
-            drawn as a stripe, which *is* the background, so there is nowhere
-            for a gradient to go. */}
+    {style.plateKind === 'gradient' ? (
+      <GradientRows value={style.plateGradient} onChange={plateGradient => patch({ plateGradient })} />
+    ) : null}
+
+    {/* One panel, or a band behind each line with the picture showing through
+        between them. Under both kinds, not only a flat colour: a gradient
+        banded is a normal thing to want, and hiding the control left a plate
+        set to bands and then changed to a gradient with nowhere to go. */}
+    {style.plateKind !== 'none' ? (
+      <>
         <Row label="Behind">
           <Toggles
             value={style.plateSpan}
@@ -705,10 +711,6 @@ const TextStyleRows = ({
           </Row>
         ) : null}
       </>
-    ) : null}
-
-    {style.plateKind === 'gradient' ? (
-      <GradientRows value={style.plateGradient} onChange={plateGradient => patch({ plateGradient })} />
     ) : null}
 
     {style.plateKind !== 'none' ? (
