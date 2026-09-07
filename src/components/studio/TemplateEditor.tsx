@@ -39,15 +39,12 @@ import type { LocalFileMeta } from '@/lib/types';
 import { fontOptions, type CustomFont } from '@/lib/projector/fonts';
 import {
   DEFAULT_GRADIENT,
-  DEFAULT_LYRIC_TEMPLATE,
-  DEFAULT_STREAM_LYRIC_TEMPLATE,
-  DEFAULT_STREAM_TEMPLATE,
-  DEFAULT_TEMPLATE,
   filesUsedBy,
   MAX_ELEMENTS,
   newElement,
   SAMPLE_LYRICS,
   sampleShowData,
+  startingTemplate,
   textStyleOf,
   type ElementKind,
   type Fit,
@@ -58,6 +55,7 @@ import {
   type ShapeElement,
   type SlideTemplate,
   type TemplateElement,
+  type TemplateTarget,
   type TextElement,
 } from '@/lib/projector/template';
 import { DYNAMIC_THEME, LOCAL_THEME, themeSrc } from '@/lib/projector/themes';
@@ -78,7 +76,7 @@ import {
   type Guide,
   type Handle,
 } from '@/lib/studio/canvas';
-import { projectorStyle, streamLangOf } from '@/lib/studio/settings';
+import { projectorStyle, streamLangOf, templatesFor } from '@/lib/studio/settings';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { LANG_LABELS, type Align, type Lang, type ProjectorStyle } from '@/lib/types';
 
@@ -108,14 +106,8 @@ const KIND_LABELS: Record<ElementKind, string> = {
   picture: 'Picture',
 };
 
-/**
- * Which of the four templates is being drawn.
- *
- * The projector's two sit over a photograph and carry every armed language;
- * the stream's two composite over live video and carry one. Same document,
- * same editor, different ground under it.
- */
-export type TemplateTarget = 'verses' | 'lyrics' | 'stream' | 'streamLyrics';
+/** Re-exported: the kind of slide a template is drawn for. */
+export type { TemplateTarget };
 
 /** What a text box can be told to say, for each kind of slide. */
 const VERSE_TOKENS = [
@@ -1222,12 +1214,24 @@ const boxStyle = (frame: Frame, rotation = 0): React.CSSProperties => ({
  * so what is being dragged is what the room will see. That is the same reason
  * the look tiles render real slides rather than pictures of them.
  *
- * The draft is local. `settings.customTemplate` is written once, on Save,
- * because the console re-publishes the live slide on every style change and a
- * drag is a hundred of those: an operator tidying up a layout would otherwise
- * be redrawing a live projector on every frame of it.
+ * The draft is local. The library is written once, on Save, because the
+ * console re-publishes the live slide on every style change and a drag is a
+ * hundred of those: an operator tidying up a layout would otherwise be
+ * redrawing a live projector on every frame of it.
+ *
+ * `id` names which of their templates is open. It is always one that exists —
+ * the picker's plus button saves the new one before opening this — so Save is
+ * a write back to a row rather than a decision about which row to make.
  */
-export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; onClose: () => void }) => {
+export const TemplateEditor = ({
+  target,
+  id,
+  onClose,
+}: {
+  target: TemplateTarget;
+  id: string;
+  onClose: () => void;
+}) => {
   const { settings, update } = useStudio();
 
   const lyrics = target === 'lyrics' || target === 'streamLyrics';
@@ -1235,21 +1239,14 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
   // under it and its templates are the operator's other two.
   const stream = target === 'stream' || target === 'streamLyrics';
 
-  const saved = stream
-    ? lyrics
-      ? settings.customStreamLyricsTemplate
-      : settings.customStreamTemplate
-    : lyrics
-      ? settings.customLyricsTemplate
-      : settings.customTemplate;
+  const entry = templatesFor(settings, target).find(row => row.id === id);
 
-  const fallback = stream
-    ? lyrics
-      ? DEFAULT_STREAM_LYRIC_TEMPLATE
-      : DEFAULT_STREAM_TEMPLATE
-    : lyrics
-      ? DEFAULT_LYRIC_TEMPLATE
-      : DEFAULT_TEMPLATE;
+  const saved = entry?.template ?? startingTemplate(target);
+
+  // The name, which is what the tile in the picker is labelled with. Held
+  // beside the draft and written with it, so an abandoned rename is abandoned
+  // along with everything else in the dialog.
+  const [name, setName] = useState(entry?.name ?? 'Custom');
 
   /**
    * The draft, and every state it has been in.
@@ -1700,15 +1697,22 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
   });
 
   const save = () => {
-    update(
-      stream
-        ? lyrics
-          ? { customStreamLyricsTemplate: draft }
-          : { customStreamTemplate: draft }
-        : lyrics
-          ? { customLyricsTemplate: draft }
-          : { customTemplate: draft },
-    );
+    update({
+      customTemplates: settings.customTemplates.map(row =>
+        row.id === id ? { ...row, name: name.trim() || 'Custom', template: draft } : row,
+      ),
+    });
+    onClose();
+  };
+
+  /**
+   * Drop it from the library. A look still pointing at it is not touched here:
+   * `fromRow` reads a look naming a template that has gone as the shipped one,
+   * which is the same fallback a deleted font gets and one place rather than
+   * four.
+   */
+  const discard = () => {
+    update({ customTemplates: settings.customTemplates.filter(row => row.id !== id) });
     onClose();
   };
 
@@ -1722,17 +1726,32 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
         onClick={event => event.stopPropagation()}
       >
         <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-studio-border px-4">
-          <h2 className="min-w-0 truncate text-sm font-semibold text-studio-text">
-            {stream
-              ? lyrics
-                ? 'Custom song strap'
-                : 'Custom strap'
-              : lyrics
-                ? 'Custom song slide'
-                : 'Custom slide'}
-          </h2>
+          {/* The name, edited where the title used to be printed: an operator
+              with three of these needs to tell them apart in the grid, and the
+              only place that name can come from is here. */}
+          <input
+            value={name}
+            onChange={event => setName(event.target.value)}
+            aria-label={
+              stream
+                ? lyrics
+                  ? 'The name of this song strap'
+                  : 'The name of this strap'
+                : lyrics
+                  ? 'The name of this song slide'
+                  : 'The name of this slide'
+            }
+            placeholder="Custom"
+            className="min-w-0 flex-1 rounded-studio bg-transparent px-1.5 py-1 text-sm font-semibold text-studio-text
+              placeholder:text-studio-faint hover:bg-studio-surface focus:bg-studio-surface focus:outline-none
+              focus-visible:ring-2 focus-visible:ring-studio-accent/40"
+          />
 
           <div className="flex items-center gap-2">
+            <IconButton label="Delete this layout" tone="danger" onClick={discard}>
+              <HiOutlineTrash className="text-base" />
+            </IconButton>
+
             <div className="flex items-center gap-0.5 rounded-studio border border-studio-border bg-studio-surface p-0.5">
               <IconButton label="Undo (⌘Z)" disabled={!canUndo(history)} onClick={() => step(undo)}>
                 <Undo2 className="size-4" />
@@ -2065,7 +2084,7 @@ export const TemplateEditor = ({ target, onClose }: { target: TemplateTarget; on
           <button
             type="button"
             onClick={() => {
-              act(() => fallback);
+              act(() => startingTemplate(target));
               setSelected(null);
             }}
             className="rounded-studio border border-studio-border px-3 py-1.5 text-xs font-medium text-studio-muted

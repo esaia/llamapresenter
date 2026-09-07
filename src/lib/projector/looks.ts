@@ -31,15 +31,45 @@ export interface Look {
   selfFit?: boolean;
 }
 
-/** The value `settings.projectorLook` carries when the custom template is on. */
+/**
+ * What a look setting carries when one of the operator's own templates is on.
+ *
+ * `custom:<id>` names which: the library holds as many as they care to draw,
+ * so the setting has to say more than "the custom one". A bare `custom` is a
+ * row written before the library existed and still reads — `templateOf` takes
+ * it as the first template of its kind, which is the only one such a row had.
+ *
+ * Same shape as a custom font's `custom:<id>`, and for the same reason: the
+ * value has to survive in a column that knows nothing about either list.
+ */
 export const CUSTOM_LOOK = 'custom';
 
+export const customLook = (id: string) => `${CUSTOM_LOOK}:${id}`;
+
+export const isCustomLook = (value: string | undefined): boolean =>
+  value === CUSTOM_LOOK || (value ?? '').startsWith(`${CUSTOM_LOOK}:`);
+
+/** The template a look names, or '' for a bare `custom` and anything else. */
+export const templateIdOf = (value: string | undefined): string =>
+  (value ?? '').startsWith(`${CUSTOM_LOOK}:`) ? value!.slice(CUSTOM_LOOK.length + 1) : '';
+
 /**
- * How a song slide is sized. Scaling to fit is what makes one line fill the
+ * How a slide is sized. Scaling to fit is what makes one line fill the
  * screen and six lines still fit on it; it is also what makes the words breathe
  * in and out across a verse, which is exactly what some rooms do not want. The
  * answer to that is one steady size — the operator's own, see `lyricsSize` —
  * and there is no third useful answer between the two.
+ *
+ * The size is read in both modes, as it is in the template editor: fitting
+ * takes it as a ceiling — *this large, and smaller when the words need it* —
+ * and holding pins the text to it. One number, one slider, live in both modes,
+ * rather than a control that greys out under the mode most operators are on.
+ *
+ * And it is the ceiling, not a second one under the look's: a slider whose top
+ * half moved nothing — because `divisor` had already capped a verse at a
+ * thirteenth of the screen — is a control that lies. What the look decides is
+ * where the block sits and how much height it may fill; how large the words may
+ * grow is the operator's, and this is where they say it.
  */
 export type ScaleMode = 'both' | 'none';
 
@@ -50,14 +80,23 @@ export const SCALE_MODES: { value: ScaleMode; label: string }[] = [
 
 /** The chosen size, as a percentage of the screen height. */
 export const MIN_TEXT_SIZE = 4;
-export const MAX_TEXT_SIZE = 24;
-export const DEFAULT_TEXT_SIZE = 9;
+export const MAX_TEXT_SIZE = 30;
+
+/**
+ * Where an operator who has never touched the slider sits, and why these two
+ * numbers: they are the ceilings the fit was already running into on a 1080p
+ * projector — 200px for a song and 64px for a verse — as a share of that
+ * screen. Held as a share, they now mean the same thing on a larger one, which
+ * the pixel caps never did.
+ */
+export const DEFAULT_TEXT_SIZE = 18;
+export const DEFAULT_VERSE_TEXT_SIZE = 6;
 
 export const asScaleMode = (value: unknown): ScaleMode =>
   SCALE_MODES.some(mode => mode.value === value) ? (value as ScaleMode) : 'both';
 
-export const clampTextSize = (value: number): number =>
-  Math.min(MAX_TEXT_SIZE, Math.max(MIN_TEXT_SIZE, Math.round(value) || DEFAULT_TEXT_SIZE));
+export const clampTextSize = (value: number, fallback = DEFAULT_TEXT_SIZE): number =>
+  Math.min(MAX_TEXT_SIZE, Math.max(MIN_TEXT_SIZE, Math.round(value) || fallback));
 
 /** Today's fit: a verse may fill most of the screen, capped at height/13. */
 const VERSE_FIT = { divisor: 13, heightRatio: 0.86 };
@@ -107,8 +146,11 @@ export const DEFAULT_LYRIC_LOOK = 'fill';
 export const lookOf = (value: string | undefined, lyrics: boolean): Look => {
   const looks = lyrics ? LYRIC_LOOKS : VERSE_LOOKS;
   const fallback = lyrics ? DEFAULT_LYRIC_LOOK : DEFAULT_VERSE_LOOK;
+  // Every template in the library is drawn by the one custom row: which of
+  // them is a question about the template, not about the fit.
+  const wanted = isCustomLook(value) ? CUSTOM_LOOK : value;
 
-  return looks.find(look => look.value === value) ?? looks.find(look => look.value === fallback)!;
+  return looks.find(look => look.value === wanted) ?? looks.find(look => look.value === fallback)!;
 };
 
 /**
@@ -127,15 +169,20 @@ export const fitTo = (
   const ceiling = Math.max(min, Math.min(cap, Math.round(height / look.divisor)));
   const available = height * look.heightRatio;
 
-  // `both` is the fit this app has always run: anywhere between the floor and
-  // the ceiling, whatever the slide needs.
-  if (scale === 'both' || !size) return { available, min, max: ceiling };
-
   // The operator's own size, held as a share of the screen so it means the same
-  // thing on a projector, in the preview panel and in a tile. The search has
-  // nowhere to go: a slide too long for it overflows, which is what "no
-  // scaling" means everywhere else it is offered.
-  const chosen = Math.max(min, Math.round((height * size) / 100));
+  // thing on a projector, in the preview panel and in a tile.
+  const chosen = size ? Math.max(min, Math.round((height * size) / 100)) : 0;
 
+  // Fitting: anywhere between the floor and the operator's size, whatever the
+  // slide needs. Their number stands in for the look's own ceiling rather than
+  // sitting under it, so raising it raises the words — and it is deliberately
+  // not held to `cap`, which is a pixel count and means nothing on a screen
+  // twice the size. The look's ceiling is what a slide with no size falls to.
+  if (scale === 'both') return { available, min, max: chosen || ceiling };
+
+  if (!chosen) return { available, min, max: ceiling };
+
+  // Holding: the search has nowhere to go, so a slide too long for the size
+  // overflows — which is what "no scaling" means everywhere else it is offered.
   return { available, min: chosen, max: chosen };
 };

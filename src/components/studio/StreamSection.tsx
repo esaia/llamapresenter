@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
 import { LowerThirdStylePicker } from './LowerThirdStylePicker';
-import { CUSTOM_LOOK } from '@/lib/projector/looks';
+import { isCustomLook } from '@/lib/projector/looks';
 
 import { Field, TypeRow } from './StyleSection';
 
@@ -37,7 +37,7 @@ export const StreamSection = () => {
 
       {/* Both straps drawn from a template of their own place everything
           themselves, so top and bottom has nothing left to decide. */}
-      {settings.lowerThirdVariant === CUSTOM_LOOK && settings.lyricsVariant === CUSTOM_LOOK ? null : (
+      {isCustomLook(settings.lowerThirdVariant) && isCustomLook(settings.lyricsVariant) ? null : (
       <Field label="Position on screen">
         <div className="grid grid-cols-2 gap-2">
           {POSITIONS.map(({ value, label, Icon }) => (
@@ -69,7 +69,7 @@ export const StreamSection = () => {
       {/* A custom strap names a typeface and an alignment on every box it has,
           so one setting for the whole strap has nothing left to say. */}
       <div className="grid gap-4 sm:grid-cols-2">
-        {settings.lowerThirdVariant === CUSTOM_LOOK ? null : (
+        {isCustomLook(settings.lowerThirdVariant) ? null : (
           <TypeRow
             label="Verse type"
             hint="Typeface and alignment for Bible slides on the stream."
@@ -81,7 +81,7 @@ export const StreamSection = () => {
           />
         )}
 
-        {settings.lyricsVariant === CUSTOM_LOOK ? null : (
+        {isCustomLook(settings.lyricsVariant) ? null : (
           <TypeRow
             label="Lyric type"
             hint="Song slides on the stream get their own look."

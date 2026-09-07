@@ -320,8 +320,14 @@ const useFrame = (ref: RefObject<HTMLDivElement | null>) => {
     if (!node) return;
 
     const measure = () => {
-      const box = node.getBoundingClientRect();
-      const width = Math.min(box.width, box.height * FRAME_RATIO);
+      // The laid-out box, not the painted one. A look tile draws this frame at
+      // 640x360 and scales the whole thing down with a transform; a rectangle
+      // read off the screen would be that scaled size — and, worse, would be
+      // zero on the first pass, because the tile has not measured itself yet
+      // and `ResizeObserver` never fires again for a transform. Measuring the
+      // layout makes the drawing the same at any scale, which is the point of
+      // a template held in fractions.
+      const width = Math.min(node.offsetWidth, node.offsetHeight * FRAME_RATIO);
       const next = { width, height: width / FRAME_RATIO };
 
       setSize(current => (current.width === next.width && current.height === next.height ? current : next));

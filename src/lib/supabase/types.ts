@@ -92,6 +92,9 @@ export interface Database {
         custom_lyrics_template: Json;
         custom_stream_template: Json;
         custom_stream_lyrics_template: Json;
+        custom_templates: Json;
+        verse_scale: string;
+        verse_size: number;
         lyrics_scale: string;
         lyrics_size: number;
         transition_ms: number;

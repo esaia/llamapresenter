@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { CUSTOM_LOOK, DEFAULT_LYRIC_LOOK, DEFAULT_VERSE_LOOK, LYRIC_LOOKS, VERSE_LOOKS, fitTo, lookOf } from './looks';
+import {
+  CUSTOM_LOOK,
+  customLook,
+  DEFAULT_LYRIC_LOOK,
+  DEFAULT_VERSE_LOOK,
+  LYRIC_LOOKS,
+  isCustomLook,
+  MAX_TEXT_SIZE,
+  templateIdOf,
+  VERSE_LOOKS,
+  fitTo,
+  lookOf,
+} from './looks';
 
 describe('lookOf', () => {
   it('finds a stored look', () => {
@@ -31,11 +43,25 @@ describe('lookOf', () => {
 describe('fitTo', () => {
   const look = lookOf('fill', true);
 
-  it('searches the whole band when the size is scaled both ways', () => {
+  it('takes the size as a ceiling while it is fitting', () => {
     const { min, max } = fitTo(look, 1000, { min: 10, scale: 'both', size: 9 });
 
     expect(min).toBe(10);
-    expect(max).toBe(250);
+    expect(max).toBe(90);
+  });
+
+  it('lets the size raise the look past its own ceiling', () => {
+    // height/4 for this look, so anything above 25% is the operator's alone.
+    expect(fitTo(look, 1000, { min: 10, scale: 'both', size: MAX_TEXT_SIZE }).max).toBe(300);
+  });
+
+  it('falls back to the look when no size has been chosen', () => {
+    expect(fitTo(look, 1000, { min: 10, scale: 'both', size: 0 }).max).toBe(250);
+  });
+
+  it('ignores the pixel cap once a size is set, so a bigger screen scales', () => {
+    expect(fitTo(look, 1000, { cap: 200, min: 10, scale: 'both', size: 0 }).max).toBe(200);
+    expect(fitTo(look, 1000, { cap: 200, min: 10, scale: 'both', size: 25 }).max).toBe(250);
   });
 
   it('pins the size when nothing is scaled', () => {
@@ -47,6 +73,29 @@ describe('fitTo', () => {
 
   it('falls back to fitting when no size has been chosen', () => {
     expect(fitTo(look, 1000, { min: 10, scale: 'none', size: 0 }).max).toBe(250);
+  });
+});
+
+describe('a custom look', () => {
+  it('names which of the operator\'s templates is on', () => {
+    expect(customLook('abc')).toBe('custom:abc');
+    expect(templateIdOf(customLook('abc'))).toBe('abc');
+    expect(isCustomLook(customLook('abc'))).toBe(true);
+  });
+
+  it('reads a bare custom, which is a row written before the library', () => {
+    expect(isCustomLook(CUSTOM_LOOK)).toBe(true);
+    expect(templateIdOf(CUSTOM_LOOK)).toBe('');
+  });
+
+  it('is not a shipped look, however it is spelled', () => {
+    expect(isCustomLook('plate')).toBe(false);
+    expect(isCustomLook(undefined)).toBe(false);
+  });
+
+  it('fits like the custom row whichever template it names', () => {
+    expect(lookOf(customLook('abc'), false).selfFit).toBe(true);
+    expect(lookOf(customLook('abc'), true).selfFit).toBe(true);
   });
 });
 

@@ -2,22 +2,26 @@
 
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { HiOutlinePencil } from 'react-icons/hi';
+import { Plus } from 'lucide-react';
 
 import { Slide } from '@/components/projector/Slide';
 import { useLocalFiles } from '@/components/projector/useLocalBackground';
 import { IconButton } from '@/components/ui/IconButton';
 import { cn } from '@/lib/cn';
 import { fitText } from '@/lib/projector/fitText';
-import { CUSTOM_LOOK, fitTo, LYRIC_LOOKS, VERSE_LOOKS, type Look } from '@/lib/projector/looks';
-import { filesUsedBy, SAMPLE_VERSE } from '@/lib/projector/template';
+import { CUSTOM_LOOK, customLook, fitTo, lookOf, LYRIC_LOOKS, VERSE_LOOKS, type Look } from '@/lib/projector/looks';
+import { filesUsedBy, SAMPLE_VERSE, startingTemplate, type SlideTemplate } from '@/lib/projector/template';
 import { DYNAMIC_THEME, LOCAL_THEME, themeSrc } from '@/lib/projector/themes';
-import { projectorStyle } from '@/lib/studio/settings';
+import { newTemplateName, projectorStyle, templatesFor } from '@/lib/studio/settings';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { REQUIRED_LANG, type ProjectorStyle, type ShowData } from '@/lib/types';
 
 import { TemplateEditor } from './TemplateEditor';
 
-const TARGETS = [
+/** Which kind of slide the grid — and everything under it — is about. */
+export type LookTarget = 'verses' | 'lyrics';
+
+const TARGETS: { id: LookTarget; label: string }[] = [
   { id: 'verses', label: 'Verses' },
   { id: 'lyrics', label: 'Lyrics' },
 ];
@@ -73,8 +77,8 @@ const LookTile = ({
     if (look.selfFit) return;
 
     const { available, min, max } = fitTo(look, FRAME_H, {
-      scale: showData.lyrics ? style.lyricsScale : 'both',
-      size: style.lyricsSize,
+      scale: showData.lyrics ? style.lyricsScale : style.verseScale,
+      size: showData.lyrics ? style.lyricsSize : style.verseSize,
     });
 
     fitText(slideRef.current, available, { min, max });
@@ -102,15 +106,22 @@ const LookTile = ({
  * Verses and song slides keep separate looks, switched by the tabs above the
  * grid rather than by a second identical grid, exactly as the lower third's
  * picker does.
+ *
+ * The tab itself belongs to the panel around it: the sizing and the type below
+ * the grid are as much about one kind of slide as the tiles are, and they all
+ * turn together.
  */
-export const ProjectorLookPicker = () => {
-  const { settings, showData, update } = useStudio();
+export const ProjectorLookPicker = ({
+  target,
+  onTarget,
+}: {
+  target: LookTarget;
+  onTarget: (target: LookTarget) => void;
+}) => {
+  const { settings, update } = useStudio();
 
-  // Opens on whichever kind of slide is live. An operator who hits the pencil
-  // over a song is there about the song, and landing on the verse grid means
-  // finding the tab before finding the tile.
-  const [target, setTarget] = useState(showData?.lyrics ? 'lyrics' : 'verses');
-  const [editing, setEditing] = useState(false);
+  // Which of the operator's own layouts is open on the canvas, if any.
+  const [editing, setEditing] = useState('');
 
   const lyrics = target === 'lyrics';
   const looks = lyrics ? LYRIC_LOOKS : VERSE_LOOKS;
@@ -132,24 +143,56 @@ export const ProjectorLookPicker = () => {
   // three-language operator is not judging a look through three stacked blocks.
   const style: ProjectorStyle = {
     ...projectorStyle(settings),
-    // The custom tile draws the saved template whichever look is currently on,
-    // so an operator can see what they built before switching to it.
-    template: settings.customTemplate,
-    lyricsTemplate: settings.customLyricsTemplate,
     fonts: settings.customFonts,
     order: [REQUIRED_LANG],
     enabled: { [REQUIRED_LANG]: true },
   };
 
+  /**
+   * The grid: the shipped looks, then the operator's own.
+   *
+   * `custom` is dropped from the shipped row — it was one tile standing for
+   * one drawing, and it is now as many tiles as they have drawn, each labelled
+   * with its own name. A tile carries its template so the sample is that
+   * layout whichever look is currently on, which is how an operator sees what
+   * they built before switching to it.
+   */
+  const mine = templatesFor(settings, target);
+  const custom = lookOf(CUSTOM_LOOK, lyrics);
+
+  const tiles: { value: string; look: Look; label: string; template?: SlideTemplate }[] = [
+    ...looks.filter(look => look.value !== CUSTOM_LOOK).map(look => ({ value: look.value, look, label: look.label })),
+    ...mine.map(row => ({ value: customLook(row.id), look: custom, label: row.name, template: row.template })),
+  ];
+
   // A picture placed in a template is in this browser's IndexedDB, so unlike
   // the background it can be minted here.
   const assets = useLocalFiles(
     useMemo(
-      () => [...filesUsedBy(settings.customTemplate), ...filesUsedBy(settings.customLyricsTemplate)],
-      [settings.customLyricsTemplate, settings.customTemplate],
+      () => settings.customTemplates.flatMap(row => filesUsedBy(row.template)),
+      [settings.customTemplates],
     ),
     null,
   );
+
+  /**
+   * Draw another one. Saved before the canvas opens rather than after it
+   * closes: the editor writes back to a row, and an operator who draws a slide
+   * and then closes the dialog without saving has lost nothing but an empty
+   * name in the grid.
+   */
+  const add = () => {
+    const row = {
+      id: crypto.randomUUID(),
+      target,
+      name: newTemplateName(settings, target),
+      template: startingTemplate(target),
+    };
+
+    update({ customTemplates: [...settings.customTemplates, row] });
+    select(customLook(row.id));
+    setEditing(row.id);
+  };
 
   return (
     <div>
@@ -165,7 +208,7 @@ export const ProjectorLookPicker = () => {
               key={id}
               type="button"
               aria-current={target === id ? 'true' : undefined}
-              onClick={() => setTarget(id)}
+              onClick={() => onTarget(id)}
               className={cn(
                 'h-6 rounded-[4px] px-2.5 text-[11px] font-medium transition-colors duration-150',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
@@ -185,18 +228,19 @@ export const ProjectorLookPicker = () => {
       </p>
 
       <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {looks.map(look => (
-          // The custom tile carries a second control, and a button cannot hold
-          // another one — so the tile is a box with the two side by side.
-          <div key={look.value} className="relative">
+        {tiles.map(({ value, look, label, template }) => (
+          // One of the operator's own carries a second control, and a button
+          // cannot hold another one — so the tile is a box with the two side
+          // by side.
+          <div key={value} className="relative">
             <button
               type="button"
-              aria-pressed={selected === look.value}
-              onClick={() => select(look.value)}
+              aria-pressed={selected === value}
+              onClick={() => select(value)}
               className={cn(
                 'block w-full overflow-hidden rounded-studio border text-left transition-colors duration-150',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
-                selected === look.value
+                selected === value
                   ? 'border-studio-accent ring-1 ring-studio-accent'
                   : 'border-studio-border hover:border-studio-faint',
               )}
@@ -204,7 +248,12 @@ export const ProjectorLookPicker = () => {
               <LookTile
                 look={look}
                 showData={lyrics ? SAMPLE_LYRIC : SAMPLE_VERSE}
-                style={{ ...style, look: look.value, lyricsLook: look.value }}
+                style={{
+                  ...style,
+                  look: value,
+                  lyricsLook: value,
+                  ...(template ? (lyrics ? { lyricsTemplate: template } : { template }) : {}),
+                }}
                 background={background}
                 assets={assets}
               />
@@ -212,18 +261,18 @@ export const ProjectorLookPicker = () => {
               <span
                 className={cn(
                   'block truncate px-1.5 py-1 text-[11px] font-medium',
-                  selected === look.value ? 'bg-studio-accent text-studio-onaccent' : 'bg-studio-bg text-studio-muted',
+                  selected === value ? 'bg-studio-accent text-studio-onaccent' : 'bg-studio-bg text-studio-muted',
                 )}
               >
-                {look.label}
+                {label}
               </span>
             </button>
 
-            {look.value === CUSTOM_LOOK ? (
+            {template ? (
               <IconButton
-                label="Edit the custom slide"
+                label={`Edit ${label}`}
                 tone="onDark"
-                onClick={() => setEditing(true)}
+                onClick={() => setEditing(value.slice(CUSTOM_LOOK.length + 1))}
                 className="absolute top-1 right-1 size-6 bg-black/55 backdrop-blur-sm"
               >
                 <HiOutlinePencil className="text-xs" />
@@ -231,9 +280,33 @@ export const ProjectorLookPicker = () => {
             ) : null}
           </div>
         ))}
+
+        {/* Its own tile at the end of the grid rather than a button beside the
+            heading: what it makes is another one of these, and it belongs
+            where they are. */}
+        <button
+          type="button"
+          onClick={add}
+          className={cn(
+            'block w-full overflow-hidden rounded-studio border border-dashed border-studio-border text-left',
+            'text-studio-muted transition-colors duration-150 hover:border-studio-faint hover:text-studio-text',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
+          )}
+        >
+          {/* Built like a tile rather than styled like one: the same picture
+              above the same strip of label, so it stands exactly as tall as
+              the looks beside it. */}
+          <div className="flex aspect-video w-full items-center justify-center">
+            <Plus className="size-5" />
+          </div>
+
+          <span className="block truncate bg-studio-bg px-1.5 py-1 text-[11px] font-medium">New layout</span>
+        </button>
       </div>
 
-      {editing ? <TemplateEditor target={lyrics ? 'lyrics' : 'verses'} onClose={() => setEditing(false)} /> : null}
+      {editing ? (
+        <TemplateEditor target={target} id={editing} onClose={() => setEditing('')} />
+      ) : null}
     </div>
   );
 };

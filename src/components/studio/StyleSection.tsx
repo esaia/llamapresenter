@@ -1,6 +1,6 @@
 'use client';
 
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { MdFormatAlignCenter, MdFormatAlignLeft, MdFormatAlignRight } from 'react-icons/md';
 
 import { Select } from '@/components/ui/Select';
@@ -9,15 +9,16 @@ import { fontOptions, type CustomFont } from '@/lib/projector/fonts';
 import {
   asScaleMode,
   clampTextSize,
-  CUSTOM_LOOK,
+  isCustomLook,
   MAX_TEXT_SIZE,
   MIN_TEXT_SIZE,
   SCALE_MODES,
+  type ScaleMode,
 } from '@/lib/projector/looks';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import type { Align } from '@/lib/types';
 
-import { ProjectorLookPicker } from './ProjectorLookPicker';
+import { ProjectorLookPicker, type LookTarget } from './ProjectorLookPicker';
 
 const ALIGNMENTS = [
   { value: 'left' as Align, label: 'Align left', Icon: MdFormatAlignLeft },
@@ -99,90 +100,143 @@ export const TypeRow = ({
 );
 
 /**
+ * How one kind of slide is sized: fitted, or held at a share of the screen.
+ *
+ * Verses and songs each have a pair of their own, because they are fitted to
+ * different ceilings — a song may fill a quarter of the screen height, a verse
+ * a thirteenth — and a single held size could not mean both.
+ */
+const TextSizeField = ({
+  label,
+  hint,
+  scale,
+  setScale,
+  size,
+  setSize,
+}: {
+  label: string;
+  hint: string;
+  scale: ScaleMode;
+  setScale: (value: ScaleMode) => void;
+  size: number;
+  setSize: (value: number) => void;
+}) => (
+  <Field label={label} hint={hint}>
+    <div className="flex items-center gap-1.5">
+      <Select
+        className="min-w-0 flex-1"
+        value={scale}
+        onChange={value => setScale(asScaleMode(value))}
+        options={SCALE_MODES}
+      />
+
+      {/* Live in both modes, as the same control is in the template editor:
+          fitting reads it as a ceiling, holding pins the text to it. */}
+      <div className="flex shrink-0 items-center gap-2">
+        <input
+          type="range"
+          min={MIN_TEXT_SIZE}
+          max={MAX_TEXT_SIZE}
+          step={1}
+          value={size}
+          aria-label={
+            scale === 'both'
+              ? `${label}, the largest share of the screen height the words may take`
+              : `${label}, as a share of the screen height`
+          }
+          onChange={event => setSize(clampTextSize(Number(event.target.value)))}
+          style={
+            {
+              '--range-fill': `${((size - MIN_TEXT_SIZE) / (MAX_TEXT_SIZE - MIN_TEXT_SIZE)) * 100}%`,
+            } as CSSProperties
+          }
+          className="studio-range h-1.5 w-28 cursor-pointer appearance-none rounded-full bg-studio-border"
+        />
+
+        <span className="w-12 shrink-0 text-right text-xs text-studio-muted tabular-nums">
+          {`${scale === 'both' ? '≤ ' : ''}${size}%`}
+        </span>
+      </div>
+    </div>
+  </Field>
+);
+
+/**
  * The projector panel of the settings dialog: the background behind the words,
  * the typeface they are set in, and how one slide gives way to the next.
+ *
+ * Everything under the layout grid belongs to the tab above it. A verse and a
+ * song keep separate looks, separate type and separate sizing, and showing
+ * both sets at once meant an operator who had come about the song reading four
+ * controls to find the two that moved — and a lyrics choice that hid a control
+ * while the Verses tab was open, which reads as the panel losing it.
  */
 export const StyleSection = () => {
-  const { settings, update } = useStudio();
+  const { settings, showData, update } = useStudio();
+
+  // Opens on whichever kind of slide is live, and the grid, the sizing and the
+  // type below it all follow it. Held here rather than in the picker because
+  // it is no longer only the picker's.
+  const [target, setTarget] = useState<LookTarget>(showData?.lyrics ? 'lyrics' : 'verses');
+
+  const lyrics = target === 'lyrics';
+  const custom = isCustomLook(lyrics ? settings.projectorLyricsLook : settings.projectorLook);
 
   return (
     <div className="space-y-6">
-      <ProjectorLookPicker />
+      <ProjectorLookPicker target={target} onTarget={setTarget} />
 
-      {/* A custom song slide sizes each of its own boxes, and answers this in
-          the same two words — so under that look the control is dead UI. */}
-      {settings.projectorLyricsLook === CUSTOM_LOOK ? null : (
-        <Field
-          label="Song text size"
-          hint="Songs are scaled to fit the screen by default. Hold the size instead if the words
-            growing and shrinking between slides is distracting."
-        >
-          <div className="flex items-center gap-1.5">
-            <Select
-              className="min-w-0 flex-1"
-              value={settings.lyricsScale}
-              onChange={value => update({ lyricsScale: asScaleMode(value) })}
-              options={SCALE_MODES}
+      {/* A custom slide sizes and sets each of its own boxes, and answers both
+          of these in the template — so under that look they are dead UI. */}
+      {custom ? null : (
+        <>
+          {lyrics ? (
+            <TextSizeField
+              label="Song text size"
+              hint="As large as this, and smaller when the words need it. Hold the size instead if
+                song text growing and shrinking between slides is distracting."
+              scale={settings.lyricsScale}
+              setScale={value => update({ lyricsScale: value })}
+              size={settings.lyricsSize}
+              setSize={value => update({ lyricsSize: value })}
             />
+          ) : (
+            <TextSizeField
+              label="Verse text size"
+              hint="As large as this, and smaller when the words need it — a passage never spills.
+                Hold the size instead if the words changing size between passages is distracting."
+              scale={settings.verseScale}
+              setScale={value => update({ verseScale: value })}
+              size={settings.verseSize}
+              setSize={value => update({ verseSize: value })}
+            />
+          )}
 
-            {/* Meaningless while the fit is free to pick any size, so it says so
-                rather than sitting there inviting a drag that changes nothing. */}
-            <div className="flex shrink-0 items-center gap-2">
-              <input
-                type="range"
-                min={MIN_TEXT_SIZE}
-                max={MAX_TEXT_SIZE}
-                step={1}
-                value={settings.lyricsSize}
-                disabled={settings.lyricsScale === 'both'}
-                aria-label="Song text size, as a share of the screen height"
-                onChange={event => update({ lyricsSize: clampTextSize(Number(event.target.value)) })}
-                style={
-                  {
-                    '--range-fill': `${((settings.lyricsSize - MIN_TEXT_SIZE) / (MAX_TEXT_SIZE - MIN_TEXT_SIZE)) * 100}%`,
-                  } as CSSProperties
-                }
-                className="studio-range h-1.5 w-28 cursor-pointer appearance-none rounded-full bg-studio-border
-                  disabled:cursor-not-allowed disabled:opacity-40"
+          <div className="grid gap-4 sm:grid-cols-2">
+            {lyrics ? (
+              <TypeRow
+                label="Lyric type"
+                hint="Typeface and alignment for song slides."
+                font={settings.lyricsFont}
+                fonts={settings.customFonts}
+                setFont={value => update({ lyricsFont: value })}
+                align={settings.lyricsAlign}
+                setAlign={value => update({ lyricsAlign: value })}
               />
-
-              <span className="w-8 shrink-0 text-right text-xs text-studio-muted tabular-nums">
-                {settings.lyricsScale === 'both' ? 'Auto' : `${settings.lyricsSize}%`}
-              </span>
-            </div>
+            ) : (
+              <TypeRow
+                label="Verse type"
+                hint="Typeface and alignment for Bible slides."
+                font={settings.font}
+                fonts={settings.customFonts}
+                setFont={value => update({ font: value })}
+                align={settings.align}
+                setAlign={value => update({ align: value })}
+              />
+            )}
           </div>
-        </Field>
+        </>
       )}
-
-      {/* A custom slide names a typeface and an alignment on every box it has,
-          so one setting for the whole slide has nothing left to say — and a
-          picker that still moved would be a control the wall ignores. */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        {settings.projectorLook === CUSTOM_LOOK ? null : (
-          <TypeRow
-            label="Verse type"
-            hint="Typeface and alignment for Bible slides."
-            font={settings.font}
-            fonts={settings.customFonts}
-            setFont={value => update({ font: value })}
-            align={settings.align}
-            setAlign={value => update({ align: value })}
-          />
-        )}
-
-        {settings.projectorLyricsLook === CUSTOM_LOOK ? null : (
-          <TypeRow
-            label="Lyric type"
-            hint="Song slides get their own look."
-            font={settings.lyricsFont}
-            fonts={settings.customFonts}
-            setFont={value => update({ lyricsFont: value })}
-            align={settings.lyricsAlign}
-            setAlign={value => update({ lyricsAlign: value })}
-          />
-        )}
-      </div>
-
     </div>
   );
 };

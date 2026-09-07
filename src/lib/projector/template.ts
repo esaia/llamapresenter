@@ -639,6 +639,28 @@ const asElement = (value: unknown, index: number): TemplateElement | null => {
  * colour re-parsed, because this is one jsonb column and the console is not
  * the only thing that could ever have written it.
  */
+/**
+ * Which of the four kinds of slide a template is drawn for.
+ *
+ * The projector's two sit over a photograph and carry every armed language;
+ * the stream's two composite over live video and carry one. Same document,
+ * same editor, different ground under it — and an operator's library is kept
+ * per kind, because a strap is no use on a wall.
+ */
+export type TemplateTarget = 'verses' | 'lyrics' | 'stream' | 'streamLyrics';
+
+export const TEMPLATE_TARGETS: TemplateTarget[] = ['verses', 'lyrics', 'stream', 'streamLyrics'];
+
+/** What a new template in that kind starts out as. */
+export const startingTemplate = (target: TemplateTarget): SlideTemplate =>
+  target === 'streamLyrics'
+    ? DEFAULT_STREAM_LYRIC_TEMPLATE
+    : target === 'stream'
+      ? DEFAULT_STREAM_TEMPLATE
+      : target === 'lyrics'
+        ? DEFAULT_LYRIC_TEMPLATE
+        : DEFAULT_TEMPLATE;
+
 export const asTemplate = (value: unknown, fallback: SlideTemplate = DEFAULT_TEMPLATE): SlideTemplate => {
   const raw = (value ?? {}) as { elements?: unknown };
 

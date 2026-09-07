@@ -1,6 +1,6 @@
 import { Slide } from '@/components/projector/Slide';
 import { DEFAULT_FONT } from '@/lib/projector/fonts';
-import { DEFAULT_LYRIC_LOOK, DEFAULT_TEXT_SIZE, DEFAULT_VERSE_LOOK } from '@/lib/projector/looks';
+import { DEFAULT_LYRIC_LOOK, DEFAULT_TEXT_SIZE, DEFAULT_VERSE_LOOK, DEFAULT_VERSE_TEXT_SIZE } from '@/lib/projector/looks';
 import type { ProjectorStyle, ShowData } from '@/lib/types';
 
 /**
@@ -33,6 +33,8 @@ const STYLE: ProjectorStyle = {
   template: null,
   lyricsTemplate: null,
   versions: {},
+  verseScale: 'both',
+  verseSize: DEFAULT_VERSE_TEXT_SIZE,
   lyricsScale: 'both',
   lyricsSize: DEFAULT_TEXT_SIZE,
   order: ['eng', 'geo'],

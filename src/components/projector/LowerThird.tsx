@@ -11,13 +11,14 @@ import { lyricFor } from '@/lib/lyrics/langs';
 import { fitText, refitOnFontLoad } from '@/lib/projector/fitText';
 import { DEFAULT_FONT, fontStyleOf } from '@/lib/projector/fonts';
 import { keepSame, sameVerse } from '@/lib/projector/keepSame';
-import { CUSTOM_LOOK } from '@/lib/projector/looks';
+import { isCustomLook } from '@/lib/projector/looks';
 import { filesUsedBy } from '@/lib/projector/template';
 import { apiBookName } from '@/lib/bible/passage';
 import { asTimerState, withSkew as withTimerSkew, type TimerState } from '@/lib/timer/model';
 import { emptyShowData, LANGS, REQUIRED_LANG, type Align, type Lang, type ShowData, type StreamStyle } from '@/lib/types';
 
 import { CustomSlide } from './CustomSlide';
+import { OutputChrome } from './OutputChrome';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
 import { useLocalFiles } from './useLocalBackground';
@@ -378,7 +379,7 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
   // it: a template says where everything sits, so the bar's position, its
   // colourway and its single fit have nothing left to decide.
   const template = lyrics ? style.lyricsTemplate : style.template;
-  const custom = look === CUSTOM_LOOK && template ? template : null;
+  const custom = isCustomLook(look) && template ? template : null;
 
   const assets = useLocalFiles(useMemo(() => filesUsedBy(custom), [custom]), transport);
 
@@ -394,79 +395,81 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
   const timerShowing = !blanked && !cardShowing && timer.onStream;
 
   return (
-    <div className={`lower3rd-stage ${type.className}`} style={type.style ? { fontFamily: type.style } : undefined}>
-      {card ? <NameCard run={card} visible={cardShowing} /> : null}
+    <OutputChrome kind="lower3rd" hiddenAtRest>
+      <div className={`lower3rd-stage ${type.className}`} style={type.style ? { fontFamily: type.style } : undefined}>
+        {card ? <NameCard run={card} visible={cardShowing} /> : null}
 
-      {timerShowing ? (
-        <div className="lower3rd-timer">
-          {/* No wall clock, as on the projector: the room and the people
-              watching it are being given a count, not a clock. */}
-          <TimerScreen state={timer} showClock={false} />
-        </div>
-      ) : null}
+        {timerShowing ? (
+          <div className="lower3rd-timer">
+            {/* No wall clock, as on the projector: the room and the people
+                watching it are being given a count, not a clock. */}
+            <TimerScreen state={timer} showClock={false} />
+          </div>
+        ) : null}
 
-      {custom ? (
+        {custom ? (
+          <div
+            className="lower3rd-custom"
+            style={{
+              opacity: visible && !cardShowing && !timerShowing ? 1 : 0,
+              transition: transitionMs === 0 ? 'none' : `opacity ${transitionMs / 2}ms ease-in-out`,
+            }}
+          >
+            <CustomSlide
+              template={custom}
+              showData={showData}
+              style={{
+                order: style.order,
+                enabled: style.enabled ?? {},
+                versions: style.versions,
+                fonts: style.fonts,
+                // The stream carries one language of a song, the one the song
+                // points at it — so a box repeating per language repeats once.
+                lyricsLang: lyrics?.lower3rd,
+              }}
+              assets={assets}
+            />
+          </div>
+        ) : (
         <div
-          className="lower3rd-custom"
+          className={`lower3rd-bar lower3rd-bar--${look} ${top ? 'lower3rd-bar--top' : ''} ${ALIGN_CLASS[align]}`}
+          // Opacity only. The bar used to slide in as well, but a lower third
+          // that moves pulls the eye away from the speaker every time a verse
+          // changes — a fade lets the words swap without the frame shifting.
           style={{
+            // The operator's colours, over the look's own. Only the knobs they
+            // have actually picked are here, so anything untouched still comes
+            // from the stylesheet.
+            ...varsFor(look, (lyrics ? style.lyricsColors : style.colors) ?? {}),
             opacity: visible && !cardShowing && !timerShowing ? 1 : 0,
             transition: transitionMs === 0 ? 'none' : `opacity ${transitionMs / 2}ms ease-in-out`,
           }}
         >
-          <CustomSlide
-            template={custom}
-            showData={showData}
-            style={{
-              order: style.order,
-              enabled: style.enabled ?? {},
-              versions: style.versions,
-              fonts: style.fonts,
-              // The stream carries one language of a song, the one the song
-              // points at it — so a box repeating per language repeats once.
-              lyricsLang: lyrics?.lower3rd,
-            }}
-            assets={assets}
-          />
+          <div ref={textRef} className="lower3rd-inner">
+            {lyrics ? (
+              // One language, the one the song points at the overlay: the stream
+              // carries one for a song exactly as it does for a verse.
+              <p className="lower3rd-text">{lyricFor(lyrics, lyrics.lower3rd).split('\n').join(' ')}</p>
+            ) : (
+              style.order.map(lang => (style.enabled?.[lang] ? <Block key={lang} lang={lang} showData={showData} /> : null))
+            )}
+          </div>
         </div>
-      ) : (
-      <div
-        className={`lower3rd-bar lower3rd-bar--${look} ${top ? 'lower3rd-bar--top' : ''} ${ALIGN_CLASS[align]}`}
-        // Opacity only. The bar used to slide in as well, but a lower third
-        // that moves pulls the eye away from the speaker every time a verse
-        // changes — a fade lets the words swap without the frame shifting.
-        style={{
-          // The operator's colours, over the look's own. Only the knobs they
-          // have actually picked are here, so anything untouched still comes
-          // from the stylesheet.
-          ...varsFor(look, (lyrics ? style.lyricsColors : style.colors) ?? {}),
-          opacity: visible && !cardShowing && !timerShowing ? 1 : 0,
-          transition: transitionMs === 0 ? 'none' : `opacity ${transitionMs / 2}ms ease-in-out`,
-        }}
-      >
-        <div ref={textRef} className="lower3rd-inner">
-          {lyrics ? (
-            // One language, the one the song points at the overlay: the stream
-            // carries one for a song exactly as it does for a verse.
-            <p className="lower3rd-text">{lyricFor(lyrics, lyrics.lower3rd).split('\n').join(' ')}</p>
-          ) : (
-            style.order.map(lang => (style.enabled?.[lang] ? <Block key={lang} lang={lang} showData={showData} /> : null))
-          )}
-        </div>
-      </div>
-      )}
+        )}
 
-      {debug ? (
-        <div className="lower3rd-debug">
-          <strong>lower3rd</strong> — page loaded, session {outputKey.slice(0, 6)}…
-          <br />
-          Slides received: {received.count}
-          {received.at ? ` (last ${received.at})` : ''}
-          <br />
-          {received.count === 0
-            ? 'Waiting for the console. Check a slide is live.'
-            : `${visible ? 'visible' : blanked ? 'blanked (switched off in the console)' : 'hidden (nothing live)'}`}
-        </div>
-      ) : null}
-    </div>
+        {debug ? (
+          <div className="lower3rd-debug">
+            <strong>lower3rd</strong> — page loaded, session {outputKey.slice(0, 6)}…
+            <br />
+            Slides received: {received.count}
+            {received.at ? ` (last ${received.at})` : ''}
+            <br />
+            {received.count === 0
+              ? 'Waiting for the console. Check a slide is live.'
+              : `${visible ? 'visible' : blanked ? 'blanked (switched off in the console)' : 'hidden (nothing live)'}`}
+          </div>
+        ) : null}
+      </div>
+    </OutputChrome>
   );
 };

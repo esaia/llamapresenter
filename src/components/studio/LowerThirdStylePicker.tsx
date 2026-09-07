@@ -11,17 +11,21 @@ import {
   type Colorway,
 } from "@/lib/lower3rd/colors";
 import { fontStyleOf, type CustomFont } from "@/lib/projector/fonts";
-import { CUSTOM_LOOK } from "@/lib/projector/looks";
+import { CUSTOM_LOOK, customLook, isCustomLook, templateIdOf } from "@/lib/projector/looks";
 import {
   filesUsedBy,
   SAMPLE_LYRICS as SAMPLE_LYRIC_SLIDE,
   SAMPLE_VERSE as SAMPLE_VERSE_SLIDE,
+  startingTemplate,
+  type SlideTemplate,
+  type TemplateTarget,
 } from "@/lib/projector/template";
-import { streamStyle } from "@/lib/studio/settings";
+import { newTemplateName, streamStyle, templatesFor } from "@/lib/studio/settings";
 import { CustomSlide } from "@/components/projector/CustomSlide";
 import { useLocalFiles } from "@/components/projector/useLocalBackground";
 import { IconButton } from "@/components/ui/IconButton";
 import { HiOutlinePencil } from "react-icons/hi";
+import { Plus } from "lucide-react";
 import { useMemo } from "react";
 import { useStudio } from "@/lib/studio/StudioProvider";
 import type { Align } from "@/lib/types";
@@ -151,7 +155,8 @@ export const LowerThirdStylePicker = () => {
   // over a song is there about the song, and landing on the verse grid means
   // finding the tab before finding the tile.
   const [target, setTarget] = useState(showData?.lyrics ? "lyrics" : "verses");
-  const [editing, setEditing] = useState(false);
+  // Which of the operator's own straps is open on the canvas, if any.
+  const [editing, setEditing] = useState("");
 
   // What the custom tile draws its sample against: the stream's own wire
   // style, which already reduces the armed set to the one language the
@@ -162,11 +167,8 @@ export const LowerThirdStylePicker = () => {
   // projector's background it can be minted here.
   const assets = useLocalFiles(
     useMemo(
-      () => [
-        ...filesUsedBy(settings.customStreamTemplate),
-        ...filesUsedBy(settings.customStreamLyricsTemplate),
-      ],
-      [settings.customStreamLyricsTemplate, settings.customStreamTemplate],
+      () => settings.customTemplates.flatMap((row) => filesUsedBy(row.template)),
+      [settings.customTemplates],
     ),
     null,
   );
@@ -193,6 +195,34 @@ export const LowerThirdStylePicker = () => {
   // colour, and a look the operator switches to later should paint in its own.
   const clearColor = (knob: keyof Colorway) =>
     setColors(Object.fromEntries(Object.entries(colors).filter(([key]) => key !== knob)));
+
+  /**
+   * The grid: the shipped straps, then the operator's own.
+   *
+   * `custom` is dropped from the shipped row — it stood for one drawing, and
+   * it is now as many tiles as they have drawn, each under its own name.
+   */
+  const kind: TemplateTarget = lyrics ? "streamLyrics" : "stream";
+  const mine = templatesFor(settings, kind);
+
+  const tiles: { value: string; label: string; template?: SlideTemplate }[] = [
+    ...VARIANTS.filter((variant) => variant.value !== CUSTOM_LOOK),
+    ...mine.map((row) => ({ value: customLook(row.id), label: row.name, template: row.template })),
+  ];
+
+  /** Draw another one; saved before the canvas opens, as the projector's is. */
+  const add = () => {
+    const row = {
+      id: crypto.randomUUID(),
+      target: kind,
+      name: newTemplateName(settings, kind),
+      template: startingTemplate(kind),
+    };
+
+    update({ customTemplates: [...settings.customTemplates, row] });
+    select(customLook(row.id));
+    setEditing(row.id);
+  };
 
   const knobs = knobsOf(selected);
   const defaults = defaultsOf(selected);
@@ -238,9 +268,10 @@ export const LowerThirdStylePicker = () => {
       </p>
 
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {VARIANTS.map(({ value, label }) => (
-          // The custom tile carries a second control, and a button cannot hold
-          // another one — so the tile is a box with the two side by side.
+        {tiles.map(({ value, label, template }) => (
+          // One of the operator's own carries a second control, and a button
+          // cannot hold another one — so the tile is a box with the two side
+          // by side.
           <div key={value} className="relative">
             <button
               type="button"
@@ -254,14 +285,10 @@ export const LowerThirdStylePicker = () => {
                   : "border-studio-border hover:border-studio-faint",
               )}
             >
-              {value === CUSTOM_LOOK ? (
+              {template ? (
                 <div className="l3-preview">
                   <CustomSlide
-                    template={
-                      lyrics
-                        ? settings.customStreamLyricsTemplate
-                        : settings.customStreamTemplate
-                    }
+                    template={template}
                     showData={lyrics ? SAMPLE_LYRIC_SLIDE : SAMPLE_VERSE_SLIDE}
                     // One language, as the overlay itself carries: without
                     // this the tile drew both of the sample's and wrapped
@@ -294,11 +321,11 @@ export const LowerThirdStylePicker = () => {
               </span>
             </button>
 
-            {value === CUSTOM_LOOK ? (
+            {template ? (
               <IconButton
-                label="Edit the custom strap"
+                label={`Edit ${label}`}
                 tone="onDark"
-                onClick={() => setEditing(true)}
+                onClick={() => setEditing(templateIdOf(value))}
                 className="absolute top-1 right-1 size-6 bg-black/55 backdrop-blur-sm"
               >
                 <HiOutlinePencil className="text-xs" />
@@ -306,18 +333,37 @@ export const LowerThirdStylePicker = () => {
             ) : null}
           </div>
         ))}
+
+        {/* Its own tile at the end of the grid rather than a button beside the
+            heading: what it makes is another one of these. */}
+        <button
+          type="button"
+          onClick={add}
+          className={cn(
+            "block w-full overflow-hidden rounded-studio border border-dashed border-studio-border text-left",
+            "text-studio-muted transition-colors duration-150 hover:border-studio-faint hover:text-studio-text",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40",
+          )}
+        >
+          {/* Built like a tile rather than styled like one, so it stands
+              exactly as tall as the straps beside it. */}
+          <div className="flex aspect-video w-full items-center justify-center">
+            <Plus className="size-5" />
+          </div>
+
+          <span className="block truncate bg-studio-bg px-1.5 py-1 text-[11px] font-medium">
+            New strap
+          </span>
+        </button>
       </div>
 
       {editing ? (
-        <TemplateEditor
-          target={lyrics ? "streamLyrics" : "stream"}
-          onClose={() => setEditing(false)}
-        />
+        <TemplateEditor target={kind} id={editing} onClose={() => setEditing("")} />
       ) : null}
 
       {/* A template carries its own plates and colours on every box, so the
-          colourway has nothing to re-point under the custom strap. */}
-      {selected === CUSTOM_LOOK ? null : (
+          colourway has nothing to re-point under one of the operator's. */}
+      {isCustomLook(selected) ? null : (
         <>
       <div className="mt-4 flex items-baseline justify-between gap-2">
         <span className="block text-xs font-semibold text-studio-text">

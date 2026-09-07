@@ -235,8 +235,8 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
       const height = screenRef.current?.clientHeight ?? 0;
       const { available, min, max } = fitTo(look, height, {
         min: 5,
-        scale: lyrics ? projector.lyricsScale : 'both',
-        size: projector.lyricsSize,
+        scale: lyrics ? projector.lyricsScale : projector.verseScale,
+        size: lyrics ? projector.lyricsSize : projector.verseSize,
       });
 
       fitText(textRef.current, available, { min, max });

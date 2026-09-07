@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import { cn } from '@/lib/cn';
 import { lyricBlocks } from '@/lib/lyrics/langs';
 import { fontStyleOf } from '@/lib/projector/fonts';
-import { CUSTOM_LOOK, DEFAULT_LYRIC_LOOK, DEFAULT_VERSE_LOOK } from '@/lib/projector/looks';
+import { DEFAULT_LYRIC_LOOK, DEFAULT_VERSE_LOOK, isCustomLook } from '@/lib/projector/looks';
 import { referenceOf } from '@/lib/projector/template';
 import type { Align, Lang, ProjectorStyle, ShowData, Verse } from '@/lib/types';
 
@@ -77,7 +77,7 @@ export const Slide = ({
   // falls through to the standard slide rather than to a bare screen.
   const template = lyrics ? style.lyricsTemplate : style.template;
 
-  if (look === CUSTOM_LOOK && template) {
+  if (isCustomLook(look) && template) {
     return <CustomSlide template={template} showData={showData} style={style} assets={assets} />;
   }
 

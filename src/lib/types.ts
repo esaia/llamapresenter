@@ -99,9 +99,12 @@ export interface ProjectorStyle {
    * it. The shipped looks have never shown one; a custom one can say `(WEB)`.
    */
   versions: Partial<Record<Lang, string>>;
-  /** How song text is sized: scaled to fit, or held at `lyricsSize`. */
-  lyricsScale: ScaleMode;
+  /** How verse text is sized: fitted to the slide, or held at `verseSize`. */
+  verseScale: ScaleMode;
   /** That size, as a percentage of the screen height. */
+  verseSize: number;
+  /** The same pair for song text, which is fitted far larger. */
+  lyricsScale: ScaleMode;
   lyricsSize: number;
   order: Lang[];
   enabled: Partial<Record<Lang, boolean>>;

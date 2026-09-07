@@ -1,14 +1,23 @@
 import { defaultVersionOf, isLang, MAX_LANGS, REQUIRED_LANG, specOf, type Lang } from '@/lib/bible/languages';
 import { asStreamColors, migrated, type StreamColors } from '@/lib/lower3rd/colors';
 import { asCustomFonts, DEFAULT_FONT, fontsUsedBy, type CustomFont } from '@/lib/projector/fonts';
-import { asScaleMode, clampTextSize, CUSTOM_LOOK, DEFAULT_TEXT_SIZE, lookOf, type ScaleMode } from '@/lib/projector/looks';
+import {
+  asScaleMode,
+  clampTextSize,
+  DEFAULT_TEXT_SIZE,
+  DEFAULT_VERSE_TEXT_SIZE,
+  isCustomLook,
+  lookOf,
+  templateIdOf,
+  type ScaleMode,
+} from '@/lib/projector/looks';
 import {
   asTemplate,
-  DEFAULT_LYRIC_TEMPLATE,
-  DEFAULT_STREAM_LYRIC_TEMPLATE,
-  DEFAULT_STREAM_TEMPLATE,
   fontsNamedBy,
+  startingTemplate,
+  TEMPLATE_TARGETS,
   type SlideTemplate,
+  type TemplateTarget,
 } from '@/lib/projector/template';
 import { DEFAULT_THEME } from '@/lib/projector/themes';
 import { clampTransition, DEFAULT_TRANSITION_MS } from '@/lib/projector/transition';
@@ -16,6 +25,90 @@ import type { Database } from '@/lib/supabase/types';
 import type { Align, LocalFileMeta, ProjectorStyle, StreamStyle } from '@/lib/types';
 
 export type SettingsRow = Database['public']['Tables']['settings']['Row'];
+
+/**
+ * One of the operator's own layouts: a name, the kind of slide it is for, and
+ * the document itself.
+ *
+ * A list rather than the four columns it grew out of, because a church has a
+ * Christmas slide and an ordinary Sunday one and no reason to redraw either.
+ */
+export interface CustomTemplate {
+  id: string;
+  target: TemplateTarget;
+  name: string;
+  template: SlideTemplate;
+}
+
+const asCustomTemplates = (value: unknown): CustomTemplate[] => {
+  const rows = Array.isArray(value) ? value : [];
+
+  return rows
+    .map(row => (row ?? {}) as Partial<Record<keyof CustomTemplate, unknown>>)
+    .filter(row => typeof row.id === 'string' && row.id && TEMPLATE_TARGETS.includes(row.target as TemplateTarget))
+    .map(row => {
+      const target = row.target as TemplateTarget;
+
+      return {
+        id: row.id as string,
+        target,
+        name: (typeof row.name === 'string' && row.name.trim()) || 'Custom',
+        template: asTemplate(row.template, startingTemplate(target)),
+      };
+    });
+};
+
+/** The templates of one kind, in the order they were drawn. */
+export const templatesFor = (settings: Settings, target: TemplateTarget): CustomTemplate[] =>
+  settings.customTemplates.filter(row => row.target === target);
+
+/**
+ * The template a look setting names, or null when it names none.
+ *
+ * A bare `custom` is a row written before the library existed: it can only
+ * have meant the one template of its kind, which is the first here.
+ */
+export const templateOf = (settings: Settings, target: TemplateTarget, look: string): SlideTemplate | null => {
+  if (!isCustomLook(look)) return null;
+
+  const kind = templatesFor(settings, target);
+  const id = templateIdOf(look);
+
+  return (id ? kind.find(row => row.id === id) : kind[0])?.template ?? null;
+};
+
+/** The shipped strap a stream look falls back to. */
+const STREAM_FALLBACK = 'scrim';
+
+/** Whether a look setting still names a template that exists. */
+const looksAt = (templates: CustomTemplate[], target: TemplateTarget, look: unknown): boolean => {
+  if (typeof look !== 'string' || !isCustomLook(look)) return false;
+
+  const kind = templates.filter(row => row.target === target);
+  const id = templateIdOf(look);
+
+  return id ? kind.some(row => row.id === id) : kind.length > 0;
+};
+
+/**
+ * What to call the next one: "Layout 2", "Layout 3", counted past whatever is
+ * already in that kind so a name is never taken twice — a rename is one click
+ * away in the editor, and this only has to be a name rather than the name.
+ */
+export const newTemplateName = (settings: Settings, target: TemplateTarget): string => {
+  const taken = new Set(templatesFor(settings, target).map(row => row.name));
+  const noun = target === 'stream' || target === 'streamLyrics' ? 'Strap' : 'Layout';
+
+  for (let n = 1; ; n += 1) {
+    const name = n === 1 ? noun : `${noun} ${n}`;
+
+    if (!taken.has(name)) return name;
+  }
+};
+
+/** A look that names one of the operator's templates, and that template is gone. */
+const droppedTemplate = (templates: CustomTemplate[], target: TemplateTarget, look: string): boolean =>
+  isCustomLook(look) && !looksAt(templates, target, look);
 
 /**
  * The operator's whole look, held as one object in the console and one row in
@@ -55,19 +148,14 @@ export interface Settings {
   projectorLook: string;
   projectorLyricsLook: string;
   /**
-   * The ninth verse look, drawn rather than shipped. Held whole here and sent
-   * only when it is the look in use; see `lib/projector/template.ts`.
+   * The looks the operator drew rather than picked, all four kinds in one
+   * list. Each is named, and a look setting points at one by id; see
+   * `customLook` in `lib/projector/looks.ts`. Held whole here and narrowed on
+   * the way out — only the template actually on air rides with a slide.
    */
-  customTemplate: SlideTemplate;
-  /** And the one song slides are drawn in, which is not the same arrangement. */
-  customLyricsTemplate: SlideTemplate;
-  /**
-   * The stream's own two. Separate from the projector's because the overlay
-   * is a different shape of thing — a strap over live video rather than a wall
-   * of words — and an operator who has drawn one has not drawn the other.
-   */
-  customStreamTemplate: SlideTemplate;
-  customStreamLyricsTemplate: SlideTemplate;
+  customTemplates: CustomTemplate[];
+  verseScale: ScaleMode;
+  verseSize: number;
   lyricsScale: ScaleMode;
   lyricsSize: number;
   transitionMs: number;
@@ -128,6 +216,11 @@ const asVersion = (lang: Lang, value: unknown): string =>
 
 export const fromRow = (row: SettingsRow): Settings => {
   const versions = (row.versions ?? {}) as Partial<Record<Lang, string>>;
+  // Read before the looks are, because a look naming a template that has since
+  // been deleted has to fall back to a shipped one rather than sit there
+  // selected while the wall draws something else — the same reasoning as
+  // `asVersion` below, and as the font pickers'.
+  const customTemplates = asCustomTemplates(row.custom_templates);
   // The dark bands look was folded back into the light one as a colourway; a
   // row still naming it is read as that arrangement in those colours.
   const stored = asStreamColors(row.stream_colors);
@@ -161,21 +254,26 @@ export const fromRow = (row: SettingsRow): Settings => {
     // dropped would otherwise sit there looking valid while the projector drew
     // something else — the picker showing nothing selected and no way to tell
     // why. Same reasoning as `asVersion` above.
-    projectorLook: lookOf(row.projector_look, false).value,
+    projectorLook: looksAt(customTemplates, 'verses', row.projector_look)
+      ? row.projector_look
+      : lookOf(row.projector_look, false).value,
     // 'steady' was a layout before song text got its own scaling control; it
     // said "hold the size still", which is now a mode rather than a look.
-    projectorLyricsLook: lookOf(row.projector_lyrics_look === 'steady' ? '' : row.projector_lyrics_look, true).value,
-    customTemplate: asTemplate(row.custom_template),
-    customLyricsTemplate: asTemplate(row.custom_lyrics_template, DEFAULT_LYRIC_TEMPLATE),
-    customStreamTemplate: asTemplate(row.custom_stream_template, DEFAULT_STREAM_TEMPLATE),
-    customStreamLyricsTemplate: asTemplate(row.custom_stream_lyrics_template, DEFAULT_STREAM_LYRIC_TEMPLATE),
+    projectorLyricsLook: looksAt(customTemplates, 'lyrics', row.projector_lyrics_look)
+      ? row.projector_lyrics_look
+      : lookOf(row.projector_lyrics_look === 'steady' ? '' : row.projector_lyrics_look, true).value,
+    customTemplates,
+    verseScale: asScaleMode(row.verse_scale),
+    verseSize: clampTextSize(row.verse_size ?? DEFAULT_VERSE_TEXT_SIZE, DEFAULT_VERSE_TEXT_SIZE),
     lyricsScale: row.projector_lyrics_look === 'steady' ? 'none' : asScaleMode(row.lyrics_scale),
     lyricsSize: clampTextSize(row.lyrics_size ?? DEFAULT_TEXT_SIZE),
     transitionMs: clampTransition(row.transition_ms ?? DEFAULT_TRANSITION_MS),
     langOrder,
     lowerThirdPosition: row.lower_third_position === 'top' ? 'top' : 'bottom',
-    lowerThirdVariant: verses.variant,
-    lyricsVariant: lyrics.variant,
+    // A strap look naming a template that has since been deleted falls back to
+    // the shipped one, exactly as the projector's two do above.
+    lowerThirdVariant: droppedTemplate(customTemplates, 'stream', verses.variant) ? STREAM_FALLBACK : verses.variant,
+    lyricsVariant: droppedTemplate(customTemplates, 'streamLyrics', lyrics.variant) ? STREAM_FALLBACK : lyrics.variant,
     streamColors: { verses: verses.colors, lyrics: lyrics.colors },
     obsHidden: Boolean(row.obs_hidden),
     streamLang: isLang(row.stream_lang) ? row.stream_lang : REQUIRED_LANG,
@@ -202,10 +300,9 @@ export const toRow = (settings: Settings) => ({
   custom_fonts: settings.customFonts,
   projector_look: settings.projectorLook,
   projector_lyrics_look: settings.projectorLyricsLook,
-  custom_template: settings.customTemplate,
-  custom_lyrics_template: settings.customLyricsTemplate,
-  custom_stream_template: settings.customStreamTemplate,
-  custom_stream_lyrics_template: settings.customStreamLyricsTemplate,
+  custom_templates: settings.customTemplates,
+  verse_scale: settings.verseScale,
+  verse_size: settings.verseSize,
   lyrics_scale: settings.lyricsScale,
   lyrics_size: settings.lyricsSize,
   transition_ms: settings.transitionMs,
@@ -227,8 +324,8 @@ export const toRow = (settings: Settings) => ({
  * template falls back to the look it was given.
  */
 export const projectorStyle = (settings: Settings): ProjectorStyle => {
-  const template = settings.projectorLook === CUSTOM_LOOK ? settings.customTemplate : null;
-  const lyricsTemplate = settings.projectorLyricsLook === CUSTOM_LOOK ? settings.customLyricsTemplate : null;
+  const template = templateOf(settings, 'verses', settings.projectorLook);
+  const lyricsTemplate = templateOf(settings, 'lyrics', settings.projectorLyricsLook);
 
   return {
     theme: settings.theme,
@@ -243,6 +340,8 @@ export const projectorStyle = (settings: Settings): ProjectorStyle => {
     template,
     lyricsTemplate,
     versions: settings.versions,
+    verseScale: settings.verseScale,
+    verseSize: settings.verseSize,
     lyricsScale: settings.lyricsScale,
     lyricsSize: settings.lyricsSize,
     order: settings.langOrder,
@@ -288,8 +387,8 @@ export const stageLangOf = (settings: Settings): Lang => {
  */
 export const streamStyle = (settings: Settings): StreamStyle => {
   const chosen = streamLangOf(settings);
-  const template = settings.lowerThirdVariant === CUSTOM_LOOK ? settings.customStreamTemplate : null;
-  const lyricsTemplate = settings.lyricsVariant === CUSTOM_LOOK ? settings.customStreamLyricsTemplate : null;
+  const template = templateOf(settings, 'stream', settings.lowerThirdVariant);
+  const lyricsTemplate = templateOf(settings, 'streamLyrics', settings.lyricsVariant);
 
   return {
     font: settings.streamFont,

@@ -8,12 +8,20 @@ import type { SignalTransport, SlidePayload } from '@/lib/live/protocol';
 import { fitText, refitOnFontLoad } from '@/lib/projector/fitText';
 import { DEFAULT_FONT } from '@/lib/projector/fonts';
 import { keepSame, sameVerse } from '@/lib/projector/keepSame';
-import { DEFAULT_LYRIC_LOOK, DEFAULT_TEXT_SIZE, DEFAULT_VERSE_LOOK, fitTo, lookOf } from '@/lib/projector/looks';
+import {
+  DEFAULT_LYRIC_LOOK,
+  DEFAULT_TEXT_SIZE,
+  DEFAULT_VERSE_LOOK,
+  DEFAULT_VERSE_TEXT_SIZE,
+  fitTo,
+  lookOf,
+} from '@/lib/projector/looks';
 import { filesUsedBy } from '@/lib/projector/template';
 import { DEFAULT_THEME, DYNAMIC_THEME, LOCAL_THEME, themeSrc } from '@/lib/projector/themes';
 import { asTimerState, withSkew, type TimerState } from '@/lib/timer/model';
 import { emptyShowData, REQUIRED_LANG, type ProjectorStyle, type ShowData } from '@/lib/types';
 
+import { OutputChrome } from './OutputChrome';
 import { Slide } from './Slide';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
@@ -36,6 +44,8 @@ const defaultStyle: ProjectorStyle = {
   template: null,
   lyricsTemplate: null,
   versions: {},
+  verseScale: 'both',
+  verseSize: DEFAULT_VERSE_TEXT_SIZE,
   lyricsScale: 'both',
   lyricsSize: DEFAULT_TEXT_SIZE,
   order: [REQUIRED_LANG],
@@ -174,14 +184,14 @@ export const Projector = ({ outputKey, initial }: { outputKey: string; initial: 
     const { available, min, max } = fitTo(look, window.innerHeight, {
       cap: lyrics ? LYRICS_MAX_FONT_SIZE : MAX_FONT_SIZE,
       min: MIN_FONT_SIZE,
-      // Only song text is sized by hand; a verse is always fitted, because a
-      // passage the operator did not choose the length of has to fit.
-      scale: lyrics ? style.lyricsScale : 'both',
-      size: style.lyricsSize,
+      // Each kind of slide is sized by its own pair: a song and a verse are
+      // fitted to different ceilings, so one held size could not serve both.
+      scale: lyrics ? style.lyricsScale : style.verseScale,
+      size: lyrics ? style.lyricsSize : style.verseSize,
     });
 
     fitText(textRef.current, available, { min, max });
-  }, [look, lyrics, style.lyricsScale, style.lyricsSize]);
+  }, [look, lyrics, style.lyricsScale, style.lyricsSize, style.verseScale, style.verseSize]);
 
   useEffect(() => {
     resize();
@@ -201,41 +211,43 @@ export const Projector = ({ outputKey, initial }: { outputKey: string; initial: 
   }, [onScreen, resize, style.align, style.font, style.lyricsAlign, style.lyricsFont, style.order]);
 
   return (
-    <div className="h-dvh w-full bg-black">
-      <div
-        className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat"
-        style={background ? { backgroundImage: `url(${background})` } : undefined}
-      >
-        {/* Scrim: projector bulbs wash out white text on a bright photograph. */}
-        <div className="absolute inset-0 bg-black/55" />
-
-        {/* Armed from the timer tab, and then it *is* the slide: a countdown
-            before a service, or a clock between sessions, wants the screen
-            rather than a corner of it. */}
-        {timer.onProjector ? (
-          <div className="absolute inset-0 z-20">
-            <TimerScreen state={timer} showClock={false} />
-          </div>
-        ) : null}
-
-        {/* Over everything, including the timer: the key says "this screen is
-            off", and a countdown showing through would be a screen that is
-            not. */}
-        {black ? <div className="absolute inset-0 z-30 bg-black" /> : null}
-
+    <OutputChrome kind="show">
+      <div className="h-dvh w-full bg-black">
         <div
-          className="relative flex h-full w-full items-center justify-center"
-          style={{
-            // The timer takes the screen rather than sharing it, but the verse
-            // stays mounted underneath so disarming brings it back already
-            // fitted, with no reflow the room can see.
-            opacity: !timer.onProjector && visible ? 1 : 0,
-            transition: cut ? 'none' : `opacity ${style.transitionMs / 2}ms ease-in-out`,
-          }}
+          className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat"
+          style={background ? { backgroundImage: `url(${background})` } : undefined}
         >
-          <Slide ref={textRef} showData={onScreen} style={style} assets={assets} className="max-w-[2000px]" />
+          {/* Scrim: projector bulbs wash out white text on a bright photograph. */}
+          <div className="absolute inset-0 bg-black/55" />
+
+          {/* Armed from the timer tab, and then it *is* the slide: a countdown
+              before a service, or a clock between sessions, wants the screen
+              rather than a corner of it. */}
+          {timer.onProjector ? (
+            <div className="absolute inset-0 z-20">
+              <TimerScreen state={timer} showClock={false} />
+            </div>
+          ) : null}
+
+          {/* Over everything, including the timer: the key says "this screen is
+              off", and a countdown showing through would be a screen that is
+              not. */}
+          {black ? <div className="absolute inset-0 z-30 bg-black" /> : null}
+
+          <div
+            className="relative flex h-full w-full items-center justify-center"
+            style={{
+              // The timer takes the screen rather than sharing it, but the verse
+              // stays mounted underneath so disarming brings it back already
+              // fitted, with no reflow the room can see.
+              opacity: !timer.onProjector && visible ? 1 : 0,
+              transition: cut ? 'none' : `opacity ${style.transitionMs / 2}ms ease-in-out`,
+            }}
+          >
+            <Slide ref={textRef} showData={onScreen} style={style} assets={assets} className="max-w-[2000px]" />
+          </div>
         </div>
       </div>
-    </div>
+    </OutputChrome>
   );
 };
