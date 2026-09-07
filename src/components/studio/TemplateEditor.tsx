@@ -825,13 +825,13 @@ const TextInspector = ({
 
     {holds > 1 ? (
       <Row label="Languages">
-        <Select
+        <Toggles
           value={element.perLanguage}
-          onChange={value => patch({ perLanguage: value === 'split' ? 'split' : 'stack' })}
           options={[
-            { value: 'stack', label: 'Stack in this box' },
-            { value: 'split', label: 'A box each, sharing it' },
+            { value: 'stack' as const, label: 'Stack the languages in this box', text: 'Stacked' },
+            { value: 'split' as const, label: 'Give each language a share of this box', text: 'A box each' },
           ]}
+          onPick={perLanguage => patch({ perLanguage })}
         />
       </Row>
     ) : null}

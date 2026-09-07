@@ -23,6 +23,7 @@ export const Frame = ({
   children,
   className,
   paneClassName,
+  sizes,
 }: {
   url?: string;
   label?: string;
@@ -31,6 +32,9 @@ export const Frame = ({
   children?: React.ReactNode;
   className?: string;
   paneClassName?: string;
+  /** Only where a frame is not laid out in the page's column — the zoomed
+      console ends up the width of the window and needs the shot to match. */
+  sizes?: string;
 }) => (
   <figure
     className={cn(
@@ -47,7 +51,7 @@ export const Frame = ({
 
     <div className={cn('relative overflow-hidden rounded-studio bg-studio-slide', paneClassName)}>
       {src ? (
-        <Image src={src} alt={alt ?? ''} fill className="object-cover" sizes="(max-width: 1280px) 100vw, 1280px" />
+        <Image src={src} alt={alt ?? ''} fill className="object-cover" sizes={sizes ?? '(max-width: 1280px) 100vw, 1280px'} />
       ) : (
         (children ?? <Placeholder label={label} />)
       )}

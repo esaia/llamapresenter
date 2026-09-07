@@ -1971,11 +1971,42 @@ html[data-preview='stage'] [data-preview-only='stage'] {
   --shadow-site-frame: 0 32px 64px -24px rgba(25, 24, 24, 0.35), 0 4px 12px -4px rgba(25, 24, 24, 0.12);
 }
 
+/* The light on the paper at the top of the page.
+ *
+ * Three washes over the flat ground, in the site's own colours and nothing
+ * else: the yellow sits high and to the right, behind the screens, so the
+ * brand colour is what the eye meets first; the cream fills the left behind
+ * the headline; and the vertical fade returns the paper to `--color-site-bg`
+ * before the first band begins, so the section below still reads as a change
+ * of paper rather than the end of a gradient. Soft enough that dark type on
+ * it keeps its contrast — this is a tint, not a colour.
+ *
+ * On `.site` rather than on the hero section, because it has to start at the
+ * very top of the window: the nav sits in the paper rather than on a bar of
+ * its own, so the wash has to run up behind it. Pinned to a fixed 56rem band
+ * at the top and not repeated — a percentage would stretch the whole thing
+ * down a long page. */
+
 /* Scoped rather than global: the console still owns `body`. */
 .site {
   color-scheme: light;
-  background: var(--color-site-bg);
   color: var(--color-site-ink);
+  background-color: var(--color-site-bg);
+  background-image:
+    radial-gradient(
+      68rem 34rem at 78% 2%,
+      color-mix(in oklab, var(--color-site-accent) 26%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      52rem 30rem at 2% 10%,
+      color-mix(in oklab, var(--color-site-band) 85%, transparent),
+      transparent 68%
+    ),
+    linear-gradient(180deg, color-mix(in oklab, var(--color-site-band) 45%, var(--color-site-bg)), var(--color-site-bg));
+  background-repeat: no-repeat;
+  background-size: 100% 56rem;
+  background-position: top center;
 }
 
 /* So an overscroll bounce shows paper rather than the console's black. */

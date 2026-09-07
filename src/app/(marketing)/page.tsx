@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import { Frame } from '@/components/marketing/Frame';
 import { HeroScene } from '@/components/marketing/HeroScene';
+import { ScrollZoom } from '@/components/marketing/ScrollZoom';
 import { PLANS } from '@/lib/billing/plans';
 
 /* The two type roles for the page: the rounded display face the brand is drawn
@@ -109,8 +110,11 @@ export default function HomePage() {
   return (
     <main>
       {/* ------------------------------------------------------------- hero */}
-      <section className="mx-auto max-w-7xl px-6 pt-12 pb-8 sm:pt-16">
-        <div className="grid items-center gap-14 lg:grid-cols-[1fr_0.9fr] lg:gap-12">
+      <section>
+        <div
+          className="mx-auto grid max-w-7xl items-center gap-14 px-6 pt-12 pb-8
+            sm:pt-16 lg:grid-cols-[1fr_0.9fr] lg:gap-12"
+        >
           <div>
             <h1 className={`${DISPLAY} text-[clamp(2.4rem,4.6vw,3.6rem)] leading-[1.0]`}>
               Simple Church{' '}
@@ -152,26 +156,33 @@ export default function HomePage() {
         {/* The console gets the whole width. It is one picture of the whole
             product, and a column of prose beside it only made it smaller —
             what a volunteer sees for an hour on a Sunday is the argument. */}
-        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
-              Built for the person at the back of the room.
-            </h2>
-            <p className="mt-5 text-[17px] leading-relaxed text-site-muted">
-              Type “John 14:6-7” and it is on the wall. The whole chapter loads with it, so stepping to the next verse
-              costs nothing — no waiting, no second search, no dead air while somebody finds the passage.
-            </p>
-          </div>
-
-          <Frame
-            url="llamapresenter.com/studio"
-            src="/images/console-studio.png"
-            alt="The console: the language panel on the left, Philippians and Luke broken into verse cards in the
-              middle, and the live projector preview, outputs and audio playlist on the right"
-            // The screenshot's own shape, so the pane crops none of it.
-            paneClassName="aspect-[500/267]"
-            className="mt-12 shadow-site-frame"
-          />
+        <div className="py-16 sm:py-24">
+          {/* The words go inside the zoom rather than above it: they are pinned
+              with the frame as one group, and the frame grows over them. */}
+          <ScrollZoom
+            intro={
+              <div className="mx-auto max-w-3xl px-6 text-center">
+                <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
+                  Built for the person at the back of the room.
+                </h2>
+                <p className="mt-5 text-[17px] leading-relaxed text-site-muted">
+                  Type “John 14:6-7” and it is on the wall. The whole chapter loads with it, so stepping to the next
+                  verse costs nothing — no waiting, no second search, no dead air while somebody finds the passage.
+                </p>
+              </div>
+            }
+          >
+            <Frame
+              url="llamapresenter.com/studio"
+              src="/images/console-studio.webp"
+              alt="The console: the language panel on the left, Philippians and Luke broken into verse cards in the
+                middle, and the live projector preview, outputs and audio playlist on the right"
+              // The screenshot's own shape, so the pane crops none of it.
+              paneClassName="aspect-[900/481]"
+              sizes="100vw"
+              className="shadow-site-frame"
+            />
+          </ScrollZoom>
         </div>
       </section>
 
