@@ -143,7 +143,12 @@ export const AccountSection = () => {
           <table className="w-full border-t border-studio-divider text-xs">
             <thead>
               <tr className="text-studio-faint">
-                <th className="px-4 py-2 text-left font-normal">Where the line is</th>
+                {/* The group headings underneath already say what the column
+                    is, so the label was a caption for a caption. Kept for a
+                    screen reader, which has no groups to read ahead to. */}
+                <th className="px-4 py-2 text-left font-normal">
+                  <span className="sr-only">What is being counted</span>
+                </th>
                 <th className="px-2 py-2 text-right font-normal">Free</th>
                 <th className="px-4 py-2 text-right font-normal">Pro</th>
               </tr>
