@@ -35,6 +35,8 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
     songs,
     plan,
     usage,
+    room,
+    noteLimit,
     activeSongId,
     importSongs,
     saveSong,
@@ -79,6 +81,13 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
   const bundleName = (files: File[]) =>
     (files.length === 1 ? files[0].name.replace(/\.[^.]+$/, '') : `Import ${new Date().toLocaleDateString()}`).trim() ||
     'Import';
+
+  /** A save whose failure the notice has already reported. */
+  const saveSongQuietly = (song: Song) => {
+    void saveSong(song).catch(failure => {
+      if (!isPlanLimit(failure)) setError((failure as Error).message);
+    });
+  };
 
   const importFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -195,7 +204,13 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
           {busy ? 'Importing…' : 'Import from ProPresenter'}
         </Button>
 
-        <Button icon={<HiOutlineDocumentAdd className="text-sm" />} onClick={() => setCreating(true)}>
+        {/* Met before the dialog opens. It used to open, take a title, open
+            the editor, and only then be refused by the database — so the
+            operator watched a song they could not have appear and vanish. */}
+        <Button
+          icon={<HiOutlineDocumentAdd className="text-sm" />}
+          onClick={() => (room('songs') ? setCreating(true) : noteLimit('songs'))}
+        >
           New song
         </Button>
 
@@ -250,7 +265,7 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
           index={editingSlide.index}
           onClose={() => setEditingSlide(null)}
           onSave={edited =>
-            void saveSong({
+            saveSongQuietly({
               ...editingSlide.song,
               slides: editingSlide.song.slides.map((item, position) =>
                 position === editingSlide.index ? edited : item,

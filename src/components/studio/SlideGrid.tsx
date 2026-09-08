@@ -74,6 +74,18 @@ export const SlideGrid = ({
   onEditSlide: (index: number) => void;
 }) => {
   const { settings, cardSize, live, selectLyric, saveSong, reorderSlides, removeSlide, setSongLangs } = useStudio();
+
+  /**
+   * A save the caller does not wait on.
+   *
+   * Grouping a slide is a change to the song, and a plan ceiling can refuse
+   * it — silently here, because the console's notice has already said so, and
+   * loudly nowhere, because an unhandled rejection is a crash overlay in
+   * development and nothing at all in production.
+   */
+  const saveSongOrShrug = (song: Song) => {
+    void saveSong(song).catch(() => {});
+  };
   const box = useRef<HTMLElement>(null);
 
   const onScreen = live?.kind === 'lyrics' && live.songId === song.id;
@@ -180,7 +192,7 @@ export const SlideGrid = ({
                  job, where the song can be deleted outright. */
               onDelete={song.slides.length > 1 ? () => void removeSlide(song, slide.id) : undefined}
               onGroup={group =>
-                void saveSong({
+                saveSongOrShrug({
                   ...song,
                   slides: song.slides.map(item =>
                     item.id === slide.id ? { ...item, group: group || undefined } : item,

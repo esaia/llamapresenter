@@ -9,6 +9,7 @@ import { Modal, useModalClose } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 import { colorOf } from '@/lib/lyrics/groups';
 import { hasWords, langsOf, textOf, withText } from '@/lib/lyrics/langs';
+import { isPlanLimit } from '@/lib/billing/limits';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import type { Song, SongSlide } from '@/lib/types';
 
@@ -239,7 +240,8 @@ export const SongEditor = ({ song, onClose }: { song: Song; onClose: () => void 
 
       close.current?.(onClose);
     } catch (failure) {
-      setError((failure as Error).message);
+      // A ceiling has already been said once, by the notice.
+      if (!isPlanLimit(failure)) setError((failure as Error).message);
     } finally {
       setSaving(false);
     }
