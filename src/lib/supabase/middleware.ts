@@ -2,7 +2,22 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 /** Paths an unauthenticated visitor may reach. */
-const PUBLIC = ['/', '/pricing', '/docs', '/login', '/auth', '/show', '/lower3rd', '/timer', '/api/bible', '/api/live', '/api/stripe'];
+// `/opengraph-image` is the link-preview card: the crawler unfurling it has no
+// cookies, and a redirect to /login is a broken preview.
+const PUBLIC = [
+  '/',
+  '/pricing',
+  '/docs',
+  '/login',
+  '/auth',
+  '/show',
+  '/lower3rd',
+  '/timer',
+  '/opengraph-image',
+  '/api/bible',
+  '/api/live',
+  '/api/stripe',
+];
 
 const isPublic = (pathname: string) =>
   PUBLIC.some(path => pathname === path || pathname.startsWith(`${path}/`));

@@ -5,9 +5,28 @@ import { railWidthScript } from '@/lib/studio/railWidth';
 
 import './globals.css';
 
+const DESCRIPTION =
+  'Put scripture on the screen — in up to three languages at once, on any machine in the room.';
+
 export const metadata: Metadata = {
+  // The card in app/opengraph-image.tsx is unfurled by other people's servers,
+  // so its URL has to be absolute. Vercel hands us the deployment host; the
+  // production domain is the fallback for anywhere else.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : 'https://llamapresenter.com'),
+  ),
   title: { default: 'LlamaPresenter', template: '%s · LlamaPresenter' },
-  description: 'Put scripture on the screen — in up to three languages at once, on any machine in the room.',
+  description: DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: 'LlamaPresenter',
+    title: 'LlamaPresenter',
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image', title: 'LlamaPresenter', description: DESCRIPTION },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
