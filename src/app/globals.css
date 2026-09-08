@@ -537,14 +537,13 @@ body {
 }
 
 /* A ceiling the operator has just met, arriving over whatever they are looking
-   at. It drops in from above because that is where it is: a thing the console
-   is saying back, rather than a part of the panel underneath it.
-   The transform is composed with the -translate-x-1/2 that centres it, so the
-   keyframe carries both. */
+   at. Mostly a fade, with just enough movement to read as arriving rather than
+   appearing — it interrupts someone mid-task, so it should not also be a
+   performance. Its wrapper does the centring, so this only ever moves down. */
 @keyframes studio-notice-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -10px);
+    transform: translateY(-6px);
   }
 }
 

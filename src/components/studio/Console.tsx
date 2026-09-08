@@ -199,24 +199,31 @@ export const Console = () => {
           looking at. Above the modal layer (z-100), because that is where the
           question was asked. */}
       {limitNotice ? (
-        <div
-          role="status"
-          className="studio-notice fixed top-3 left-1/2 z-[110] flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2
-            items-center gap-3 rounded-studio border border-studio-border bg-studio-lift px-3 py-2
-            shadow-studio-panel"
-        >
-          <span className="text-sm text-studio-text">{limitNotice}</span>
-
-          <a
-            href="/pricing"
-            className="shrink-0 rounded-studio bg-studio-accent px-2.5 py-1 text-xs font-medium text-studio-onaccent"
+        // Centring and arriving are two jobs and they get two elements. Done on
+        // one, they fight: Tailwind centres with the `translate` property and
+        // the keyframe moved `transform`, which are composed rather than shared
+        // — so the notice started a whole width to the left and slid sideways
+        // into place. The outer box does the placing and never animates; the
+        // inner one only fades and settles.
+        <div className="pointer-events-none fixed inset-x-0 top-3 z-[110] flex justify-center px-3">
+          <div
+            role="status"
+            className="studio-notice pointer-events-auto flex items-center gap-3 rounded-studio border
+              border-studio-border bg-studio-lift px-3 py-2 shadow-studio-panel"
           >
-            See Pro
-          </a>
+            <span className="text-sm text-studio-text">{limitNotice}</span>
 
-          <IconButton label="Dismiss" onClick={dismissLimit}>
-            <X className="size-3.5" />
-          </IconButton>
+            <a
+              href="/pricing"
+              className="shrink-0 rounded-studio bg-studio-accent px-2.5 py-1 text-xs font-medium text-studio-onaccent"
+            >
+              See Pro
+            </a>
+
+            <IconButton label="Dismiss" onClick={dismissLimit}>
+              <X className="size-3.5" />
+            </IconButton>
+          </div>
         </div>
       ) : null}
 
