@@ -1,4 +1,4 @@
-import { limitOf, roomFor, type LimitKey } from './limits';
+import { limitOf, roomFor, roomForList, type LimitKey } from './limits';
 import type { PlanId } from './plans';
 
 /**
@@ -25,3 +25,14 @@ export const allows = (plan: string | null | undefined, key: LimitKey, current: 
 /** The ceiling in force, or `null` for none. */
 export const ceiling = (plan: string | null | undefined, key: LimitKey): number | null =>
   limitOf(effectivePlan(plan), key);
+
+/**
+ * Whether a list may become `wants` long, given it was `had` long. The console's
+ * half of the rule that lets someone already over a ceiling shrink back under it.
+ */
+export const allowsList = (
+  plan: string | null | undefined,
+  key: LimitKey,
+  wants: number,
+  had: number,
+): boolean => roomForList(effectivePlan(plan), key, wants, had);

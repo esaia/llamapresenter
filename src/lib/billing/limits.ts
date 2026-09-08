@@ -54,6 +54,26 @@ export const roomFor = (plan: PlanId, key: LimitKey, current: number, adding = 1
   return limit === null || current + adding <= limit;
 };
 
+/**
+ * Whether a list may become `wants` long, given it was `had` long.
+ *
+ * A ceiling must never trap someone under it. A row can already be over the
+ * line — an account that dropped from Pro to Free, or anyone at all on the day
+ * the gates are first turned on — and if every write were refused then so
+ * would be the writes that bring them back under: a ten-song running order
+ * could not have a song taken off it, because nine is still more than three.
+ *
+ * So growing past the ceiling is refused, and shrinking, reordering and
+ * standing still are always allowed. The ceiling still holds, because nothing
+ * gets bigger; it is simply a line you can walk back across. The trigger in
+ * `…_limits_allow_shrinking.sql` asks the same question.
+ */
+export const roomForList = (plan: PlanId, key: LimitKey, wants: number, had: number): boolean => {
+  const limit = limitOf(plan, key);
+
+  return limit === null || wants <= limit || wants <= had;
+};
+
 /** How many more fit, or `null` when the answer is "as many as you like". */
 export const remaining = (plan: PlanId, key: LimitKey, current: number): number | null => {
   const limit = limitOf(plan, key);

@@ -63,7 +63,7 @@ import {
   type SongSlide,
 } from '@/lib/types';
 
-import { allows } from '@/lib/billing/entitlements';
+import { allows, allowsList } from '@/lib/billing/entitlements';
 import { limitMessage, planErrorMessage, type LimitKey } from '@/lib/billing/limits';
 
 import {
@@ -1805,7 +1805,10 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       const landing = list.songs.filter(id => !songIds.includes(id)).length + songIds.length;
 
-      if (!allows(initial.plan, 'songs_per_playlist', landing, 0)) {
+      // Only growing past the ceiling is refused. Dragging songs around inside
+      // a running order that is already over the line leaves it the same
+      // length, and has to keep working — see `roomForList`.
+      if (!allowsList(initial.plan, 'songs_per_playlist', landing, list.songs.length)) {
         throw new Error(limitMessage('songs_per_playlist'));
       }
 

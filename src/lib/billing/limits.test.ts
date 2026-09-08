@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-import { FREE_LIMITS, LIMIT_KEYS, limitMessage, limitOf, planErrorMessage, remaining, roomFor } from './limits';
+import { FREE_LIMITS, LIMIT_KEYS, limitMessage, limitOf, planErrorMessage, remaining, roomFor, roomForList } from './limits';
 
 const MIGRATION = 'supabase/migrations/20260908000000_dodo_and_plan_limits.sql';
 
@@ -96,5 +96,28 @@ describe('planErrorMessage', () => {
   it('leaves an ordinary error alone', () => {
     expect(planErrorMessage('duplicate key value violates unique constraint')).toBeNull();
     expect(planErrorMessage('plan_limit:something_else')).toBeNull();
+  });
+});
+
+describe('roomForList', () => {
+  it('refuses a list that grows past the ceiling', () => {
+    expect(roomForList('free', 'songs_per_playlist', 4, 3)).toBe(false);
+  });
+
+  it('lets a list already over the line shrink back towards it', () => {
+    expect(roomForList('free', 'songs_per_playlist', 9, 10)).toBe(true);
+    expect(roomForList('free', 'songs_per_playlist', 4, 10)).toBe(true);
+  });
+
+  it('lets an over-the-line list be reordered, which keeps its length', () => {
+    expect(roomForList('free', 'songs_per_playlist', 10, 10)).toBe(true);
+  });
+
+  it('still refuses an over-the-line list that grows further', () => {
+    expect(roomForList('free', 'songs_per_playlist', 11, 10)).toBe(false);
+  });
+
+  it('never stops pro', () => {
+    expect(roomForList('pro', 'songs_per_playlist', 900, 0)).toBe(true);
   });
 });
