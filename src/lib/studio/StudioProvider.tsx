@@ -104,6 +104,16 @@ export interface StudioSession {
   outputKey: string;
 }
 
+/** What the subscription row says beyond the plan name. */
+export interface Billing {
+  /** Dodo's own word for it: active, past_due, on_hold, cancelled, paused… */
+  status: string;
+  /** When the next payment is due, or when a cancelled run ends. */
+  renewsAt: string | null;
+  /** Cancelled, but paid up until `renewsAt`. */
+  ending: boolean;
+}
+
 export interface StudioInitial {
   session: StudioSession;
   /** Who is signed in, so the console can say so. */
@@ -132,6 +142,7 @@ export interface StudioInitial {
   nextShowData: ShowData;
   timer: TimerState;
   plan: string;
+  billing: Billing;
 }
 
 
@@ -139,6 +150,7 @@ interface StudioValue {
   session: StudioSession;
   email: string;
   plan: string;
+  billing: Billing;
   /**
    * Whether `adding` more of something still fits under the operator's plan.
    *
@@ -1974,6 +1986,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       session: initial.session,
       email: initial.email,
       plan: initial.plan,
+      billing: initial.billing,
       room,
       usage: counts,
       limitNotice,
@@ -2071,6 +2084,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       goLive,
       importSongs,
       initial.email,
+      initial.billing,
       initial.plan,
       initial.session,
       live,

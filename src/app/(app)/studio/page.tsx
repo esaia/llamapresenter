@@ -37,7 +37,11 @@ export default async function StudioPage() {
   const [settings, session, subscription, songs, libraries, playlists, nameCards] = await Promise.all([
     supabase.from('settings').select('*').eq('user_id', user.id).single(),
     supabase.from('sessions').select('id, name, output_key').eq('user_id', user.id).order('created_at').limit(1).single(),
-    supabase.from('subscriptions').select('plan').eq('user_id', user.id).maybeSingle(),
+    supabase
+      .from('subscriptions')
+      .select('plan, status, current_period_end, cancel_at_period_end')
+      .eq('user_id', user.id)
+      .maybeSingle(),
     supabase.from('songs').select('id, title, slides, langs, library_id, source').eq('user_id', user.id).order('title'),
     supabase.from('song_libraries').select('id, name').eq('user_id', user.id).order('position').order('created_at'),
     supabase
@@ -142,6 +146,13 @@ export default async function StudioPage() {
       songs: (row.songs as string[]) ?? [],
     })),
     plan: subscription.data?.plan ?? 'free',
+    // What the account panel needs to say more than "Pro": whether the last
+    // payment went through, and when the next one is.
+    billing: {
+      status: subscription.data?.status ?? 'active',
+      renewsAt: subscription.data?.current_period_end ?? null,
+      ending: subscription.data?.cancel_at_period_end ?? false,
+    },
   };
 
   return (
