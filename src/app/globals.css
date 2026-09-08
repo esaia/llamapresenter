@@ -536,6 +536,26 @@ body {
   animation: studio-modal-out 120ms ease-in forwards;
 }
 
+/* A ceiling the operator has just met, arriving over whatever they are looking
+   at. It drops in from above because that is where it is: a thing the console
+   is saying back, rather than a part of the panel underneath it.
+   The transform is composed with the -translate-x-1/2 that centres it, so the
+   keyframe carries both. */
+@keyframes studio-notice-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+}
+
+@utility studio-notice {
+  animation: studio-notice-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* A track title longer than the transport is wide. It walks to its end and
    back rather than being cut off, with a pause at each end so the beginning is
    readable — the operator is usually checking which take is playing. */

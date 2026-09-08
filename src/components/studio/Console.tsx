@@ -166,6 +166,17 @@ export const Console = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [browsing, live, removeSlide, searching, songs, stepLive, tab, updateTimer]);
 
+  // A notice that has been read should not have to be dismissed. Long enough to
+  // finish reading twice, and the button is still there for anyone who wants it
+  // gone sooner.
+  useEffect(() => {
+    if (!limitNotice) return;
+
+    const wait = window.setTimeout(dismissLimit, 9000);
+
+    return () => window.clearTimeout(wait);
+  }, [dismissLimit, limitNotice]);
+
   return (
     <div className="flex h-dvh flex-col bg-studio-bg">
       <AppBar onSettings={() => setSettingsTab('projector')} onOpenNav={() => setNavOpen(true)} />
@@ -179,29 +190,33 @@ export const Console = () => {
         ) : null}
       </div>
 
-      {/* A ceiling the operator has just walked into. It sits under the app bar
-          rather than beside the button that refused, because the same sentence
-          comes from the rail, from a song dragged onto a running order and from
-          an import — one place to read it is kinder than three. */}
+      {/* A ceiling the operator has just walked into.
+          
+          Floated over everything rather than banded across the top. It was a
+          band, and a band was wrong twice: it pushed the whole console down for
+          a sentence, and the refusal it was reporting usually happened inside a
+          dialog — so the answer appeared behind the thing the operator was
+          looking at. Above the modal layer (z-100), because that is where the
+          question was asked. */}
       {limitNotice ? (
         <div
           role="status"
-          className="flex shrink-0 items-center gap-3 border-b border-studio-border bg-studio-surface px-4 py-2"
+          className="studio-notice fixed top-3 left-1/2 z-[110] flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2
+            items-center gap-3 rounded-studio border border-studio-border bg-studio-lift px-3 py-2
+            shadow-studio-panel"
         >
           <span className="text-sm text-studio-text">{limitNotice}</span>
 
           <a
             href="/pricing"
-            className="rounded-studio bg-studio-accent px-2.5 py-1 text-xs font-medium text-studio-onaccent"
+            className="shrink-0 rounded-studio bg-studio-accent px-2.5 py-1 text-xs font-medium text-studio-onaccent"
           >
             See Pro
           </a>
 
-          <div className="ml-auto">
-            <IconButton label="Dismiss" onClick={dismissLimit}>
-              <X className="size-3.5" />
-            </IconButton>
-          </div>
+          <IconButton label="Dismiss" onClick={dismissLimit}>
+            <X className="size-3.5" />
+          </IconButton>
         </div>
       ) : null}
 
