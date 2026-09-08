@@ -19,6 +19,7 @@ import { useStudio } from '@/lib/studio/StudioProvider';
  * slide before it stops being readable, and no amount of money changes that.
  */
 const ROWS: LimitKey[] = [
+  'passages',
   'songs_per_playlist',
   'playlists',
   'songs',

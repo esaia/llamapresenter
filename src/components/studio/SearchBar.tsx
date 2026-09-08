@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Kbd } from '@/components/ui/Kbd';
 import { findBook, parseReference, type BookEntry } from '@/lib/bible/passage';
+import { isPlanLimit } from '@/lib/billing/limits';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
 import { BrowseModal } from './BrowseModal';
@@ -85,7 +86,7 @@ export const SearchBar = ({
       setInput('');
       goLive(block.id, 0);
     } catch (failure) {
-      setError((failure as Error).message);
+      if (!isPlanLimit(failure)) setError((failure as Error).message);
     }
   };
 

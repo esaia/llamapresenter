@@ -15,6 +15,7 @@ import {
 } from '@/lib/bible/search';
 import { chapterCount, verseCount } from '@/lib/bible/versification';
 import { cn } from '@/lib/cn';
+import { isPlanLimit } from '@/lib/billing/limits';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
 import { BookScope } from './BookScope';
@@ -257,7 +258,8 @@ export const BrowseModal = ({
 
       if (block) goLive(block.id, 0);
     } catch (failure) {
-      setError((failure as Error).message);
+      if (isPlanLimit(failure)) onClose();
+      else setError((failure as Error).message);
     } finally {
       setAdding(null);
     }

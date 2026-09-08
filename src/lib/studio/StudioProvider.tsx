@@ -362,6 +362,14 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     blocks: initial.workspace.blocks,
     live: initial.workspace.live,
   });
+  // Read by `addPassage`, which must see how many are on the board without
+  // being rebuilt every time one of them is collapsed or dragged.
+  const workspaceRef = useRef(workspace);
+
+  useEffect(() => {
+    workspaceRef.current = workspace;
+  }, [workspace]);
+
   // Read by `addLang`, which must see the current language set without being
   // rebuilt on every settings change — the same arrangement as `songsRef`.
   const settingsRef = useRef(settings);
@@ -1009,6 +1017,11 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
   const addPassage = useCallback<StudioValue['addPassage']>(
     async ({ book, chapter, from = null, to = null }) => {
+      // Checked before the fetch: refusing after the passage has been pulled
+      // down wastes the wait and tells the operator nothing they could not have
+      // been told immediately.
+      if (!allows(initial.plan, 'passages', workspaceRef.current.blocks.length)) refuse('passages');
+
       setLoading(true);
 
       try {
@@ -1046,7 +1059,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         setLoading(false);
       }
     },
-    [client, settings.adminLang, targets],
+    [client, initial.plan, refuse, settings.adminLang, targets],
   );
 
   /**
@@ -1939,6 +1952,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
   const counts = useMemo<Partial<Record<LimitKey, number>>>(
     () => ({
       sessions: 1,
+      passages: blocks.length,
       songs: songs.length,
       libraries: libraries.length,
       playlists: playlists.length,
@@ -1947,7 +1961,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       custom_fonts: settings.customFonts.length,
       custom_templates: settings.customTemplates.length,
     }),
-    [cards.length, libraries.length, playlists.length, settings, songs.length],
+    [blocks.length, cards.length, libraries.length, playlists.length, settings, songs.length],
   );
 
   const room = useCallback<StudioValue['room']>(
