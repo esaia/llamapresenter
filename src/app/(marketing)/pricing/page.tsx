@@ -8,8 +8,8 @@ import { freeLimitValue, INCLUDED, LIMIT_GROUPS, LIMIT_NOTES, proLimitValue } fr
 export const metadata = {
   title: 'Pricing',
   description:
-    'Free covers a congregation putting scripture on a screen — the whole Bible, the projector, the stage and the '
-    + 'lower third. Pro lifts the ceilings for $9 a month.',
+    'Start for free and use LlamaPresenter for your projector, stage display, and livestream. Pro is $9 a month '
+    + 'for more songs, more languages and custom templates.',
 };
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
@@ -31,9 +31,9 @@ const Tick = () => (
 
 const QUESTIONS = [
   {
-    q: 'Is Free a trial?',
-    a: 'No. There is no clock on it and no card to start. A church that only ever puts verses on the screen can run '
-      + 'every service on Free and never hear from us about money.',
+    q: 'Is Free really free?',
+    a: 'Yes. There is no card required and no trial period. A church that only puts verses on the screen can run '
+      + 'every service on Free and never pay us anything.',
   },
   {
     q: 'What actually changes when I pay?',
@@ -65,10 +65,12 @@ const QUESTIONS = [
 export default function PricingPage() {
   return (
     <main className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
-      <h1 className={`${DISPLAY} text-4xl sm:text-5xl`}>Pricing</h1>
+      <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Pricing</p>
+
+      <h1 className={`${DISPLAY} mt-5 text-4xl sm:text-5xl`}>Simple pricing for your church</h1>
       <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-        Putting scripture on the screen costs nothing, on every screen you have, for as long as you like. Pro is for
-        the teams that also run songs, music and a look of their own — it lifts the ceilings, and adds no buttons.
+        Start for free and use LlamaPresenter for your projector, stage display, and livestream. Upgrade to Pro when
+        you need more songs, more languages, custom templates, and more room for your service.
       </p>
 
       {/* ------------------------------------------------------- the two cards */}
@@ -108,7 +110,7 @@ export default function PricingPage() {
                   : 'mt-8 block rounded-studio border border-site-rule px-4 py-2.5 text-center text-sm text-site-ink transition-colors duration-150 hover:bg-site-band'
               }
             >
-              {plan.id === 'pro' ? `${plan.cta.label} — ${plan.price} ${plan.cadence}` : plan.cta.label}
+              {plan.id === 'pro' ? `${plan.cta.label} for ${plan.price} ${plan.cadence}` : plan.cta.label}
             </Link>
           </div>
         ))}
@@ -120,10 +122,10 @@ export default function PricingPage() {
           not printed. It is the table the console shows an operator who has
           hit a ceiling, from the same `LIMIT_GROUPS`. */}
       <section className="mt-20">
-        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Every ceiling, side by side</h2>
+        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Everything, side by side</h2>
         <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-          These are all of them. A gate in this app is always a number — how many of a thing you can keep — so this
-          table is the entire difference between the two plans.
+          See exactly what is included in Free and what you get with Pro. The limits are shown clearly so you can
+          choose the plan that fits your church.
         </p>
 
         {/* One card, one rule per group, and no lines between rows.
@@ -183,17 +185,17 @@ export default function PricingPage() {
         </div>
 
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-site-faint">
-          Three languages on a slide is the one number Pro does not make unlimited: it is how many fit before a slide
-          stops being readable from the back of the room, and not something we would charge for.
+          Three languages on a slide is the one number Pro does not make unlimited. It is how many fit before a
+          slide stops being readable from the back of the room, and not something we would charge for.
         </p>
       </section>
 
       {/* ------------------------------------------------------- in both plans */}
       <section className="mt-20">
-        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>In both plans</h2>
+        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Included with every plan</h2>
         <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-          Nothing below is a Pro feature. It is what the app is, and it is the same on the day you sign up as it is on
-          the day you pay us.
+          Both plans include the core tools you need to run a church service. Pro simply gives you more room to use
+          them.
         </p>
 
         <div className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -216,7 +218,7 @@ export default function PricingPage() {
 
       {/* ------------------------------------------------------------ questions */}
       <section className="mt-20">
-        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Questions about paying</h2>
+        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Questions about pricing</h2>
 
         <div className="mt-10 gap-x-12 sm:columns-2 lg:columns-3">
           {QUESTIONS.map(item => (

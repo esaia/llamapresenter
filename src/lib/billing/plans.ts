@@ -1,3 +1,4 @@
+import { MAX_LANGS } from '../bible/languages';
 import { THEMES } from '../projector/themes';
 
 import { FREE_LIMITS } from './limits';
@@ -30,14 +31,14 @@ export const PLANS: Record<PlanId, Plan> = {
     name: 'Free',
     price: '$0',
     cadence: 'forever',
-    blurb: 'Everything a congregation needs to put scripture on a screen.',
+    blurb: 'Everything you need to get your church service on screen.',
     highlights: [
       'The whole Bible, in every translation we hold',
-      'Projector, stage and a lower third for your stream',
+      'Projector, stage, and lower third for your stream',
       `${FREE_LIMITS.languages} languages side by side`,
       `${THEMES.length} built-in backgrounds`,
       `${FREE_LIMITS.songs} songs, ${FREE_LIMITS.songs_per_playlist} to a playlist`,
-      `${FREE_LIMITS.audio_tracks} tracks and ${FREE_LIMITS.name_cards} name cards`,
+      `${FREE_LIMITS.audio_tracks} tracks and ${FREE_LIMITS.audio_categories} music libraries`,
     ],
     cta: { label: 'Start free', href: '/login' },
   },
@@ -46,13 +47,13 @@ export const PLANS: Record<PlanId, Plan> = {
     name: 'Pro',
     price: '$9',
     cadence: 'per month',
-    blurb: 'For teams running a full service — songs, music and their own look.',
+    blurb: 'For churches that need more songs, more languages, and more control over their presentation.',
     highlights: [
-      'Everything in Free, without the ceilings',
-      'Unlimited songs, libraries and running orders',
-      'Three languages on a slide',
-      'Your own music and typefaces',
-      'Templates you draw yourself',
+      'Everything in Free, without the limits',
+      'Unlimited songs, libraries, and running orders',
+      `${MAX_LANGS} languages on a slide`,
+      'Use your own music and typefaces',
+      'Create your own templates',
       'More than one session',
     ],
     // Buying needs an account, so the button goes to `/upgrade` rather than to

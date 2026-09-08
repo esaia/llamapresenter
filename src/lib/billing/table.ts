@@ -31,17 +31,16 @@ export const LIMIT_GROUPS: { title: string; keys: LimitKey[] }[] = [
  */
 export const LIMIT_NOTES: Record<LimitKey, string> = {
   passages: 'Bible passages open in the console at once, each broken into verses and ready to send.',
-  languages: 'Translations stacked on the same slide, so the room can read the verse in both at once.',
-  songs: 'Songs kept in your library, typed in or imported from a ProPresenter bundle.',
-  songs_per_playlist: 'How long one running order can be — the songs for a single service.',
-  playlists: 'Running orders. One per service, or one per team that leads.',
-  audio_tracks: 'Your own music files, played from the console. They stay on your machine.',
-  audio_categories: 'Shelves you sort that music onto — prelude, communion, after the service.',
-  name_cards: 'The strap across the bottom of your livestream saying who is speaking, and what they do.',
-  custom_templates: 'Slide designs you draw yourself, instead of the ones we ship.',
-  custom_fonts: 'Typefaces of your own, added as a Google Fonts family or a link to a font file.',
-  sessions: 'A session is one set of screens — its own projector, stage and stream links. A second session is a '
-    + 'second room, running its own service at the same time.',
+  languages: 'Show translations together on the same slide so your church can read in more than one language.',
+  songs: 'Keep your song lyrics in LlamaPresenter, typed in or imported from a ProPresenter export.',
+  songs_per_playlist: 'Choose how many songs can be in a single running order for a service.',
+  playlists: 'Create a running order for each service or event.',
+  audio_tracks: 'Play your own music files directly from the console.',
+  audio_categories: 'Keep your music organized into separate libraries for different services or teams.',
+  name_cards: 'Show speaker names and titles on your livestream.',
+  custom_templates: 'Create your own designs for verses and lyrics instead of using only the built-in templates.',
+  custom_fonts: 'Use your own fonts in your presentation templates.',
+  sessions: 'Run more than one service or presentation at the same time.',
 };
 
 /** Pro is unlimited everywhere except languages, where three is how many fit. */
@@ -64,7 +63,7 @@ export const INCLUDED = [
   {
     title: 'The Bible',
     items: [
-      'Every translation we hold, whole — no chapter or book is held back',
+      'Every translation we support',
       'Side-by-side languages on one slide',
       'Search by reference or by the words of a verse',
       'Psalms split the way each translation splits them',
@@ -73,30 +72,30 @@ export const INCLUDED = [
   {
     title: 'Screens',
     items: [
-      'A projector output for the wall',
-      'A stage display for the people on the platform',
-      'A transparent lower third for OBS, vMix or any other streaming tool',
-      'A countdown timer the room can see',
-      'As many screens as you can open — every output is a link',
+      'A projector output for the room',
+      'A stage display for your team',
+      'A transparent lower third for OBS, vMix, or another streaming tool',
+      'A countdown timer for the room or stage',
+      'As many screens as you need, each with its own link',
     ],
   },
   {
     title: 'Running the service',
     items: [
       'Control it from your phone, from anywhere in the room',
-      'Songs, verses and announcements in one running order',
+      'Songs, verses, and announcements in one running order',
       'Name cards for whoever is speaking',
-      'Built-in backgrounds, and your own pictures and video',
+      'Built-in backgrounds and your own pictures and videos',
       'Your own music, played from the console',
     ],
   },
   {
-    title: 'The account',
+    title: 'Your account',
     items: [
-      'No card to start, and no trial that expires',
-      'Your work stays yours if you stop paying — nothing is deleted',
-      'Cancel from the console whenever you like',
-      'Runs in a browser: Windows, macOS, Linux, ChromeOS',
+      'No card required to start',
+      'Your work stays yours if you stop paying',
+      'Cancel from the console whenever you need',
+      'Runs in a browser on Windows, macOS, Linux, ChromeOS, and more',
     ],
   },
 ];
