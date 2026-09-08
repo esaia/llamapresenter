@@ -264,7 +264,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
 
     const target = playlists.find(item => item.id === list.id);
 
-    void placeInPlaylist(list.id, songIds, target?.songs.length ?? 0);
+    void placeInPlaylist(list.id, songIds, target?.songs.length ?? 0).catch(() => {});
   };
 
   /** A shelf or an order dropped among its own kind, at the line. */
@@ -363,7 +363,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
         <div className="flex items-center justify-between border-b border-studio-border bg-studio-surface px-2.5 py-1.5">
           <span className="text-[11px] font-semibold tracking-wider text-studio-muted uppercase">Library</span>
 
-          <IconButton label="New library" onClick={() => void addLibrary(`Library ${libraries.length + 1}`)}>
+          <IconButton label="New library" onClick={() => void addLibrary(`Library ${libraries.length + 1}`).catch(() => {})}>
             <HiOutlinePlus className="text-xs" />
           </IconButton>
         </div>
@@ -377,7 +377,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
         <div className="flex items-center justify-between border-y border-studio-border bg-studio-surface px-2.5 py-1.5">
           <span className="text-[11px] font-semibold tracking-wider text-studio-muted uppercase">Playlist</span>
 
-          <IconButton label="New playlist" onClick={() => void addPlaylist(`Playlist ${playlists.length + 1}`)}>
+          <IconButton label="New playlist" onClick={() => void addPlaylist(`Playlist ${playlists.length + 1}`).catch(() => {})}>
             <HiOutlinePlus className="text-xs" />
           </IconButton>
         </div>
@@ -425,7 +425,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
         onOpenSong={setActiveSongId}
         onEdit={onEdit}
         onRemove={onRemove}
-        onPlace={(songIds, index) => open.kind === 'playlist' && void placeInPlaylist(open.id, songIds, index)}
+        onPlace={(songIds, index) => open.kind === 'playlist' && void placeInPlaylist(open.id, songIds, index).catch(() => {})}
         onDrop={songIds => open.kind === 'playlist' && void removeFromPlaylist(open.id, songIds)}
       />
 

@@ -59,6 +59,8 @@ export const Console = () => {
     live,
     songs,
     removeSlide,
+    limitNotice,
+    dismissLimit,
   } = useStudio();
 
   // The console draws its own copies of the slide — the preview panel, every
@@ -176,6 +178,32 @@ export const Console = () => {
           <div role="progressbar" aria-label="Loading passages" className="studio-progress absolute inset-0" />
         ) : null}
       </div>
+
+      {/* A ceiling the operator has just walked into. It sits under the app bar
+          rather than beside the button that refused, because the same sentence
+          comes from the rail, from a song dragged onto a running order and from
+          an import — one place to read it is kinder than three. */}
+      {limitNotice ? (
+        <div
+          role="status"
+          className="flex shrink-0 items-center gap-3 border-b border-studio-border bg-studio-surface px-4 py-2"
+        >
+          <span className="text-sm text-studio-text">{limitNotice}</span>
+
+          <a
+            href="/pricing"
+            className="rounded-studio bg-studio-accent px-2.5 py-1 text-xs font-medium text-studio-onaccent"
+          >
+            See Pro
+          </a>
+
+          <div className="ml-auto">
+            <IconButton label="Dismiss" onClick={dismissLimit}>
+              <X className="size-3.5" />
+            </IconButton>
+          </div>
+        </div>
+      ) : null}
 
       <div className="flex min-h-0 flex-1">
         <aside className="hidden w-[18rem] shrink-0 border-r border-studio-border lg:block">

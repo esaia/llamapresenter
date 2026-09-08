@@ -150,6 +150,16 @@ interface StudioValue {
    * length of one running order, or the audio library next door.
    */
   room: (key: LimitKey, adding?: number, current?: number) => boolean;
+  /**
+   * The ceiling the operator just walked into, in words, or null.
+   *
+   * A plan limit is refused in several places — the rail's two plus buttons, a
+   * song dragged onto a running order, an import — and most of those callers
+   * have nowhere to put an error. Rather than ask each of them to catch, the
+   * refusal is written here and the console shows it once, in one place.
+   */
+  limitNotice: string | null;
+  dismissLimit: () => void;
 
   settings: Settings;
   update: (patch: Partial<Settings>) => void;
@@ -300,6 +310,33 @@ export const useStudio = () => {
 export const StudioProvider = ({ initial, children }: { initial: StudioInitial; children: ReactNode }) => {
   const client = useQueryClient();
   const db = useMemo(() => supabase(), []);
+
+  /**
+   * A ceiling the operator has just met, held until they dismiss it.
+   *
+   * `refuse` is what the console's own checks call; `failed` is for a write the
+   * database turned away, which is the same event arriving from the other side.
+   * Both still throw, because the operation genuinely did not happen and the
+   * callers that do catch — the import panel, the song editor — show the
+   * message where the operator is already looking.
+   */
+  const [limitNotice, setLimitNotice] = useState<string | null>(null);
+
+  const refuse = useCallback((key: LimitKey): never => {
+    const message = limitMessage(key);
+
+    setLimitNotice(message);
+
+    throw new Error(message);
+  }, []);
+
+  const failed = useCallback((error: { message: string }) => {
+    const ceiling = planErrorMessage(error.message);
+
+    if (ceiling) setLimitNotice(ceiling);
+
+    return new Error(ceiling ?? error.message);
+  }, []);
 
   const [settings, setSettings] = useState<Settings>(() => fromRow(initial.settings));
   const [workspace, setWorkspace] = useState<Workspace>({
@@ -723,9 +760,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       const saved = hasRealId(card.id) ? { id: card.id } : {};
 
       // Editing a saved card is always allowed; only a new one is counted.
-      if (!saved.id && !allows(initial.plan, 'name_cards', cards.length)) {
-        throw new Error(limitMessage('name_cards'));
-      }
+      if (!saved.id && !allows(initial.plan, 'name_cards', cards.length)) refuse('name_cards');
 
       const { data, error } = await db
         .from('name_cards')
@@ -739,7 +774,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         .select()
         .single();
 
-      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
+      if (error) throw failed(error);
       if (!data) return;
 
       const written = cardFromRow(data);
@@ -750,21 +785,21 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         return [...without, written].sort((a, b) => a.position - b.position || a.title.localeCompare(b.title));
       });
     },
-    [cards.length, db, initial.plan, initial.settings.user_id],
+    [cards.length, db, failed, initial.plan, initial.settings.user_id, refuse],
   );
 
   const removeCard = useCallback<StudioValue['removeCard']>(
     async id => {
       const { error } = await db.from('name_cards').delete().eq('id', id);
 
-      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
+      if (error) throw failed(error);
 
       setCards(current => current.filter(card => card.id !== id));
 
       // A card taken out of the library while it is on the stream comes off it.
       if (cardRef.current?.card.id === id) publishCard(null);
     },
-    [db, publishCard],
+    [db, failed, publishCard],
   );
 
   /** Normalised on the way out, so a hand-typed duration or a stale row can
@@ -1329,10 +1364,8 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       const known = new Set(songs.map(song => song.title.toLowerCase()));
       const fresh = imported.filter(song => !known.has(song.title.toLowerCase())).length;
 
-      if (!allows(initial.plan, 'songs', songs.length, fresh)) throw new Error(limitMessage('songs'));
-      if (intoNewLibrary && !allows(initial.plan, 'libraries', libraries.length)) {
-        throw new Error(limitMessage('libraries'));
-      }
+      if (!allows(initial.plan, 'songs', songs.length, fresh)) refuse('songs');
+      if (intoNewLibrary && !allows(initial.plan, 'libraries', libraries.length)) refuse('libraries');
 
       // A shelf of its own, named after what was dropped. Two bundles of the
       // same name are two imports and get two shelves, because that is what
@@ -1374,7 +1407,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         )
         .select();
 
-      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
+      if (error) throw failed(error);
       if (!data) return;
 
       setSongs(current => {
@@ -1385,7 +1418,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         return [...byTitle.values()].sort((a, b) => a.title.localeCompare(b.title));
       });
     },
-    [db, filing, initial.plan, initial.settings.user_id, libraries, songs],
+    [db, failed, filing, initial.plan, initial.settings.user_id, libraries, refuse, songs],
   );
 
   const saveSong = useCallback<StudioValue['saveSong']>(
@@ -1397,7 +1430,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // Only a song that is not in the library yet counts against the ceiling;
       // editing one already there is always allowed, whatever the plan.
       if (!saved.id && !songs.some(item => item.title.toLowerCase() === song.title.toLowerCase())) {
-        if (!allows(initial.plan, 'songs', songs.length)) throw new Error(limitMessage('songs'));
+        if (!allows(initial.plan, 'songs', songs.length)) refuse('songs');
       }
 
       const { data, error } = await db
@@ -1416,7 +1449,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // One title per library is a unique index, and Postgres says so in its own
       // words. The operator gets ours.
       if (error?.code === '23505') throw new Error(`A song called “${song.title}” is already in the library.`);
-      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
+      if (error) throw failed(error);
       if (!data) return;
 
       const written = songFromRow(data);
@@ -1455,7 +1488,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       return written;
     },
-    [db, filing, initial.plan, initial.settings.user_id, songs],
+    [db, failed, filing, initial.plan, initial.settings.user_id, refuse, songs],
   );
 
   /**
@@ -1629,7 +1662,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    */
   const addLibrary = useCallback<StudioValue['addLibrary']>(
     async name => {
-      if (!allows(initial.plan, 'libraries', libraries.length)) throw new Error(limitMessage('libraries'));
+      if (!allows(initial.plan, 'libraries', libraries.length)) refuse('libraries');
 
       const { data, error } = await db
         .from('song_libraries')
@@ -1637,18 +1670,18 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         .select('id, name')
         .single();
 
-      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
+      if (error) throw failed(error);
       if (!data) return;
 
       setLibraries(current => [...current, data]);
       setOpenList({ kind: 'library', id: data.id });
     },
-    [db, initial.plan, initial.settings.user_id, libraries.length],
+    [db, failed, initial.plan, initial.settings.user_id, libraries.length, refuse],
   );
 
   const addPlaylist = useCallback<StudioValue['addPlaylist']>(
     async name => {
-      if (!allows(initial.plan, 'playlists', playlists.length)) throw new Error(limitMessage('playlists'));
+      if (!allows(initial.plan, 'playlists', playlists.length)) refuse('playlists');
 
       const { data, error } = await db
         .from('song_playlists')
@@ -1656,13 +1689,13 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         .select('id, name, songs')
         .single();
 
-      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
+      if (error) throw failed(error);
       if (!data) return;
 
       setPlaylists(current => [...current, { id: data.id, name: data.name, songs: [] }]);
       setOpenList({ kind: 'playlist', id: data.id });
     },
-    [db, initial.plan, initial.settings.user_id, playlists.length],
+    [db, failed, initial.plan, initial.settings.user_id, playlists.length, refuse],
   );
 
   const renameList = useCallback<StudioValue['renameList']>(
@@ -1792,9 +1825,9 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         current.map(list => (list.id === playlistId && restored ? { ...list, songs: restored } : list)),
       );
 
-      throw new Error(planErrorMessage(error.message) ?? error.message);
+      throw failed(error);
     },
-    [db],
+    [db, failed],
   );
 
   const placeInPlaylist = useCallback<StudioValue['placeInPlaylist']>(
@@ -1809,7 +1842,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // a running order that is already over the line leaves it the same
       // length, and has to keep working — see `roomForList`.
       if (!allowsList(initial.plan, 'songs_per_playlist', landing, list.songs.length)) {
-        throw new Error(limitMessage('songs_per_playlist'));
+        refuse('songs_per_playlist');
       }
 
       const without = list.songs.filter(id => !songIds.includes(id));
@@ -1822,7 +1855,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       await writePlaylist(playlistId, without);
     },
-    [initial.plan, playlists, writePlaylist],
+    [initial.plan, playlists, refuse, writePlaylist],
   );
 
   const orderPlaylist = useCallback<StudioValue['orderPlaylist']>(
@@ -1885,6 +1918,8 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       email: initial.email,
       plan: initial.plan,
       room,
+      limitNotice,
+      dismissLimit: () => setLimitNotice(null),
       settings,
       update,
       setLangOrder,
@@ -1996,6 +2031,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       removeFromPlaylist,
       publishLyrics,
       refreshBlocks,
+      limitNotice,
       regroupCards,
       room,
       removeCard,

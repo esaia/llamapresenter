@@ -241,7 +241,7 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
       if (event.shiftKey && open.kind === 'playlist') {
         const list = playlists.find(item => item.id === open.id);
 
-        void placeInPlaylist(open.id, [picked.id], list?.songs.length ?? 0);
+        void placeInPlaylist(open.id, [picked.id], list?.songs.length ?? 0).catch(() => {});
         onClose();
         return;
       }
