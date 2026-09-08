@@ -2,29 +2,12 @@
 
 import { Fragment, useState } from 'react';
 
-import { MAX_LANGS } from '@/lib/bible/languages';
 import { gatesEnforced, planOf } from '@/lib/billing/entitlements';
 import { FREE_LIMITS, LIMIT_LABELS, type LimitKey } from '@/lib/billing/limits';
 import { PLANS } from '@/lib/billing/plans';
+import { LIMIT_GROUPS, proLimitValue } from '@/lib/billing/table';
 import { useAudio } from '@/lib/studio/AudioProvider';
 import { useStudio } from '@/lib/studio/StudioProvider';
-
-/**
- * The ceilings, grouped the way the console is.
- *
- * A flat list of eleven made the reader work out for themselves that passages
- * and languages are the same subject and tracks and music libraries are
- * another. The groups are the tabs an operator already knows, in the order
- * they matter: scripture on the screen is what this app is for, and it comes
- * first even though it is the part we gate least.
- */
-const GROUPS: { title: string; keys: LimitKey[] }[] = [
-  { title: 'Scripture', keys: ['passages', 'languages'] },
-  { title: 'Songs', keys: ['songs', 'songs_per_playlist', 'playlists'] },
-  { title: 'Music', keys: ['audio_tracks', 'audio_categories'] },
-  { title: 'The stream, and your own look', keys: ['name_cards', 'custom_templates', 'custom_fonts'] },
-  { title: 'Sessions', keys: ['sessions'] },
-];
 
 /**
  * What a Pro account has made. Counts only — no ceilings, because there are
@@ -32,9 +15,6 @@ const GROUPS: { title: string; keys: LimitKey[] }[] = [
  * nothing in it.
  */
 const BUILT: LimitKey[] = ['songs', 'playlists', 'audio_tracks', 'custom_templates', 'name_cards', 'custom_fonts'];
-
-/** Pro is unlimited everywhere except languages, where three is how many fit. */
-const proValue = (key: LimitKey) => (key === 'languages' ? String(MAX_LANGS) : 'Unlimited');
 
 /** A date the operator reads, not an ISO string. */
 const readable = (iso: string | null) =>
@@ -155,7 +135,7 @@ export const AccountSection = () => {
             </thead>
 
             <tbody>
-              {GROUPS.map(group => (
+              {LIMIT_GROUPS.map(group => (
                 <Fragment key={group.title}>
                   <tr>
                     <th
@@ -192,7 +172,7 @@ export const AccountSection = () => {
                           {limit === 0 ? 'Pro only' : limit}
                         </td>
 
-                        <td className="px-4 py-2 text-right text-studio-text">{proValue(key)}</td>
+                        <td className="px-4 py-2 text-right text-studio-text">{proLimitValue(key)}</td>
                       </tr>
                     );
                   })}
@@ -228,7 +208,7 @@ export const AccountSection = () => {
                 onClick={() => void go('/api/billing/checkout')}
                 disabled={busy}
                 className="w-full rounded-studio bg-studio-accent px-3 py-2 text-sm font-medium text-studio-onaccent
-                  transition-transform duration-150 hover:-translate-y-px disabled:translate-y-0 disabled:opacity-60"
+                  transition-colors duration-150 hover:bg-studio-accent/85 disabled:opacity-60"
               >
                 Upgrade to Pro — {pro.price} {pro.cadence}
               </button>

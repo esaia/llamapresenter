@@ -1,37 +1,97 @@
 import Link from 'next/link';
+import { Fragment } from 'react';
 
+import { LIMIT_LABELS } from '@/lib/billing/limits';
 import { PLANS } from '@/lib/billing/plans';
+import { freeLimitValue, INCLUDED, LIMIT_GROUPS, proLimitValue } from '@/lib/billing/table';
 
-export const metadata = { title: 'Pricing' };
+export const metadata = {
+  title: 'Pricing',
+  description:
+    'Free covers a congregation putting scripture on a screen — the whole Bible, the projector, the stage and the '
+    + 'lower third. Pro lifts the ceilings for $9 a month.',
+};
+
+/* The rounded display face the brand is drawn in, as on the rest of the site. */
+const DISPLAY = 'font-valera tracking-tight text-site-ink';
+
+/** The tick beside a line both plans carry. Drawn rather than a font's glyph. */
+const Tick = () => (
+  <svg viewBox="0 0 16 16" aria-hidden focusable="false" className="mt-[5px] size-3.5 shrink-0 text-site-ink">
+    <path
+      d="M3 8.5 6.2 12 13 4.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const QUESTIONS = [
+  {
+    q: 'Is Free a trial?',
+    a: 'No. There is no clock on it and no card to start. A church that only ever puts verses on the screen can run '
+      + 'every service on Free and never hear from us about money.',
+  },
+  {
+    q: 'What actually changes when I pay?',
+    a: 'The numbers, and nothing else. There is no feature Pro can do that Free cannot — Pro lifts the ceilings on '
+      + 'how many songs, tracks, running orders, name cards and looks of your own you can keep.',
+  },
+  {
+    q: 'What happens to my work if I stop paying?',
+    a: 'It stays exactly where it is. A ceiling only ever refuses something new: going back to Free never deletes a '
+      + 'song, a playlist or a template you made, and you can still open, reorder and remove them.',
+  },
+  {
+    q: 'Do I need an account for the projector machine?',
+    a: 'No. Every output — the projector, the stage display and the lower third — is a link you open on that machine. '
+      + 'Only the person running the console signs in.',
+  },
+  {
+    q: 'Where do my backgrounds and music live?',
+    a: 'On the machine running the console, not on our servers. That is why they cost you nothing to keep, and why '
+      + 'you copy them over when you move to a different computer.',
+  },
+  {
+    q: 'How do I cancel?',
+    a: 'From the console, in the account panel, in two clicks. It runs to the end of the month you have paid for, and '
+      + 'then the account is a Free one again.',
+  },
+];
 
 export default function PricingPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-24">
-      <h1 className="font-valera text-4xl tracking-tight text-site-ink">Pricing</h1>
-      <p className="text-site-muted mt-4">
-        Free covers a congregation putting verses on a screen. Pro is for teams running the whole service.
+    <main className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
+      <h1 className={`${DISPLAY} text-4xl sm:text-5xl`}>Pricing</h1>
+      <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
+        Putting scripture on the screen costs nothing, on every screen you have, for as long as you like. Pro is for
+        the teams that also run songs, music and a look of their own — it lifts the ceilings, and adds no buttons.
       </p>
 
+      {/* ------------------------------------------------------- the two cards */}
       <div className="mt-12 grid gap-6 sm:grid-cols-2">
         {Object.values(PLANS).map(plan => (
           <div
             key={plan.id}
             className={
               plan.id === 'pro'
-                ? 'rounded-studio-lg border border-site-ink bg-site-surface p-6'
-                : 'rounded-studio-lg border border-site-rule p-6'
+                ? 'flex flex-col rounded-studio-lg border border-site-ink bg-site-surface p-6 shadow-sm'
+                : 'flex flex-col rounded-studio-lg border border-site-rule p-6'
             }
           >
             <h2 className="text-sm text-site-muted">{plan.name}</h2>
 
-            <p className="mt-4">
-              <span className="font-valera text-4xl tracking-tight text-site-ink">{plan.price}</span>
-              <span className="text-site-muted ml-2 text-sm">{plan.cadence}</span>
+            <p className="mt-4 flex items-baseline gap-2">
+              <span className={`${DISPLAY} text-4xl`}>{plan.price}</span>
+              <span className="text-sm text-site-faint">{plan.cadence}</span>
             </p>
 
-            <p className="text-site-muted mt-4 text-sm">{plan.blurb}</p>
+            <p className="mt-4 text-sm leading-relaxed text-site-muted">{plan.blurb}</p>
 
-            <ul className="mt-6 space-y-2 text-sm text-site-ink">
+            <ul className="mt-6 flex-1 space-y-2 text-sm text-site-ink">
               {plan.highlights.map(item => (
                 <li key={item} className="flex gap-2">
                   <span className="text-site-faint">·</span>
@@ -41,18 +101,134 @@ export default function PricingPage() {
             </ul>
 
             <Link
-              href="/login"
+              href={plan.cta.href}
               className={
                 plan.id === 'pro'
-                  ? 'mt-8 block rounded-studio bg-site-accent px-4 py-2.5 text-center text-sm font-medium text-site-onaccent transition-transform duration-150 hover:-translate-y-px'
+                  ? 'mt-8 block rounded-studio bg-site-accent px-4 py-2.5 text-center text-sm font-medium text-site-onaccent transition-colors duration-150 hover:bg-site-accent/85'
                   : 'mt-8 block rounded-studio border border-site-rule px-4 py-2.5 text-center text-sm text-site-ink transition-colors duration-150 hover:bg-site-band'
               }
             >
-              {plan.id === 'pro' ? 'Start with Pro' : 'Start free'}
+              {plan.id === 'pro' ? `${plan.cta.label} — ${plan.price} ${plan.cadence}` : plan.cta.label}
             </Link>
           </div>
         ))}
       </div>
+
+      {/* ------------------------------------------------------------- ceilings */}
+      {/* The whole table, not a curated half of it: someone deciding whether
+          Free is enough for their church is asking about the one row we have
+          not printed. It is the table the console shows an operator who has
+          hit a ceiling, from the same `LIMIT_GROUPS`. */}
+      <section className="mt-20">
+        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Every ceiling, side by side</h2>
+        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-site-muted">
+          These are all of them. A gate in this app is always a number — how many of a thing you can keep — so this
+          table is the entire difference between the two plans.
+        </p>
+
+        <div className="mt-8 overflow-x-auto">
+          <table className="w-full min-w-md border-collapse text-left text-[15px]">
+            <thead>
+              <tr className="text-site-faint">
+                <th className="py-2 pr-4 text-left text-sm font-normal">
+                  <span className="sr-only">What is being counted</span>
+                </th>
+                <th className="w-28 px-3 py-2 text-right text-sm font-normal">Free</th>
+                <th className="w-28 py-2 pl-3 text-right text-sm font-normal">Pro</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {LIMIT_GROUPS.map(group => (
+                <Fragment key={group.title}>
+                  <tr>
+                    <th
+                      colSpan={3}
+                      scope="colgroup"
+                      className="border-t border-site-rule pt-6 pb-1 text-left text-[11px] font-semibold
+                        tracking-wider text-site-faint uppercase"
+                    >
+                      {group.title}
+                    </th>
+                  </tr>
+
+                  {group.keys.map(key => (
+                    <tr key={key} className="border-t border-site-rule/60">
+                      <td className="py-2.5 pr-4 text-site-ink">{LIMIT_LABELS[key].many}</td>
+                      <td className="px-3 py-2.5 text-right text-site-muted">{freeLimitValue(key)}</td>
+                      <td className="py-2.5 pl-3 text-right text-site-ink">{proLimitValue(key)}</td>
+                    </tr>
+                  ))}
+                </Fragment>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-site-faint">
+          Three languages on a slide is the one number Pro does not make unlimited: it is how many fit before a slide
+          stops being readable from the back of the room, and not something we would charge for.
+        </p>
+      </section>
+
+      {/* ------------------------------------------------------- in both plans */}
+      <section className="mt-20">
+        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>In both plans</h2>
+        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-site-muted">
+          Nothing below is a Pro feature. It is what the app is, and it is the same on the day you sign up as it is on
+          the day you pay us.
+        </p>
+
+        <div className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+          {INCLUDED.map(group => (
+            <div key={group.title}>
+              <h3 className="text-sm font-semibold text-site-ink">{group.title}</h3>
+
+              <ul className="mt-4 space-y-2.5 text-[15px] leading-relaxed text-site-muted">
+                {group.items.map(item => (
+                  <li key={item} className="flex gap-2.5">
+                    <Tick />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------ questions */}
+      <section className="mt-20">
+        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Questions about paying</h2>
+
+        <div className="mt-10 gap-x-12 sm:columns-2">
+          {QUESTIONS.map(item => (
+            <div key={item.q} className="mb-8 break-inside-avoid">
+              <h3 className="text-[17px] leading-snug font-medium text-site-ink">{item.q}</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-site-muted">{item.a}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ----------------------------------------------------------- last word */}
+      <section className="mt-16 flex flex-col items-start gap-6 rounded-studio-lg border border-site-rule bg-site-band px-6 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-10">
+        <div>
+          <h2 className={`${DISPLAY} text-2xl`}>Start on Free.</h2>
+          <p className="mt-2 max-w-md text-[15px] leading-relaxed text-site-muted">
+            Open the console, send the projector its link, and put a verse on the wall. Move to Pro the week you run
+            out of room.
+          </p>
+        </div>
+
+        <Link
+          href="/login"
+          className="shrink-0 rounded-studio bg-site-ink px-6 py-3 text-sm font-medium text-white transition-colors
+            duration-150 hover:bg-site-ink/85"
+        >
+          Open the console
+        </Link>
+      </section>
     </main>
   );
 }

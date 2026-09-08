@@ -140,7 +140,7 @@ export default function HomePage() {
             <Link
               href="/login"
               className="mt-9 flex w-full max-w-md items-center justify-center rounded-studio bg-site-accent px-6 py-4
-                text-lg font-medium text-site-onaccent shadow-sm transition-transform duration-150 hover:-translate-y-px"
+                text-lg font-medium text-site-onaccent shadow-sm transition-colors duration-150 hover:bg-site-accent/85"
             >
               Try for free in the browser
             </Link>
@@ -273,13 +273,14 @@ export default function HomePage() {
       <section className="border-y border-site-rule bg-site-band">
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:py-24 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
           <div>
-            <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Free is a real plan.</h2>
+            <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Pay only when you outgrow it.</h2>
             <p className="mt-5 max-w-prose text-[17px] leading-relaxed text-site-muted">
-              A congregation putting scripture on a screen never has to pay us. Pro is for the teams running songs,
-              music and their own look on top of it.
+              Putting scripture on the screen costs nothing — the whole Bible, the projector, the stage display and
+              the lower third, with no trial and no time limit. Pro is for teams that also run songs, music and their
+              own templates every week.
             </p>
             <Link href="/pricing" className="mt-6 inline-block text-[17px] text-site-ink underline underline-offset-4">
-              Compare the two plans
+              See what each plan includes
             </Link>
           </div>
 
@@ -288,11 +289,13 @@ export default function HomePage() {
               <div
                 key={plan.id}
                 // Both cards take a ground of their own now that the section
-                // has one: on the band, a transparent card is not a card.
+                // has one: on the band, a transparent card is not a card. They
+                // are columns because the two lists are different lengths and
+                // the buttons still have to sit on one line at the foot.
                 className={
                   plan.id === 'pro'
-                    ? 'rounded-studio-lg border border-site-ink bg-site-surface p-6 shadow-sm'
-                    : 'rounded-studio-lg border border-site-rule bg-site-bg p-6'
+                    ? 'flex flex-col rounded-studio-lg border border-site-ink bg-site-surface p-6 shadow-sm'
+                    : 'flex flex-col rounded-studio-lg border border-site-rule bg-site-bg p-6'
                 }
               >
                 <h3 className="text-sm text-site-muted">{plan.name}</h3>
@@ -300,11 +303,24 @@ export default function HomePage() {
                   <span className={`${DISPLAY} text-4xl`}>{plan.price}</span>
                   <span className="text-sm text-site-faint">{plan.cadence}</span>
                 </p>
-                <ul className="mt-5 space-y-2 text-[15px] text-site-muted">
+                <ul className="mt-5 flex-1 space-y-2 text-[15px] text-site-muted">
                   {plan.highlights.map(item => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
+
+                <Link
+                  href={plan.cta.href}
+                  className={
+                    plan.id === 'pro'
+                      ? `mt-8 block rounded-studio bg-site-accent px-4 py-2.5 text-center text-[15px] font-medium
+                         text-site-onaccent transition-colors duration-150 hover:bg-site-accent/85`
+                      : `mt-8 block rounded-studio border border-site-rule px-4 py-2.5 text-center text-[15px]
+                         text-site-ink transition-colors duration-150 hover:bg-site-band`
+                  }
+                >
+                  {plan.id === 'pro' ? `${plan.cta.label} — ${plan.price} ${plan.cadence}` : plan.cta.label}
+                </Link>
               </div>
             ))}
           </div>
@@ -347,7 +363,7 @@ export default function HomePage() {
           <Link
             href="/login"
             className="rounded-studio bg-studio-accent px-6 py-3 font-medium text-studio-onaccent
-              transition-transform duration-150 hover:-translate-y-px"
+              transition-colors duration-150 hover:bg-studio-accent/85"
           >
             Start free
           </Link>

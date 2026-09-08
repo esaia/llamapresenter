@@ -1,3 +1,5 @@
+import { THEMES } from '../projector/themes';
+
 import { FREE_LIMITS } from './limits';
 
 /**
@@ -18,6 +20,8 @@ export interface Plan {
   cadence: string;
   blurb: string;
   highlights: string[];
+  /** What the button under the card says, and where it goes. */
+  cta: { label: string; href: string };
 }
 
 export const PLANS: Record<PlanId, Plan> = {
@@ -31,10 +35,11 @@ export const PLANS: Record<PlanId, Plan> = {
       'The whole Bible, in every translation we hold',
       'Projector, stage and OBS lower third',
       `${FREE_LIMITS.languages} languages side by side`,
-      '33 built-in backgrounds',
+      `${THEMES.length} built-in backgrounds`,
       `${FREE_LIMITS.songs} songs, ${FREE_LIMITS.songs_per_playlist} to a playlist`,
       `${FREE_LIMITS.audio_tracks} tracks and ${FREE_LIMITS.name_cards} name cards`,
     ],
+    cta: { label: 'Start free', href: '/login' },
   },
   pro: {
     id: 'pro',
@@ -50,5 +55,9 @@ export const PLANS: Record<PlanId, Plan> = {
       'Templates you draw yourself',
       'More than one session',
     ],
+    // Buying needs an account, so the button goes to `/upgrade` rather than to
+    // the provider: that page signs the visitor in if it has to and opens the
+    // checkout session we created for them.
+    cta: { label: 'Get Pro', href: '/upgrade' },
   },
 };
