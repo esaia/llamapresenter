@@ -5,8 +5,10 @@
 -- library ceiling and music did not, which was an oversight rather than a
 -- decision — the same shape of thing should cost the same.
 --
--- One, like song libraries, and "All tracks" is not one of them: a free account
--- keeps every track it is allowed in a list it did not have to make.
+-- Two, and "All tracks" is not one of them: a free account keeps every track it
+-- is allowed in a list it never had to make, and can still file them into a
+-- couple of shelves of its own — a set for the service and a set for before it,
+-- which is what a church actually does with music.
 
 create or replace function public.free_limit(key text) returns int
 language sql immutable as $$
@@ -17,7 +19,7 @@ language sql immutable as $$
     when 'playlists'          then 1
     when 'songs_per_playlist' then 3
     when 'audio_tracks'       then 5
-    when 'audio_categories'   then 1
+    when 'audio_categories'   then 2
     when 'name_cards'         then 3
     when 'languages'          then 2
     when 'custom_fonts'       then 0
