@@ -14,6 +14,7 @@ import {
 
 import { isAudioFile, loadLocalFile, loadLocalFiles, saveLocalFile, titleFromName } from '@/lib/media/localMedia';
 import { supabase } from '@/lib/supabase/client';
+import { useStudio } from '@/lib/studio/StudioProvider';
 import { save } from '@/lib/supabase/save';
 
 
@@ -201,6 +202,9 @@ export interface AudioInitial {
  */
 export const AudioProvider = ({ initial, children }: { initial: AudioInitial; children: ReactNode }) => {
   const db = useMemo(() => supabase(), []);
+  // This provider sits inside the studio's, so a ceiling met here is announced
+  // in the one place the console shows them all.
+  const { room, noteLimit } = useStudio();
   const element = useRef<HTMLAudioElement>(null);
   const fadeTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const objectUrls = useRef(new Map<string, string>());
@@ -751,6 +755,14 @@ export const AudioProvider = ({ initial, children }: { initial: AudioInitial; ch
         );
       },
       addCategory: async name => {
+        // A music shelf is a shelf like any other, and the plan counts them.
+        // The refusal is said next door — this provider has no notice of its
+        // own, and the console shows every ceiling in the same place.
+        if (!room('audio_categories', 1, libraries.length)) {
+          noteLimit('audio_categories');
+          return;
+        }
+
         const { data } = await db
           .from('audio_categories')
           .insert({ user_id: initial.userId, name, position: (lastCategoryPosition.current += 1) })
@@ -798,6 +810,9 @@ export const AudioProvider = ({ initial, children }: { initial: AudioInitial; ch
       setFadeMs: next => setFadeMsState(Math.min(5000, Math.max(0, next))),
     }),
     [
+      libraries,
+      noteLimit,
+      room,
       addLocalFiles,
       addUrlTrack,
       categories,

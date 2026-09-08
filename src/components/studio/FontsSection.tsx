@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { Trash2 } from 'lucide-react';
 
+import { limitMessage } from '@/lib/billing/limits';
 import { LANG_LABELS } from '@/lib/bible/languages';
 import { cn } from '@/lib/cn';
 import { probeFont } from '@/components/projector/useCustomFonts';
@@ -67,7 +68,7 @@ const Specimen = ({ value, fonts, langs }: { value: string; fonts: CustomFont[];
  * the stream alike, and neither of those panels owns it.
  */
 export const FontsSection = () => {
-  const { settings, update } = useStudio();
+  const { settings, update, room } = useStudio();
 
   const [label, setLabel] = useState('');
   const [source, setSource] = useState('');
@@ -75,7 +76,11 @@ export const FontsSection = () => {
   const [busy, setBusy] = useState(false);
 
   const langs = settings.langOrder.filter(lang => settings.enabled[lang]);
-  const full = settings.customFonts.length >= MAX_CUSTOM_FONTS;
+  // Two ceilings, and they are answered differently. MAX_CUSTOM_FONTS is how
+  // many faces a slide can sensibly carry and is fixed for everyone; the plan's
+  // is a line that can be moved, so it says so and offers the way past it.
+  const atPlanCeiling = !room('custom_fonts');
+  const full = settings.customFonts.length >= MAX_CUSTOM_FONTS || atPlanCeiling;
 
   const add = async (event: FormEvent) => {
     event.preventDefault();
@@ -180,7 +185,14 @@ export const FontsSection = () => {
           </div>
 
           {error ? <p className="text-[11px] text-studio-danger">{error}</p> : null}
-          {full ? (
+          {atPlanCeiling ? (
+            <p className="text-[11px] leading-relaxed text-studio-muted">
+              {limitMessage('custom_fonts')}{' '}
+              <a href="/pricing" className="text-studio-accent underline underline-offset-2">
+                See Pro
+              </a>
+            </p>
+          ) : full ? (
             <p className="text-[11px] text-studio-faint">
               That is {MAX_CUSTOM_FONTS} fonts — remove one before adding another.
             </p>

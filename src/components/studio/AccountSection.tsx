@@ -25,6 +25,7 @@ const ROWS: LimitKey[] = [
   'songs',
   'languages',
   'audio_tracks',
+  'audio_categories',
   'name_cards',
   'custom_fonts',
   'custom_templates',

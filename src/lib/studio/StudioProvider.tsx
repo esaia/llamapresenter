@@ -64,7 +64,7 @@ import {
 } from '@/lib/types';
 
 import { allows, allowsList } from '@/lib/billing/entitlements';
-import { limitMessage, planErrorMessage, type LimitKey } from '@/lib/billing/limits';
+import { limitMessage, PlanLimitError, planLimitKey, type LimitKey } from '@/lib/billing/limits';
 
 import {
   joinGroup as joinGroupIn,
@@ -169,6 +169,14 @@ interface StudioValue {
    */
   limitNotice: string | null;
   dismissLimit: () => void;
+  /**
+   * Say a ceiling was met, without throwing.
+   *
+   * For a caller that has already decided not to do the thing and only needs
+   * the operator told — the audio library next door, which lives in its own
+   * provider and has no error path of its own to put a sentence in.
+   */
+  noteLimit: (key: LimitKey) => void;
 
   settings: Settings;
   update: (patch: Partial<Settings>) => void;
@@ -331,20 +339,22 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    */
   const [limitNotice, setLimitNotice] = useState<string | null>(null);
 
+  const noteLimit = useCallback((key: LimitKey) => setLimitNotice(limitMessage(key)), []);
+
   const refuse = useCallback((key: LimitKey): never => {
-    const message = limitMessage(key);
+    noteLimit(key);
 
-    setLimitNotice(message);
-
-    throw new Error(message);
-  }, []);
+    throw new PlanLimitError(key);
+  }, [noteLimit]);
 
   const failed = useCallback((error: { message: string }) => {
-    const ceiling = planErrorMessage(error.message);
+    const key = planLimitKey(error.message);
 
-    if (ceiling) setLimitNotice(ceiling);
+    if (!key) return new Error(error.message);
 
-    return new Error(ceiling ?? error.message);
+    setLimitNotice(limitMessage(key));
+
+    return new PlanLimitError(key);
   }, []);
 
   const [settings, setSettings] = useState<Settings>(() => fromRow(initial.settings));
@@ -1957,6 +1967,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       usage: counts,
       limitNotice,
       dismissLimit: () => setLimitNotice(null),
+      noteLimit,
       settings,
       update,
       setLangOrder,
@@ -2070,6 +2081,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       refreshBlocks,
       counts,
       limitNotice,
+      noteLimit,
       regroupCards,
       room,
       removeCard,

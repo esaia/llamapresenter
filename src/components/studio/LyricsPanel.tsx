@@ -7,6 +7,8 @@ import {
 } from 'react-icons/hi';
 
 import { Button } from '@/components/ui/Button';
+import { ceiling } from '@/lib/billing/entitlements';
+import { isPlanLimit } from '@/lib/billing/limits';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { cn } from '@/lib/cn';
 import { songsInPlaylist } from '@/lib/lyrics/lists';
@@ -15,6 +17,7 @@ import { useStudio } from '@/lib/studio/StudioProvider';
 import type { Song } from '@/lib/types';
 
 import { DROP_ZONE, leftZone, useDragEnded } from './dropZone';
+import { ImportPicker } from './ImportPicker';
 import { NewSongModal } from './NewSongModal';
 import { SongRail } from './SongRail';
 import { SlideEditor } from './SlideEditor';
@@ -30,6 +33,8 @@ import { SongEditor } from './SongEditor';
 export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
   const {
     songs,
+    plan,
+    usage,
     activeSongId,
     importSongs,
     saveSong,
@@ -48,6 +53,8 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dropping, setDropping] = useState(false);
+  /** A bundle too big for the plan, waiting for the operator to choose from it. */
+  const [choosing, setChoosing] = useState<{ songs: Song[]; allowance: number; shelf: string } | null>(null);
 
   useDragEnded(dropping, () => setDropping(false));
 
@@ -87,12 +94,45 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
         return;
       }
 
+      // A bundle is somebody's whole library, and the plan may not have room
+      // for all of it. Rather than refuse the lot, ask which — a re-import
+      // replaces a song already here, so only the new titles cost anything.
+      const held = new Set(songs.map(song => song.title.toLowerCase()));
+      const fresh = imported.filter(song => !held.has(song.title.toLowerCase()));
+      const limit = ceiling(plan, 'songs');
+      const room = limit === null ? null : Math.max(0, limit - (usage.songs ?? 0));
+
+      if (room !== null && fresh.length > room) {
+        setChoosing({ songs: fresh, allowance: room, shelf: bundleName(files) });
+        return;
+      }
+
       await importSongs(imported, bundleName(files));
     } catch (failure) {
+      // A ceiling has already said so, once, in the console's own notice.
+      // Repeating it here is what put the same sentence on screen twice.
+      if (isPlanLimit(failure)) return;
+
       setError(
         (failure as Error).message ||
           'That file could not be read. It should be a ProPresenter .proBundle or .pro document.',
       );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Bring in what the operator ticked, onto the shelf the bundle would have made. */
+  const importChosen = async (chosen: Song[]) => {
+    const shelf = choosing?.shelf;
+
+    setChoosing(null);
+    setBusy(true);
+
+    try {
+      await importSongs(chosen, shelf);
+    } catch (failure) {
+      if (!isPlanLimit(failure)) setError((failure as Error).message);
     } finally {
       setBusy(false);
     }
@@ -162,6 +202,15 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
         <SongRail onEdit={setEditing} onRemove={setConfirmingRemove} onSearch={onSearch} />
 
       </div>
+
+      {choosing ? (
+        <ImportPicker
+          songs={choosing.songs}
+          allowance={choosing.allowance}
+          onCancel={() => setChoosing(null)}
+          onImport={chosen => void importChosen(chosen)}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={Boolean(confirmingRemove)}

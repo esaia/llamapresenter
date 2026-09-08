@@ -1,9 +1,26 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 import { FREE_LIMITS, LIMIT_KEYS, limitMessage, limitOf, planErrorMessage, remaining, roomFor, roomForList } from './limits';
 
-const MIGRATION = 'supabase/migrations/20260908000000_dodo_and_plan_limits.sql';
+const MIGRATIONS = 'supabase/migrations';
+
+/**
+ * The last `free_limit()` in the migrations, which is the one the database ends
+ * up with. Read by scanning rather than by naming a file, because raising a
+ * ceiling means writing another `create or replace` — and a test pinned to the
+ * first one would go on checking a definition that has since been replaced.
+ */
+const liveFreeLimit = () => {
+  const files = readdirSync(MIGRATIONS).filter(name => name.endsWith('.sql')).sort();
+  const defining = files.filter(name => readFileSync(`${MIGRATIONS}/${name}`, 'utf8').includes('function public.free_limit'));
+  const latest = readFileSync(`${MIGRATIONS}/${defining[defining.length - 1]}`, 'utf8');
+  const body = latest.slice(latest.lastIndexOf('function public.free_limit'));
+
+  return Object.fromEntries(
+    [...body.matchAll(/when '(\w+)'\s+then (\d+)/g)].map(([, key, value]) => [key, Number(value)]),
+  );
+};
 
 /**
  * The numbers exist twice — in limits.json, and in `free_limit()` where they
@@ -12,11 +29,7 @@ const MIGRATION = 'supabase/migrations/20260908000000_dodo_and_plan_limits.sql';
  * keeps LANGS and languages.json in step.
  */
 describe('the SQL function and the JSON agree', () => {
-  const sql = readFileSync(MIGRATION, 'utf8');
-  const body = sql.slice(sql.indexOf('function public.free_limit'));
-  const fromSql = Object.fromEntries(
-    [...body.matchAll(/when '(\w+)'\s+then (\d+)/g)].map(([, key, value]) => [key, Number(value)]),
-  );
+  const fromSql = liveFreeLimit();
 
   it('names exactly the keys the app knows', () => {
     expect(Object.keys(fromSql).sort()).toEqual([...LIMIT_KEYS].sort());

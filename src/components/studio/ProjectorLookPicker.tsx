@@ -118,7 +118,7 @@ export const ProjectorLookPicker = ({
   target: LookTarget;
   onTarget: (target: LookTarget) => void;
 }) => {
-  const { settings, update } = useStudio();
+  const { settings, update, room, noteLimit } = useStudio();
 
   // Which of the operator's own layouts is open on the canvas, if any.
   const [editing, setEditing] = useState('');
@@ -188,6 +188,14 @@ export const ProjectorLookPicker = ({
       name: newTemplateName(settings, target),
       template: startingTemplate(target),
     };
+
+    // A drawn look is a plan ceiling like any other. Checked here rather than
+    // left to the settings write, which is debounced and fire-and-forget — a
+    // refusal on the way out would never reach the operator who drew it.
+    if (!room('custom_templates')) {
+      noteLimit('custom_templates');
+      return;
+    }
 
     update({ customTemplates: [...settings.customTemplates, row] });
     select(customLook(row.id));

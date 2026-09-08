@@ -26,6 +26,7 @@ export const LIMIT_KEYS = [
   'playlists',
   'songs_per_playlist',
   'audio_tracks',
+  'audio_categories',
   'name_cards',
   'languages',
   'custom_fonts',
@@ -95,6 +96,7 @@ export const LIMIT_LABELS: Record<LimitKey, { one: string; many: string }> = {
   playlists: { one: 'playlist', many: 'playlists' },
   songs_per_playlist: { one: 'song in a playlist', many: 'songs in a playlist' },
   audio_tracks: { one: 'track', many: 'tracks' },
+  audio_categories: { one: 'music library', many: 'music libraries' },
   name_cards: { one: 'name card', many: 'name cards' },
   languages: { one: 'language on a slide', many: 'languages on a slide' },
   custom_fonts: { one: 'custom font', many: 'custom fonts' },
@@ -131,4 +133,35 @@ export const planErrorMessage = (message: string): string | null => {
   const key = /plan_limit:(\w+)/.exec(message)?.[1];
 
   return key && (LIMIT_KEYS as readonly string[]).includes(key) ? limitMessage(key as LimitKey) : null;
+};
+
+/**
+ * A refusal that is a plan ceiling rather than a failure.
+ *
+ * Worth its own type because the two want different handling: a write that
+ * broke deserves an inline message next to whatever the operator was doing, and
+ * a ceiling has already been announced once by the console's own notice. Panels
+ * that show errors inline check for this and stay quiet, so the operator is
+ * told where the line is exactly once rather than in two places at the same
+ * time — which is what "Free covers 15 songs" appearing twice on one screen
+ * looked like.
+ */
+export class PlanLimitError extends Error {
+  readonly key: LimitKey;
+
+  constructor(key: LimitKey) {
+    super(limitMessage(key));
+
+    this.name = 'PlanLimitError';
+    this.key = key;
+  }
+}
+
+export const isPlanLimit = (error: unknown): error is PlanLimitError => error instanceof PlanLimitError;
+
+/** The key behind a `plan_limit:<key>` raised by a trigger, if that is what this is. */
+export const planLimitKey = (message: string): LimitKey | null => {
+  const key = /plan_limit:(\w+)/.exec(message)?.[1];
+
+  return key && (LIMIT_KEYS as readonly string[]).includes(key) ? (key as LimitKey) : null;
 };

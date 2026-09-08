@@ -149,7 +149,7 @@ const Preview = ({
  * operator whose church is not black or white was out of luck.
  */
 export const LowerThirdStylePicker = () => {
-  const { settings, showData, update } = useStudio();
+  const { settings, showData, update, room, noteLimit } = useStudio();
 
   // Opens on whichever kind of slide is live. An operator who hits the pencil
   // over a song is there about the song, and landing on the verse grid means
@@ -218,6 +218,14 @@ export const LowerThirdStylePicker = () => {
       name: newTemplateName(settings, kind),
       template: startingTemplate(kind),
     };
+
+    // A drawn look is a plan ceiling like any other. Checked here rather than
+    // left to the settings write, which is debounced and fire-and-forget — a
+    // refusal on the way out would never reach the operator who drew it.
+    if (!room('custom_templates')) {
+      noteLimit('custom_templates');
+      return;
+    }
 
     update({ customTemplates: [...settings.customTemplates, row] });
     select(customLook(row.id));
