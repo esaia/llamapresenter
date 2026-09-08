@@ -1968,12 +1968,16 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       songs: songs.length,
       libraries: libraries.length,
       playlists: playlists.length,
+      // The longest running order, since that is the one that will hit the
+      // ceiling first — a count of "all songs on all playlists" would be a
+      // number the limit is not about.
+      songs_per_playlist: playlists.reduce((most, list) => Math.max(most, list.songs.length), 0),
       name_cards: cards.length,
       languages: settings.langOrder.length,
       custom_fonts: settings.customFonts.length,
       custom_templates: settings.customTemplates.length,
     }),
-    [blocks.length, cards.length, libraries.length, playlists.length, settings, songs.length],
+    [blocks.length, cards.length, libraries.length, playlists, settings, songs.length],
   );
 
   const room = useCallback<StudioValue['room']>(

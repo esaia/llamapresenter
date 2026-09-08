@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 import { MAX_LANGS } from '@/lib/bible/languages';
 import { gatesEnforced, planOf } from '@/lib/billing/entitlements';
@@ -10,24 +10,20 @@ import { useAudio } from '@/lib/studio/AudioProvider';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
 /**
- * The ceilings, in the order an operator meets them.
+ * The ceilings, grouped the way the console is.
  *
- * Songs and running orders first because that is what a church fills up in its
- * first month; the look and the second session are further down because they
- * are wants rather than walls.
+ * A flat list of eleven made the reader work out for themselves that passages
+ * and languages are the same subject and tracks and music libraries are
+ * another. The groups are the tabs an operator already knows, in the order
+ * they matter: scripture on the screen is what this app is for, and it comes
+ * first even though it is the part we gate least.
  */
-const ROWS: LimitKey[] = [
-  'passages',
-  'songs_per_playlist',
-  'playlists',
-  'songs',
-  'languages',
-  'audio_tracks',
-  'audio_categories',
-  'name_cards',
-  'custom_fonts',
-  'custom_templates',
-  'sessions',
+const GROUPS: { title: string; keys: LimitKey[] }[] = [
+  { title: 'Scripture', keys: ['passages', 'languages'] },
+  { title: 'Songs', keys: ['songs', 'songs_per_playlist', 'playlists'] },
+  { title: 'Music', keys: ['audio_tracks', 'audio_categories'] },
+  { title: 'The stream, and your own look', keys: ['name_cards', 'custom_templates', 'custom_fonts'] },
+  { title: 'Sessions', keys: ['sessions'] },
 ];
 
 /**
@@ -64,7 +60,7 @@ const STATES: Record<string, { tone: string; says: string }> = {
 /** Plan, what it costs the operator in practice, and the way out of the account. */
 export const AccountSection = () => {
   const { email, plan, billing, usage } = useStudio();
-  const { tracks } = useAudio();
+  const { tracks, categories } = useAudio();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -72,9 +68,10 @@ export const AccountSection = () => {
   const free = current.id === 'free';
   const pro = PLANS.pro;
 
-  // The audio library lives in its own provider, so it is the one count the
-  // studio does not already hold.
-  const used = (key: LimitKey) => (key === 'audio_tracks' ? tracks.length : usage[key]);
+  // The music library lives in its own provider, so those two counts are the
+  // ones the studio does not already hold.
+  const used = (key: LimitKey) =>
+    key === 'audio_tracks' ? tracks.length : key === 'audio_categories' ? categories.length : usage[key];
 
   const state = STATES[billing.status] ?? { tone: 'text-studio-muted', says: billing.status };
   const renews = readable(billing.renewsAt);
@@ -153,31 +150,49 @@ export const AccountSection = () => {
             </thead>
 
             <tbody>
-              {ROWS.map(key => {
-                const limit = FREE_LIMITS[key];
-                const count = used(key);
-                const full = gatesEnforced && count !== undefined && count >= limit;
-
-                return (
-                  <tr key={key} className="border-t border-studio-divider/60">
-                    <td className="px-4 py-2 text-studio-text">
-                      {LIMIT_LABELS[key].many}
-
-                      {count !== undefined ? (
-                        <span className={full ? 'ml-2 text-studio-accent' : 'ml-2 text-studio-faint'}>
-                          {full ? 'full' : `${count} used`}
-                        </span>
-                      ) : null}
-                    </td>
-
-                    <td className={`px-2 py-2 text-right ${full ? 'text-studio-accent' : 'text-studio-muted'}`}>
-                      {limit === 0 ? '—' : limit}
-                    </td>
-
-                    <td className="px-4 py-2 text-right text-studio-text">{proValue(key)}</td>
+              {GROUPS.map(group => (
+                <Fragment key={group.title}>
+                  <tr>
+                    <th
+                      colSpan={3}
+                      scope="colgroup"
+                      className="border-t border-studio-divider px-4 pt-4 pb-1 text-left text-[11px]
+                        font-semibold tracking-wider text-studio-faint uppercase"
+                    >
+                      {group.title}
+                    </th>
                   </tr>
-                );
-              })}
+
+                  {group.keys.map(key => {
+                    const limit = FREE_LIMITS[key];
+                    const count = used(key);
+                    // A ceiling of zero is not something you can fill. Saying
+                    // "custom fonts full" to an operator who has none reads as
+                    // a bug, and the dash in the Free column already says it.
+                    const full = gatesEnforced && limit > 0 && count !== undefined && count >= limit;
+
+                    return (
+                      <tr key={key} className="border-t border-studio-divider/60">
+                        <td className="px-4 py-2 text-studio-text">
+                          {LIMIT_LABELS[key].many}
+
+                          {limit > 0 && count !== undefined ? (
+                            <span className={full ? 'ml-2 text-studio-accent' : 'ml-2 text-studio-faint'}>
+                              {full ? 'full' : `${count} used`}
+                            </span>
+                          ) : null}
+                        </td>
+
+                        <td className={`px-2 py-2 text-right ${full ? 'text-studio-accent' : 'text-studio-muted'}`}>
+                          {limit === 0 ? 'Pro only' : limit}
+                        </td>
+
+                        <td className="px-4 py-2 text-right text-studio-text">{proValue(key)}</td>
+                      </tr>
+                    );
+                  })}
+                </Fragment>
+              ))}
             </tbody>
           </table>
         ) : (
