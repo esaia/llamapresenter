@@ -139,7 +139,7 @@ describe('what rides with a slide', () => {
   // actually draws, the way the stream narrows `enabled` to its one language.
   it('is only the faces the values name', () => {
     expect(fontsUsedBy([valueOf(hosted), 'font-banner'], library)).toEqual([hosted]);
-    expect(fontsUsedBy(['font-banner', 'font-lora'], library)).toEqual([]);
+    expect(fontsUsedBy(['font-banner', 'font-inter'], library)).toEqual([]);
   });
 });
 

@@ -39,13 +39,11 @@ export interface CustomFont {
 /** The faces we ship. The value is the Tailwind class; see `@theme` in globals.css. */
 export const BUILT_IN_FONTS = [
   { value: 'font-banner', label: 'BPG Banner Caps (Georgian)' },
-  { value: 'font-valera', label: 'Varela Round (Latin)' },
   { value: 'font-firago', label: 'FiraGO (Georgian, Latin, Cyrillic)' },
   { value: 'font-notosans', label: 'Noto Sans (Georgian, Latin, Cyrillic)' },
   { value: 'font-notoserif', label: 'Noto Serif (Georgian, Latin, Cyrillic)' },
   { value: 'font-inter', label: 'Inter (Latin, Cyrillic)' },
   { value: 'font-sourcesans', label: 'Source Sans 3 (Latin, Cyrillic)' },
-  { value: 'font-lora', label: 'Lora (Latin, Cyrillic)' },
   { value: 'font-robotoslab', label: 'Roboto Slab (Latin, Cyrillic)' },
   { value: 'font-montserrat', label: 'Montserrat (Latin, Cyrillic)' },
   { value: 'font-playfair', label: 'Playfair Display (Latin, Cyrillic)' },
