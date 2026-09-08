@@ -26,14 +26,20 @@ export interface Database {
       }>;
       subscriptions: Row<{
         user_id: string;
-        stripe_customer_id: string | null;
-        stripe_subscription_id: string | null;
+        /** Who is billing them. 'dodo' for every row we write. */
+        provider: string;
+        provider_customer_id: string | null;
+        provider_subscription_id: string | null;
         plan: string;
         status: string;
         current_period_end: string | null;
         cancel_at_period_end: boolean;
+        /** The timestamp on the webhook event that last wrote this row. */
+        event_at: string | null;
         updated_at: string;
       }>;
+      /** One row, one switch: whether the plan ceilings are being enforced. */
+      billing_config: Row<{ id: boolean; enforce: boolean }>;
       sessions: Row<{
         id: string;
         user_id: string;

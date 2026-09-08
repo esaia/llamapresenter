@@ -1,21 +1,15 @@
+import { FREE_LIMITS } from './limits';
+
 /**
- * What each plan includes.
+ * The two plans, and what the pricing page and the console both say about them.
  *
- * Nothing is enforced yet — `can()` in ./entitlements returns true for
- * everything while NEXT_PUBLIC_ENFORCE_GATES is off. The map exists now so the
- * pricing page and the console read the same source, and so switching a gate on
- * later is a one-line change rather than an audit.
+ * Every gate in the app is a number rather than a capability — see `./limits`.
+ * There is no feature Pro can do that Free cannot; there is more of it. That
+ * keeps the promise on the marketing page and the check in Postgres the same
+ * sentence, and it means a church that outgrows Free discovers it by filling
+ * something up rather than by hitting a wall in the middle of a service.
  */
 export type PlanId = 'free' | 'pro';
-
-export type Feature =
-  | 'multiple_sessions'
-  | 'own_backgrounds'
-  | 'three_languages'
-  | 'lyrics_import'
-  | 'audio_library'
-  | 'lower_third'
-  | 'custom_transitions';
 
 export interface Plan {
   id: PlanId;
@@ -23,7 +17,6 @@ export interface Plan {
   price: string;
   cadence: string;
   blurb: string;
-  features: Feature[];
   highlights: string[];
 }
 
@@ -33,13 +26,14 @@ export const PLANS: Record<PlanId, Plan> = {
     name: 'Free',
     price: '$0',
     cadence: 'forever',
-    blurb: 'Everything a small congregation needs to put scripture on a screen.',
-    features: ['three_languages', 'lower_third'],
+    blurb: 'Everything a congregation needs to put scripture on a screen.',
     highlights: [
-      'One live session',
-      'Three languages side by side',
+      'The whole Bible, in every translation we hold',
+      'Projector, stage and OBS lower third',
+      `${FREE_LIMITS.languages} languages side by side`,
       '33 built-in backgrounds',
-      'Projector output and OBS lower third',
+      `${FREE_LIMITS.songs} songs, ${FREE_LIMITS.songs_per_playlist} to a playlist`,
+      `${FREE_LIMITS.audio_tracks} tracks and ${FREE_LIMITS.name_cards} name cards`,
     ],
   },
   pro: {
@@ -48,31 +42,13 @@ export const PLANS: Record<PlanId, Plan> = {
     price: '$9',
     cadence: 'per month',
     blurb: 'For teams running a full service — songs, music and their own look.',
-    features: [
-      'multiple_sessions',
-      'own_backgrounds',
-      'three_languages',
-      'lyrics_import',
-      'audio_library',
-      'lower_third',
-      'custom_transitions',
-    ],
     highlights: [
-      'Everything in Free',
-      'ProPresenter song import and setlists',
-      'Your own backgrounds and music',
-      'Unlimited sessions and saved looks',
-      'Custom transitions and typography',
+      'Everything in Free, without the ceilings',
+      'Unlimited songs, libraries and running orders',
+      'Three languages on a slide',
+      'Your own music and typefaces',
+      'Templates you draw yourself',
+      'More than one session',
     ],
   },
-};
-
-export const FEATURE_LABELS: Record<Feature, string> = {
-  multiple_sessions: 'More than one session',
-  own_backgrounds: 'Your own backgrounds',
-  three_languages: 'Three languages at once',
-  lyrics_import: 'Song import and setlists',
-  audio_library: 'Music library',
-  lower_third: 'OBS lower third',
-  custom_transitions: 'Custom transitions',
 };

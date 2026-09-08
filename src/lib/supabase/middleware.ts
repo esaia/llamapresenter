@@ -16,7 +16,10 @@ const PUBLIC = [
   '/opengraph-image',
   '/api/bible',
   '/api/live',
-  '/api/stripe',
+  // Only the webhook. Dodo has no cookie, and its signature is what authorises
+  // it; checkout and the portal are reached from the console by someone who is
+  // signed in, and each checks that for itself.
+  '/api/billing/webhook',
 ];
 
 const isPublic = (pathname: string) =>

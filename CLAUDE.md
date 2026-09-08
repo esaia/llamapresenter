@@ -58,6 +58,19 @@ domain vocabulary. This file is the working agreement on top of it.
   falls back there rather than on the wall. Third-party CSS is never injected:
   a Google URL is one we build, and a pasted link is wrapped in our own
   `@font-face`.
+- **A plan limit is a number, and it lives twice.** Free is not a trial: the
+  Bible, both outputs and the stage are never gated. What Pro buys is volume —
+  the ceilings in `lib/billing/limits.json`. The console writes to Supabase
+  directly under RLS, so the console's check is a courtesy and `free_limit()`
+  in the migration is the rule; `limits.test.ts` reads both and fails when they
+  drift. Triggers raise `plan_limit:<key>` and `planErrorMessage` turns that
+  into what the operator reads. Only inserts are checked — a downgrade never
+  deletes a church's work. Both switches (`NEXT_PUBLIC_ENFORCE_GATES` and
+  `billing_config.enforce`) are meant to move together.
+- **The billing webhook is the source of truth, not checkout.** A subscription
+  ends, lapses and resumes with no browser present. `/api/billing/webhook` is
+  the only writer of `subscriptions`, and it finds the operator by
+  `metadata.user_id` or the `provider_customer_id` stored before checkout.
 - **Media is never uploaded.** Backgrounds and music stay in IndexedDB; the
   database holds metadata only. Do not "simplify" this into Supabase Storage
   without asking — it is a deliberate cost decision.
@@ -84,5 +97,5 @@ domain vocabulary. This file is the working agreement on top of it.
 - Writes from the console are debounced (`useDebouncedSave`). A slider drag is
   dozens of renders and must not be dozens of round trips.
 - The service-role client (`lib/supabase/admin.ts`) bypasses RLS. It is only for
-  routes that have authorised the caller another way: a verified Stripe
-  signature, or a session's `output_key`.
+  routes that have authorised the caller another way: a verified Dodo Payments
+  webhook signature, or a session's `output_key`.

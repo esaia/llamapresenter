@@ -42,7 +42,13 @@ export const AccountSection = () => {
         <p className="mt-1 text-lg">{current.name}</p>
         <p className="text-studio-muted mt-2 text-xs">{current.blurb}</p>
 
-        {gatesEnforced ? null : (
+        {gatesEnforced ? (
+          <ul className="text-studio-muted mt-3 space-y-1 text-xs">
+            {current.highlights.map(item => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        ) : (
           <p className="text-studio-accent mt-3 text-xs">
             Every feature is unlocked for everyone while the tiers are being settled.
           </p>
@@ -52,7 +58,7 @@ export const AccountSection = () => {
           {current.id === 'free' ? (
             <button
               type="button"
-              onClick={() => void go('/api/stripe/checkout')}
+              onClick={() => void go('/api/billing/checkout')}
               disabled={busy}
               className="bg-studio-accent text-studio-onaccent hover:bg-studio-accent rounded-studio px-3 py-1.5 text-xs font-medium transition disabled:opacity-60"
             >
@@ -61,7 +67,7 @@ export const AccountSection = () => {
           ) : (
             <button
               type="button"
-              onClick={() => void go('/api/stripe/portal')}
+              onClick={() => void go('/api/billing/portal')}
               disabled={busy}
               className="border-studio-border hover:border-studio-faint rounded-studio border px-3 py-1.5 text-xs transition disabled:opacity-60"
             >

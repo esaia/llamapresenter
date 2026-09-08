@@ -204,7 +204,7 @@ src/
   lib/
     bible/                 languages, versification, psalms, book remap, chapter loading
 scripts/                   the language catalogue, and the scripture mirror
-    billing/               plans, entitlements, Stripe
+    billing/               plans, the free ceilings, Dodo Payments
     live/                  the realtime channel and its payloads
     media/                 IndexedDB + WebRTC file transfer
     projector/             fit-to-height text, themes, transitions
@@ -214,6 +214,95 @@ supabase/migrations/       the schema
 
 ## Plans
 
-`lib/billing/plans.ts` names what Free and Pro include and `can()` checks it —
-but `NEXT_PUBLIC_ENFORCE_GATES` is off, so everything is unlocked for everyone.
-Turning it on is the one switch that makes every gate bite at once.
+Free is not a trial. A church can put scripture on a screen, run the projector,
+the stage and the lower third, and never pay us. What $9/month buys is *volume
+and polish* — a song catalogue, a music library, more than one running order,
+and a look of their own. There is no feature Pro can do that Free cannot; there
+is more of it.
+
+The ceilings live in `lib/billing/limits.json`:
+
+| | Free | Pro |
+| --- | --- | --- |
+| Songs in a playlist | 3 | ∞ |
+| Playlists | 1 | ∞ |
+| Song libraries | 1 | ∞ |
+| Songs stored | 15 | ∞ |
+| Sessions | 1 | ∞ |
+| Languages on a slide | 2 | 3 |
+| Audio tracks | 5 | ∞ |
+| Name cards | 3 | ∞ |
+| Custom fonts | — | ∞ |
+| Templates you draw | — | ∞ |
+| Bible, outputs, 33 backgrounds | full | full |
+
+**The number lives twice, on purpose.** The console writes to Supabase directly
+under RLS, so a limit enforced only in React is one anyone with the anon key can
+skip. `limits.json` is what greys a button out and puts the ceiling in words;
+`free_limit()` in `supabase/migrations/…_dodo_and_plan_limits.sql` is the one
+that cannot be got around. `limits.test.ts` reads both and fails when they
+drift, the same way `mapping.test.ts` keeps `LANGS` and `languages.json` in step.
+
+A trigger raises `plan_limit:<key>`, and `planErrorMessage` turns that into the
+sentence the operator reads — so a write path the console forgot to check still
+fails politely rather than as a Postgres exception.
+
+Only inserts are checked. An account that drops from Pro to Free keeps every
+song it imported and every playlist it built; it simply cannot add more until it
+is back under the line. Deleting a church's work because a card expired would be
+indefensible.
+
+### Turning the gates on
+
+Two switches, meant to move together:
+
+```
+NEXT_PUBLIC_ENFORCE_GATES=1                        # the console
+update public.billing_config set enforce = true;   # the database
+```
+
+Both start off, so deploying this changes nothing for anyone until you say so.
+
+## Billing
+
+Dodo Payments, as a merchant of record — it handles VAT and sales tax for the
+churches abroad, which is most of them. Three routes, mirroring the shape any
+provider needs:
+
+| | |
+| --- | --- |
+| `POST /api/billing/checkout` | creates the Dodo customer, stores it, opens a checkout session |
+| `POST /api/billing/portal` | sends the operator to Dodo to change, pause or cancel |
+| `POST /api/billing/webhook` | the only writer of `subscriptions`; signature-verified |
+
+The **webhook is the source of truth**, not checkout. A subscription also ends,
+lapses on a failed card, pauses and resumes — none of which the browser is
+present for. It resolves whose plan to change by `metadata.user_id`, falling
+back to `provider_customer_id`, which is why the customer is created in the
+checkout route and stored *before* the operator ever reaches Dodo.
+
+`past_due` and `on_hold` still count as Pro. A card that failed has a dunning
+sequence running and Dodo cancels at the end of it; losing the projector
+mid-service over an expired card is a worse outcome than a few days of unpaid
+Pro. `event_at` holds the timestamp of the event that last wrote the row, so a
+retry that lands behind an event that overtook it cannot put a paying church
+back on Free.
+
+### Setting it up in the Dodo dashboard
+
+1. **Product** — one subscription product, $9.00, billing period *1 month*, no
+   trial. Copy its `pdt_…` id into `DODO_PAYMENTS_PRODUCT_PRO`.
+2. **API key** — Developer → API Keys. Test and live are different keys against
+   different hosts; `DODO_PAYMENTS_ENVIRONMENT` has to name the one you used.
+3. **Webhook** — Developer → Webhooks → add
+   `https://your-domain/api/billing/webhook`. Subscribe to the eleven
+   `subscription.*` events; the route ignores everything else. Copy the signing
+   secret into `DODO_PAYMENTS_WEBHOOK_KEY`.
+4. **Business details** — the merchant-of-record fields (legal name, address,
+   support email, refund and privacy policy URLs) have to be filled in before
+   live mode will take a payment.
+5. **Test it** — with `DODO_PAYMENTS_ENVIRONMENT=test_mode`, upgrade from the
+   console with a test card, then check `select plan, status from
+   public.subscriptions` moved to `pro`/`active`. If it did not, the webhook
+   delivery log in the dashboard will say why; "bad signature" almost always
+   means the key and the environment are from different halves.

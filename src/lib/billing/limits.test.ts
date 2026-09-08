@@ -1,0 +1,100 @@
+import { readFileSync } from 'node:fs';
+import { describe, expect, it } from 'vitest';
+
+import { FREE_LIMITS, LIMIT_KEYS, limitMessage, limitOf, planErrorMessage, remaining, roomFor } from './limits';
+
+const MIGRATION = 'supabase/migrations/20260908000000_dodo_and_plan_limits.sql';
+
+/**
+ * The numbers exist twice — in limits.json, and in `free_limit()` where they
+ * are actually enforced — because the console and Postgres cannot import from
+ * each other. This is what keeps the two honest, the same way mapping.test.ts
+ * keeps LANGS and languages.json in step.
+ */
+describe('the SQL function and the JSON agree', () => {
+  const sql = readFileSync(MIGRATION, 'utf8');
+  const body = sql.slice(sql.indexOf('function public.free_limit'));
+  const fromSql = Object.fromEntries(
+    [...body.matchAll(/when '(\w+)'\s+then (\d+)/g)].map(([, key, value]) => [key, Number(value)]),
+  );
+
+  it('names exactly the keys the app knows', () => {
+    expect(Object.keys(fromSql).sort()).toEqual([...LIMIT_KEYS].sort());
+  });
+
+  it('carries the same number for each', () => {
+    expect(fromSql).toEqual(FREE_LIMITS);
+  });
+});
+
+describe('limitOf', () => {
+  it('gives free the published ceiling', () => {
+    expect(limitOf('free', 'songs_per_playlist')).toBe(3);
+  });
+
+  it('gives pro no ceiling at all', () => {
+    for (const key of LIMIT_KEYS) expect(limitOf('pro', key)).toBeNull();
+  });
+});
+
+describe('roomFor', () => {
+  it('lets a free playlist reach three songs but not four', () => {
+    expect(roomFor('free', 'songs_per_playlist', 2)).toBe(true);
+    expect(roomFor('free', 'songs_per_playlist', 3)).toBe(false);
+  });
+
+  it('counts the whole batch, not one at a time', () => {
+    expect(roomFor('free', 'songs_per_playlist', 1, 2)).toBe(true);
+    expect(roomFor('free', 'songs_per_playlist', 1, 3)).toBe(false);
+  });
+
+  it('holds even when a downgrade left someone over the line', () => {
+    expect(roomFor('free', 'songs', 40)).toBe(false);
+  });
+
+  it('never stops pro', () => {
+    expect(roomFor('pro', 'songs_per_playlist', 900)).toBe(true);
+  });
+});
+
+describe('remaining', () => {
+  it('counts down and stops at zero', () => {
+    expect(remaining('free', 'name_cards', 1)).toBe(2);
+    expect(remaining('free', 'name_cards', 9)).toBe(0);
+  });
+
+  it('is null when there is no ceiling', () => {
+    expect(remaining('pro', 'name_cards', 9)).toBeNull();
+  });
+});
+
+describe('limitMessage', () => {
+  it('says where the line is, in the plural the number needs', () => {
+    expect(limitMessage('songs_per_playlist')).toBe('Free covers 3 songs in a playlist. Pro makes it unlimited.');
+  });
+
+  it('uses the singular when the ceiling is one', () => {
+    expect(limitMessage('playlists')).toBe('Free covers 1 playlist. Pro makes it unlimited.');
+  });
+
+  it('reads as an addition when free has none', () => {
+    expect(limitMessage('custom_fonts')).toBe('Pro adds custom fonts. Free has none.');
+  });
+});
+
+describe('planErrorMessage', () => {
+  it('turns what a trigger raises into what the operator reads', () => {
+    expect(planErrorMessage('plan_limit:songs_per_playlist')).toBe(
+      'Free covers 3 songs in a playlist. Pro makes it unlimited.',
+    );
+  });
+
+  it('finds the key inside the noise Postgres wraps it in', () => {
+    expect(planErrorMessage('new row violates ... plan_limit:name_cards')).toContain('3 name cards');
+  });
+
+  it('leaves an ordinary error alone', () => {
+    expect(planErrorMessage('duplicate key value violates unique constraint')).toBeNull();
+    expect(planErrorMessage('plan_limit:something_else')).toBeNull();
+  });
+});

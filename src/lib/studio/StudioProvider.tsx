@@ -63,6 +63,9 @@ import {
   type SongSlide,
 } from '@/lib/types';
 
+import { allows } from '@/lib/billing/entitlements';
+import { limitMessage, planErrorMessage, type LimitKey } from '@/lib/billing/limits';
+
 import {
   joinGroup as joinGroupIn,
   liveGroup,
@@ -136,6 +139,17 @@ interface StudioValue {
   session: StudioSession;
   email: string;
   plan: string;
+  /**
+   * Whether `adding` more of something still fits under the operator's plan.
+   *
+   * The console's half of the rule — what greys a button out and puts the
+   * ceiling in words before a click fails. The other half is a trigger in
+   * Postgres, which is the one that cannot be got around; see
+   * `lib/billing/limits`. `current` defaults to what the provider is already
+   * holding, and is passed explicitly for the counts it does not keep — the
+   * length of one running order, or the audio library next door.
+   */
+  room: (key: LimitKey, adding?: number, current?: number) => boolean;
 
   settings: Settings;
   update: (patch: Partial<Settings>) => void;
@@ -708,6 +722,11 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // leaving it off lets Postgres mint the real one.
       const saved = hasRealId(card.id) ? { id: card.id } : {};
 
+      // Editing a saved card is always allowed; only a new one is counted.
+      if (!saved.id && !allows(initial.plan, 'name_cards', cards.length)) {
+        throw new Error(limitMessage('name_cards'));
+      }
+
       const { data, error } = await db
         .from('name_cards')
         .upsert({
@@ -720,7 +739,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
       if (!data) return;
 
       const written = cardFromRow(data);
@@ -731,14 +750,14 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         return [...without, written].sort((a, b) => a.position - b.position || a.title.localeCompare(b.title));
       });
     },
-    [db, initial.settings.user_id],
+    [cards.length, db, initial.plan, initial.settings.user_id],
   );
 
   const removeCard = useCallback<StudioValue['removeCard']>(
     async id => {
       const { error } = await db.from('name_cards').delete().eq('id', id);
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
 
       setCards(current => current.filter(card => card.id !== id));
 
@@ -820,9 +839,19 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    * bottom of the stack. Adding past the ceiling is a no-op rather than a
    * silent shuffle — the button that calls this is hidden by then anyway.
    */
+  /**
+   * Arm another language.
+   *
+   * Two ceilings meet here and the lower one wins: MAX_LANGS is how many fit on
+   * a slide before it stops being readable, and the plan's is how many this
+   * account may keep. Silent, like the MAX_LANGS check always was — the picker
+   * has already said which rows it will not add.
+   */
   const addLang = useCallback((lang: Lang) => {
     setSettings(current =>
-      current.langOrder.includes(lang) || current.langOrder.length >= MAX_LANGS
+      current.langOrder.includes(lang) ||
+      current.langOrder.length >= MAX_LANGS ||
+      !allows(initial.plan, 'languages', current.langOrder.length)
         ? current
         : {
             ...current,
@@ -831,7 +860,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
             versions: { ...current.versions, [lang]: current.versions[lang] || defaultVersionOf(lang) },
           },
     );
-  }, []);
+  }, [initial.plan]);
 
   /**
    * Take a language off. English stays whatever happens — it is what the
@@ -1294,6 +1323,17 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     async (imported, intoNewLibrary) => {
       if (imported.length === 0) return;
 
+      // A bundle usually holds songs we already have — a re-import replaces
+      // them rather than doubling them — so only the titles that are new
+      // count against the ceiling.
+      const known = new Set(songs.map(song => song.title.toLowerCase()));
+      const fresh = imported.filter(song => !known.has(song.title.toLowerCase())).length;
+
+      if (!allows(initial.plan, 'songs', songs.length, fresh)) throw new Error(limitMessage('songs'));
+      if (intoNewLibrary && !allows(initial.plan, 'libraries', libraries.length)) {
+        throw new Error(limitMessage('libraries'));
+      }
+
       // A shelf of its own, named after what was dropped. Two bundles of the
       // same name are two imports and get two shelves, because that is what
       // the operator did — the alternative is a silent merge.
@@ -1334,7 +1374,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         )
         .select();
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
       if (!data) return;
 
       setSongs(current => {
@@ -1345,7 +1385,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         return [...byTitle.values()].sort((a, b) => a.title.localeCompare(b.title));
       });
     },
-    [db, filing, initial.settings.user_id, libraries],
+    [db, filing, initial.plan, initial.settings.user_id, libraries, songs],
   );
 
   const saveSong = useCallback<StudioValue['saveSong']>(
@@ -1353,6 +1393,12 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // A song written in the console has a placeholder id until it is saved;
       // leaving it off lets Postgres mint the real one.
       const saved = /^[0-9a-f-]{36}$/i.test(song.id) ? { id: song.id } : {};
+
+      // Only a song that is not in the library yet counts against the ceiling;
+      // editing one already there is always allowed, whatever the plan.
+      if (!saved.id && !songs.some(item => item.title.toLowerCase() === song.title.toLowerCase())) {
+        if (!allows(initial.plan, 'songs', songs.length)) throw new Error(limitMessage('songs'));
+      }
 
       const { data, error } = await db
         .from('songs')
@@ -1370,7 +1416,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // One title per library is a unique index, and Postgres says so in its own
       // words. The operator gets ours.
       if (error?.code === '23505') throw new Error(`A song called “${song.title}” is already in the library.`);
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
       if (!data) return;
 
       const written = songFromRow(data);
@@ -1409,7 +1455,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       return written;
     },
-    [db, filing, initial.settings.user_id],
+    [db, filing, initial.plan, initial.settings.user_id, songs],
   );
 
   /**
@@ -1583,36 +1629,40 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    */
   const addLibrary = useCallback<StudioValue['addLibrary']>(
     async name => {
+      if (!allows(initial.plan, 'libraries', libraries.length)) throw new Error(limitMessage('libraries'));
+
       const { data, error } = await db
         .from('song_libraries')
         .insert({ user_id: initial.settings.user_id, name, position: libraries.length })
         .select('id, name')
         .single();
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
       if (!data) return;
 
       setLibraries(current => [...current, data]);
       setOpenList({ kind: 'library', id: data.id });
     },
-    [db, initial.settings.user_id, libraries.length],
+    [db, initial.plan, initial.settings.user_id, libraries.length],
   );
 
   const addPlaylist = useCallback<StudioValue['addPlaylist']>(
     async name => {
+      if (!allows(initial.plan, 'playlists', playlists.length)) throw new Error(limitMessage('playlists'));
+
       const { data, error } = await db
         .from('song_playlists')
         .insert({ user_id: initial.settings.user_id, name, songs: [], position: playlists.length })
         .select('id, name, songs')
         .single();
 
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(planErrorMessage(error.message) ?? error.message);
       if (!data) return;
 
       setPlaylists(current => [...current, { id: data.id, name: data.name, songs: [] }]);
       setOpenList({ kind: 'playlist', id: data.id });
     },
-    [db, initial.settings.user_id, playlists.length],
+    [db, initial.plan, initial.settings.user_id, playlists.length],
   );
 
   const renameList = useCallback<StudioValue['renameList']>(
@@ -1709,13 +1759,40 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
   );
 
   /** One running order, rewritten whole — the shape a drag leaves it in. */
+  /**
+   * The running order, moved locally first and then written.
+   *
+   * Local state leads because a drag has to answer instantly, which means the
+   * write can still be refused after the songs have visibly moved — a plan
+   * ceiling is exactly such a refusal. So the optimistic move is remembered and
+   * put back: a running order the database would not take must not sit on
+   * screen looking saved until the next reload quietly loses it.
+   */
   const writePlaylist = useCallback(
     async (playlistId: string, songIds: string[]) => {
+      let before: string[] | null = null;
+
       setPlaylists(current =>
-        current.map(list => (list.id === playlistId ? { ...list, songs: songIds } : list)),
+        current.map(list => {
+          if (list.id !== playlistId) return list;
+
+          before = list.songs;
+
+          return { ...list, songs: songIds };
+        }),
       );
 
-      await save(db.from('song_playlists').update({ songs: songIds }).eq('id', playlistId), 'the playlist');
+      const { error } = await db.from('song_playlists').update({ songs: songIds }).eq('id', playlistId);
+
+      if (!error) return;
+
+      const restored = before;
+
+      setPlaylists(current =>
+        current.map(list => (list.id === playlistId && restored ? { ...list, songs: restored } : list)),
+      );
+
+      throw new Error(planErrorMessage(error.message) ?? error.message);
     },
     [db],
   );
@@ -1725,6 +1802,12 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       const list = playlists.find(item => item.id === playlistId);
 
       if (!list || songIds.length === 0) return;
+
+      const landing = list.songs.filter(id => !songIds.includes(id)).length + songIds.length;
+
+      if (!allows(initial.plan, 'songs_per_playlist', landing, 0)) {
+        throw new Error(limitMessage('songs_per_playlist'));
+      }
 
       const without = list.songs.filter(id => !songIds.includes(id));
       // Taking them out first shifts every later slot down by one, so the drop
@@ -1736,7 +1819,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       await writePlaylist(playlistId, without);
     },
-    [playlists, writePlaylist],
+    [initial.plan, playlists, writePlaylist],
   );
 
   const orderPlaylist = useCallback<StudioValue['orderPlaylist']>(
@@ -1767,11 +1850,38 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     [playlists, writePlaylist],
   );
 
+  /**
+   * What the operator has, counted where the console already knows it.
+   *
+   * `sessions` is 1 because a console holds exactly one; the two that are not
+   * here — a single playlist's length, and the audio library — belong to a
+   * caller and a sibling provider, and are passed in.
+   */
+  const counts = useMemo<Partial<Record<LimitKey, number>>>(
+    () => ({
+      sessions: 1,
+      songs: songs.length,
+      libraries: libraries.length,
+      playlists: playlists.length,
+      name_cards: cards.length,
+      languages: settings.langOrder.length,
+      custom_fonts: settings.customFonts.length,
+      custom_templates: settings.customTemplates.length,
+    }),
+    [cards.length, libraries.length, playlists.length, settings, songs.length],
+  );
+
+  const room = useCallback<StudioValue['room']>(
+    (key, adding = 1, current) => allows(initial.plan, key, current ?? counts[key] ?? 0, adding),
+    [counts, initial.plan],
+  );
+
   const value = useMemo<StudioValue>(
     () => ({
       session: initial.session,
       email: initial.email,
       plan: initial.plan,
+      room,
       settings,
       update,
       setLangOrder,
@@ -1884,6 +1994,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       publishLyrics,
       refreshBlocks,
       regroupCards,
+      room,
       removeCard,
       removeGroup,
       saveCard,
