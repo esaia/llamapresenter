@@ -243,8 +243,8 @@ export const FontsSection = () => {
 
       <Field
         label="Built-in fonts"
-        hint="Bundled with LlamaPresenter, so they render with no internet. Only the first five cover
-          Georgian."
+        hint="Bundled with LlamaPresenter, so they render with no internet. The ones marked Georgian
+          set Georgian and English both; the rest are Latin and Cyrillic only."
       >
         <ul className="space-y-2">
           {BUILT_IN_FONTS.map(font => (

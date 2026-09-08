@@ -212,6 +212,34 @@ scripts/                   the language catalogue, and the scripture mirror
 supabase/migrations/       the schema
 ```
 
+## Typefaces
+
+The picker's faces are Tailwind class names stored verbatim in `settings.font`,
+declared in `@theme` in `globals.css`, with the woff2 subsets in `public/fonts`
+and a row in `BUILT_IN_FONTS`. All four steps or none.
+
+Five of them set Georgian and English both, which is what this app is for — a
+verse in Georgian with the English under it, in one face rather than two
+different greys on the same slide. They are subset to Latin plus the Georgian
+block, 11–24 KB each, from the originals at [typeface.ge](https://typeface.ge):
+
+| Face | Source | What the file says about itself |
+| --- | --- | --- |
+| BPG Banner Caps | BPG-InfoTech | — |
+| BPG LE Studio 02 Caps | [typeface.ge](https://typeface.ge/ka/font/BPG+LE+Studio+02+Caps) | licence field: `Free`, © BPG-InfoTech 2012 |
+| Eurostile GEO | [typeface.ge](https://typeface.ge/ka/font/Eurostile+GEOMt) | licence field: `Free`, © GF Fonts 2025 |
+| Futura Book Mta | [typeface.ge](https://typeface.ge/ka/font/Futura+Book+Mta) | no licence field, © David Kokhodze 2003 |
+| ALK Sanet | [typeface.ge](https://typeface.ge/ka/font/ALK+Sanet) | no licence field, no copyright |
+
+**Worth knowing before shipping these.** typeface.ge publishes no licence terms
+and says a licence-purchase function is coming, with Personal and Commercial
+options — so commercial terms are undefined rather than granted. Two of the
+faces declare `Free` in their own metadata and two say nothing at all.
+Self-hosting means redistributing the file to every projector, stage screen and
+OBS source that opens a session, which is a wider grant than personal use.
+Getting written permission for the two silent ones is cheap insurance; removing
+a face is the four steps above in reverse.
+
 ## Plans
 
 Free is not a trial. A church can put scripture on a screen, run the projector,

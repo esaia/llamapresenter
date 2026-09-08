@@ -22,6 +22,44 @@
   font-display: swap;
 }
 
+/* Georgian faces that set English too, subset to Latin and the Georgian block.
+   A church here reads a verse in Georgian and the one under it in English, so a
+   face that does only one of the two makes the operator pick twice and get two
+   different colours of grey on the same slide. Every one of these draws both.
+   Subset from the originals at typeface.ge — see README for where each came
+   from and what it says about its own licence. */
+@font-face {
+  font-family: 'BPG LE Studio 02 Caps';
+  src: url('/fonts/BpgLeStudio02Caps-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Eurostile GEO Mt';
+  src: url('/fonts/EurostileGeoMt-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Futura Book Mta';
+  src: url('/fonts/FuturaBookMta-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'ALK Sanet';
+  src: url('/fonts/AlkSanet-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @font-face {
   font-family: 'FiraGO';
   src: url('/fonts/FiraGO-Regular.woff2') format('woff2');
@@ -326,6 +364,10 @@
   /* Typefaces the operator can pick for the projector and the lower third.
      These names are the values stored in settings.font — keep them stable. */
   --font-banner: 'BPG Banner Caps', sans-serif;
+  --font-lestudio: 'BPG LE Studio 02 Caps', sans-serif;
+  --font-eurostile: 'Eurostile GEO Mt', sans-serif;
+  --font-futura: 'Futura Book Mta', sans-serif;
+  --font-sanet: 'ALK Sanet', sans-serif;
   --font-firago: 'FiraGO', 'Noto Sans Georgian', sans-serif;
   --font-notosans: 'Noto Sans Trilingual', 'Noto Sans Georgian', sans-serif;
   --font-notoserif: 'Noto Serif Trilingual', 'Noto Serif Georgian', serif;
