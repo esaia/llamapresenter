@@ -151,6 +151,15 @@ interface StudioValue {
    */
   room: (key: LimitKey, adding?: number, current?: number) => boolean;
   /**
+   * How much of each ceiling the operator is actually using.
+   *
+   * The account panel reads it to show a plan as what it costs *them* — "15 of
+   * 15 songs" rather than a bullet about songs — which is both more honest and
+   * more use than a feature list. Sparse: the two counts the provider does not
+   * hold are absent rather than zero.
+   */
+  usage: Partial<Record<LimitKey, number>>;
+  /**
    * The ceiling the operator just walked into, in words, or null.
    *
    * A plan limit is refused in several places — the rail's two plus buttons, a
@@ -1945,6 +1954,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       email: initial.email,
       plan: initial.plan,
       room,
+      usage: counts,
       limitNotice,
       dismissLimit: () => setLimitNotice(null),
       settings,
@@ -2058,6 +2068,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       removeFromPlaylist,
       publishLyrics,
       refreshBlocks,
+      counts,
       limitNotice,
       regroupCards,
       room,

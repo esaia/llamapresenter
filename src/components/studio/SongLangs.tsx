@@ -116,7 +116,11 @@ export const SongLangs = ({ song, onChange }: { song: Song; onChange: (song: Son
                 value={typing?.id === lang.id ? typing.label : lang.label}
                 onChange={event => setTyping({ id: lang.id, label: event.target.value })}
                 onBlur={flush}
-                placeholder={`Language ${index + 1}`}
+                // A prompt, not a value. "Language 1" looked like the field
+                // was already filled in — an operator reads it as the name of
+                // the language rather than as an invitation to type one, and
+                // then wonders why the song is in something called Language 1.
+                placeholder="Name this language…"
                 aria-label={`What language ${index + 1} of this song is called`}
                 className={cn(
                   'min-w-0 flex-1 rounded-studio border border-transparent bg-transparent px-1.5 py-1 text-sm',
