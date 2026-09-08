@@ -310,7 +310,11 @@ export default function ProPresenterAlternativePage() {
           onto the screens, what goes on those screens, and what it costs.
         </p>
 
-        <div className="mt-10 overflow-x-auto">
+        {/* The whole table on one sheet of paper, rather than a band behind
+            our column: a white stripe running the height of the page reads as
+            something broken, and the column is already told apart by the tick
+            beside every line of it. */}
+        <div className="mt-10 overflow-x-auto rounded-studio-lg border border-site-rule bg-site-surface px-5 py-1 sm:px-8">
           <table className="w-full min-w-3xl border-collapse text-left align-top">
             <caption className="sr-only">
               {THEIRS} compared with {OURS}, row by row
@@ -318,21 +322,15 @@ export default function ProPresenterAlternativePage() {
 
             <thead>
               <tr>
-                <th className="w-[22%] py-3 pr-6 text-left text-sm font-normal text-site-faint">
+                <th className="w-[22%] py-4 pr-6 text-left text-sm font-normal text-site-faint">
                   <span className="sr-only">What is being compared</span>
                 </th>
 
-                <th scope="col" className="w-[39%] px-6 py-3 text-left text-[15px] font-semibold text-site-muted">
+                <th scope="col" className="w-[39%] px-6 py-4 text-left text-[15px] font-semibold text-site-muted">
                   {THEIRS}
                 </th>
 
-                {/* Our column is the one the reader is deciding about, so it is
-                    lifted off the paper the whole height of the table. */}
-                <th
-                  scope="col"
-                  className="w-[39%] rounded-t-studio-lg border-x border-t border-site-rule bg-site-surface px-6 py-3
-                    text-left text-[15px] font-semibold text-site-ink"
-                >
+                <th scope="col" className="w-[39%] px-6 py-4 text-left text-[15px] font-semibold text-site-ink">
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-site-accent" />
                     {OURS}
@@ -353,7 +351,7 @@ export default function ProPresenterAlternativePage() {
                       {section.group}
                     </th>
                     <td className="border-t border-site-rule" />
-                    <td className="border-x border-site-rule bg-site-surface" />
+                    <td className="border-t border-site-rule" />
                   </tr>
 
                   {/* One rule per group, none between rows: every row here is a
@@ -368,7 +366,7 @@ export default function ProPresenterAlternativePage() {
 
                       <td className="px-6 py-5 text-[15px] leading-relaxed text-site-muted">{row.theirs}</td>
 
-                      <td className="border-x border-site-rule bg-site-surface px-6 py-5 text-[15px] leading-relaxed text-site-ink">
+                      <td className="px-6 py-5 text-[15px] leading-relaxed text-site-ink">
                         <span className="flex gap-2.5">
                           <Tick className="mt-[6px] size-3.5 shrink-0 text-site-ink" />
                           <span>{row.ours}</span>
@@ -379,12 +377,6 @@ export default function ProPresenterAlternativePage() {
                 </Fragment>
               ))}
 
-              {/* Closes the box the last column has been drawing all the way down. */}
-              <tr aria-hidden>
-                <td />
-                <td className="border-t border-site-rule" />
-                <td className="h-3 rounded-b-studio-lg border-x border-y border-site-rule bg-site-surface" />
-              </tr>
             </tbody>
           </table>
         </div>

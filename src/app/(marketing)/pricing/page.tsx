@@ -126,37 +126,37 @@ export default function PricingPage() {
           table is the entire difference between the two plans.
         </p>
 
-        {/* One rule per group and none between rows.
-            A hairline under every row drew nineteen lines down the page and
-            made the reader work out which of them meant anything; the rows are
-            two lines of type each and separate themselves. What the eye needs
-            is help running *across* — so the Pro column keeps a ground of its
-            own the whole way down, and the group titles are the only rules. */}
-        <div className="mt-8 overflow-x-auto">
+        {/* One card, one rule per group, and no lines between rows.
+            A hairline under every row drew nineteen of them down the page; a
+            band behind the Pro column instead drew one long white stripe, which
+            read as something broken rather than as a column. So the table sits
+            on its own paper and Pro is told apart by the weight of its type —
+            the thing the reader is actually comparing is two numbers on one
+            line, and those are already side by side. */}
+        <div className="mt-8 overflow-x-auto rounded-studio-lg border border-site-rule bg-site-surface px-5 py-1 sm:px-8">
           <table className="w-full min-w-md border-collapse text-left text-[15px]">
             <thead>
               <tr className="text-site-faint">
-                <th className="py-2 pr-4 text-left text-sm font-normal">
+                <th className="py-4 pr-6 text-left text-sm font-normal">
                   <span className="sr-only">What is being counted</span>
                 </th>
-                <th className="w-28 px-4 py-2 text-right text-sm font-normal">Free</th>
-                <th className="w-32 rounded-t-studio bg-site-surface px-4 py-2 text-right text-sm font-normal">Pro</th>
+                <th className="w-24 px-4 py-4 text-right text-sm font-normal sm:w-28">Free</th>
+                <th className="w-24 py-4 pl-4 text-right text-sm font-normal text-site-ink sm:w-28">Pro</th>
               </tr>
             </thead>
 
             <tbody>
-              {LIMIT_GROUPS.map(group => (
+              {LIMIT_GROUPS.map((group, index) => (
                 <Fragment key={group.title}>
                   <tr>
                     <th
-                      colSpan={2}
+                      colSpan={3}
                       scope="colgroup"
-                      className="border-t border-site-rule pt-7 pb-2 text-left text-[11px] font-semibold
-                        tracking-wider text-site-faint uppercase"
+                      className={`border-t border-site-rule pb-2 text-left text-[11px] font-semibold tracking-wider
+                        text-site-faint uppercase ${index === 0 ? 'pt-5' : 'pt-8'}`}
                     >
                       {group.title}
                     </th>
-                    <td className="bg-site-surface" />
                   </tr>
 
                   {group.keys.map(key => (
@@ -171,20 +171,13 @@ export default function PricingPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3.5 text-right whitespace-nowrap text-site-muted">{freeLimitValue(key)}</td>
-                      <td className="bg-site-surface px-4 py-3.5 text-right whitespace-nowrap text-site-ink">
+                      <td className="py-3.5 pl-4 text-right font-medium whitespace-nowrap text-site-ink">
                         {proLimitValue(key)}
                       </td>
                     </tr>
                   ))}
                 </Fragment>
               ))}
-
-              {/* Closes the ground the Pro column has been standing on. */}
-              <tr aria-hidden>
-                <td className="border-t border-site-rule" />
-                <td className="border-t border-site-rule" />
-                <td className="h-3 rounded-b-studio bg-site-surface" />
-              </tr>
             </tbody>
           </table>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 
 /**
@@ -45,35 +45,69 @@ export const ScrollZoom = ({ intro, children }: { intro: React.ReactNode; childr
     return () => q.removeEventListener('change', read);
   }, []);
 
+  const measure = useCallback(() => {
+    const el = box.current;
+    const wrap = group.current;
+    if (!el || !wrap) return;
+    // Layout sizes, not `getBoundingClientRect`: on a resize the box is
+    // already under a scale, and a rect would report the scaled figure and
+    // compound it.
+    const { offsetWidth: width, offsetHeight: height, offsetTop: top } = el;
+    if (!width || !height) return;
+
+    setFit({
+      // Contain, not cover: whichever axis runs out first is the one that
+      // decides, so the whole console is on screen at the end.
+      scale: Math.max(1, Math.min(window.innerWidth / width, window.innerHeight / height)),
+      // The group is centred in the window, so the middle of the group is the
+      // middle of the screen: this is the distance from the frame's own centre
+      // to that, and it is negative because the frame sits below it.
+      lift: wrap.offsetHeight / 2 - (top + height / 2),
+    });
+  }, []);
+
   // Re-run when the page crosses into the animated layout: the box being
   // measured does not exist until then, and a first pass against nothing would
   // leave the frame at its natural size for the whole of the pin.
   useEffect(() => {
-    const measure = () => {
-      const el = box.current;
-      const wrap = group.current;
-      if (!el || !wrap) return;
-      // Layout sizes, not `getBoundingClientRect`: on a resize the box is
-      // already under a scale, and a rect would report the scaled figure and
-      // compound it.
-      const { offsetWidth: width, offsetHeight: height, offsetTop: top } = el;
-      if (!width || !height) return;
-
-      setFit({
-        // Contain, not cover: whichever axis runs out first is the one that
-        // decides, so the whole console is on screen at the end.
-        scale: Math.max(1, Math.min(window.innerWidth / width, window.innerHeight / height)),
-        // The group is centred in the window, so the middle of the group is
-        // the middle of the screen: this is the distance from the frame's own
-        // centre to that, and it is negative because the frame sits below it.
-        lift: wrap.offsetHeight / 2 - (top + height / 2),
-      });
-    };
-
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [wide, reduced]);
+  }, [measure, wide, reduced]);
+
+  /**
+   * Arriving here from another page is not the same as loading this one.
+   *
+   * A click on the wordmark mounts this section while the window is still
+   * scrolled wherever the last page was, and the reset to the top happens
+   * *after* that. A scroll-linked value read in between is read against a
+   * scroll that is about to be thrown away, and — because nothing scrolls
+   * afterwards — it keeps that figure and never moves again: the console
+   * arrives already zoomed and stays there. The same is true of the layout
+   * itself, which is still settling while the pictures above load.
+   *
+   * So once the first frame is on screen, and again when the page has finished
+   * loading, say so: our own measurement runs again, and the synthetic events
+   * make every scroll-linked reader — the zoom included — take the position it
+   * actually has rather than the one it started with.
+   */
+  useEffect(() => {
+    if (reduced || !wide) return;
+
+    const settle = () => {
+      measure();
+      window.dispatchEvent(new Event('resize'));
+      window.dispatchEvent(new Event('scroll'));
+    };
+
+    const frame = requestAnimationFrame(settle);
+    window.addEventListener('load', settle);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('load', settle);
+    };
+  }, [measure, reduced, wide]);
 
   // The track is a window taller than the stage: that extra window is the
   // scroll the zoom is given, and the section lets go the moment it is spent.
