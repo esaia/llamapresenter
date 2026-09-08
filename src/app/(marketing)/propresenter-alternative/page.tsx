@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 
 import { Art } from '@/components/marketing/Art';
-import { Frame } from '@/components/marketing/Frame';
+import { CompareScene } from '@/components/marketing/CompareScene';
 import { PLANS } from '@/lib/billing/plans';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
@@ -229,7 +229,7 @@ export default function ProPresenterAlternativePage() {
           {OURS} vs {THEIRS}
         </p>
 
-        <div className="mt-5 grid items-start gap-10 lg:grid-cols-[1fr_0.95fr] lg:gap-14">
+        <div className="mt-5 max-w-3xl">
           <div>
             <h1 className={`${DISPLAY} text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
               A church presenter that{' '}
@@ -272,16 +272,18 @@ export default function ProPresenterAlternativePage() {
 
             <p className="mt-4 text-sm text-site-faint">No credit card. Nothing to uninstall if you change your mind.</p>
           </div>
+        </div>
 
-          <Frame
-            url="llamapresenter.com/studio"
-            src="/images/console-studio.webp"
-            alt="The LlamaPresenter console running in a browser: the language panel, verse cards for the passage on
-              screen, and the live projector preview with the outputs beside it"
-            paneClassName="aspect-[900/481]"
-            sizes="(min-width: 1024px) 46rem, 100vw"
-            className="shadow-site-frame"
-          />
+        {/* The banner gets the full width rather than a column beside the
+            headline: the argument is two machines set against each other, and
+            at half the page neither screen can be read. */}
+        <div className="mt-12">
+          <CompareScene />
+
+          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-site-faint">
+            On the right, an application of the kind {THEIRS} is: installed on a machine, licensed to it, and updated
+            there. The screen is our own drawing of what that asks of you rather than any screenshot of theirs.
+          </p>
         </div>
       </section>
 
