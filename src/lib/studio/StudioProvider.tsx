@@ -343,6 +343,14 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     blocks: initial.workspace.blocks,
     live: initial.workspace.live,
   });
+  // Read by `addLang`, which must see the current language set without being
+  // rebuilt on every settings change — the same arrangement as `songsRef`.
+  const settingsRef = useRef(settings);
+
+  useEffect(() => {
+    settingsRef.current = settings;
+  }, [settings]);
+
   const [songs, setSongs] = useState<Song[]>(initial.songs);
 
   // Read by `saveSong` when it propagates a switch to the songs that share a
@@ -882,20 +890,39 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    * account may keep. Silent, like the MAX_LANGS check always was — the picker
    * has already said which rows it will not add.
    */
-  const addLang = useCallback((lang: Lang) => {
-    setSettings(current =>
-      current.langOrder.includes(lang) ||
-      current.langOrder.length >= MAX_LANGS ||
-      !allows(initial.plan, 'languages', current.langOrder.length)
-        ? current
-        : {
-            ...current,
-            langOrder: [...current.langOrder, lang],
-            enabled: { ...current.enabled, [lang]: true },
-            versions: { ...current.versions, [lang]: current.versions[lang] || defaultVersionOf(lang) },
-          },
-    );
-  }, [initial.plan]);
+  /**
+   * Arm another language.
+   *
+   * Two ceilings meet here and they are not the same kind of thing. MAX_LANGS
+   * is how many fit on a slide before it stops being readable — the picker is
+   * simply not offered at that point, so there is nothing to explain. The
+   * plan's ceiling is lower and the picker is still on screen, so walking into
+   * it silently is the confusing case: it has to say so.
+   *
+   * The plan check is deliberately outside the updater. React may call an
+   * updater more than once, and a refusal that announces itself is a side
+   * effect that must happen exactly as often as the click did.
+   */
+  const addLang = useCallback(
+    (lang: Lang) => {
+      const order = settingsRef.current.langOrder;
+
+      if (order.includes(lang) || order.length >= MAX_LANGS) return;
+
+      if (!allows(initial.plan, 'languages', order.length)) {
+        setLimitNotice(limitMessage('languages'));
+        return;
+      }
+
+      setSettings(current => ({
+        ...current,
+        langOrder: [...current.langOrder, lang],
+        enabled: { ...current.enabled, [lang]: true },
+        versions: { ...current.versions, [lang]: current.versions[lang] || defaultVersionOf(lang) },
+      }));
+    },
+    [initial.plan],
+  );
 
   /**
    * Take a language off. English stays whatever happens — it is what the

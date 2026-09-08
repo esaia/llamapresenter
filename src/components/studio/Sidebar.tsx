@@ -5,6 +5,7 @@ import type { CSSProperties, ReactNode } from 'react';
 
 import { Select } from '@/components/ui/Select';
 import { Toggle } from '@/components/ui/Toggle';
+import { limitMessage } from '@/lib/billing/limits';
 import { cn } from '@/lib/cn';
 import { fontLabelOf } from '@/lib/projector/fonts';
 import { THEMES } from '@/lib/projector/themes';
@@ -76,8 +77,19 @@ const SummaryRow = ({
  * sits one click away in the settings dialog, summarised at the foot.
  */
 export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) => {
-  const { settings, update, setLangOrder, setAdminLang, addLang, removeLang, tab, songs, activeSongId, setSongLangs } =
-    useStudio();
+  const {
+    settings,
+    update,
+    setLangOrder,
+    setAdminLang,
+    addLang,
+    removeLang,
+    room,
+    tab,
+    songs,
+    activeSongId,
+    setSongLangs,
+  } = useStudio();
 
   // The rail sits outside the tabs, so on the Lyrics tab it was offering the
   // scripture languages while the wall carried a chorus that pays them no
@@ -246,7 +258,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
               {/* Adding is a pick, not a dialog: the list is short enough that the
                   native menu is the whole interaction, and it resets to its
                   placeholder because it is a verb rather than a setting. */}
-              {settings.langOrder.length < MAX_LANGS ? (
+              {settings.langOrder.length >= MAX_LANGS ? null : room('languages') ? (
                 <Select
                   value=""
                   onChange={value => addLang(value as Lang)}
@@ -256,7 +268,19 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                   ]}
                   className="mt-3 w-full"
                 />
-              ) : null}
+              ) : (
+                // At the plan's ceiling the menu is replaced rather than left
+                // to be clicked to no effect. A picker that opens, lists four
+                // languages and then quietly does nothing is the most confusing
+                // thing this rail could do; the reason belongs in the slot the
+                // picker was in, where the operator is already looking.
+                <p className="mt-3 text-xs leading-relaxed text-studio-muted">
+                  {limitMessage('languages')}{' '}
+                  <a href="/pricing" className="text-studio-accent underline underline-offset-2">
+                    See Pro
+                  </a>
+                </p>
+              )}
             </Section>
           </>
         )}
