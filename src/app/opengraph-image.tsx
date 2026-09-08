@@ -60,18 +60,21 @@ export default async function OpengraphImage() {
 
         {/* the promise */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', fontSize: 76, lineHeight: 1.08, letterSpacing: '-0.03em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', fontSize: 76, lineHeight: 1.28, letterSpacing: '-0.03em' }}>
             <div style={{ display: 'flex' }}>Everything you need</div>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ display: 'flex' }}>for your&nbsp;</span>
               {/* The hero's highlighter: a yellow plate under the word rather
-                  than yellow type, which cannot be read on this ground. */}
+                  than yellow type, which cannot be read on this ground. The
+                  plate is the line box — it takes no padding of its own, so it
+                  cannot grow past the line and crowd the descenders above it;
+                  the air around the word is the headline's line height. */}
               <span
                 style={{
                   display: 'flex',
                   background: YELLOW,
                   borderRadius: 8,
-                  padding: '2px 16px 10px',
+                  padding: '0 16px',
                 }}
               >
                 next service
