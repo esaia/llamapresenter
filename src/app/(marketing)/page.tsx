@@ -268,6 +268,26 @@ export default function HomePage() {
         </p>
       </Feature>
 
+      <Feature
+        title="The console fits in your pocket, too."
+        visual={
+          <Art
+            src="/images/features/remote-phone.webp"
+            alt="The lower-third panel open on a laptop and on a phone, the same card selected on both"
+          />
+        }
+      >
+        <p>
+          The console is a browser tab, so a phone is another one. Open the session on it and the running order, the
+          live slide and the next-verse button are under your thumb — from the front row, the sound desk, or the
+          doorway you ended up standing in.
+        </p>
+        <p>
+          Two people can hold it at once. Whoever is at the laptop and whoever is on their feet see the same order and
+          the same live card, and either of them can put the next thing up.
+        </p>
+      </Feature>
+
       {/* ------------------------------------------------------- small print */}
       <section className="border-y border-site-rule bg-site-band">
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">

@@ -47,12 +47,20 @@ export const AudioBar = () => {
   if (!current) return null;
 
   return (
-    <div className="flex h-12 shrink-0 items-center gap-2 border-t border-studio-border bg-studio-bg px-3 sm:gap-3 sm:px-4">
+    // On a phone the bar wraps into two lines rather than dropping the track
+    // name: what is playing is the first thing an operator looks for, and a
+    // transport with no title on it is somebody else's player. The name takes
+    // the first line and the transport the second; from `sm` up it is the one
+    // row it has always been.
+    <div
+      className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-studio-border bg-studio-bg
+        px-3 py-2 sm:h-12 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0"
+    >
       <IconButton label={playing ? 'Fade out' : 'Play'} onClick={togglePlay}>
         {playing ? <Pause className="size-4" /> : <Play className="size-4" />}
       </IconButton>
 
-      <div className="hidden w-40 shrink-0 sm:block">
+      <div className="order-first w-full min-w-0 sm:order-none sm:w-40 sm:shrink-0">
         <Marquee text={current.title} className="text-xs font-medium text-studio-text" />
         <p className="truncate text-[11px] text-studio-faint">{current.artist}</p>
       </div>
@@ -69,7 +77,7 @@ export const AudioBar = () => {
         disabled={!duration}
         onChange={event => seek(Number(event.target.value))}
         style={{ '--range-fill': `${duration ? (Math.min(position, duration) / duration) * 100 : 0}%` } as CSSProperties}
-        className="studio-range h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-studio-border
+        className="studio-range h-1.5 min-w-16 flex-1 cursor-pointer appearance-none rounded-full bg-studio-border
           disabled:cursor-default"
       />
 

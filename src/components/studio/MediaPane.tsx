@@ -235,8 +235,10 @@ export const MediaPane = () => {
             two 36px rails stacked at the foot of the console cost the cards
             above them a row, and this one is already here. */}
         {tab === 'bible' || tab === 'lyrics' ? (
-          <label className="flex items-center gap-2 text-[11px] text-studio-muted">
-            Card size
+          <label className="flex min-w-0 items-center gap-2 text-[11px] text-studio-muted">
+            {/* The word goes on a narrow screen, not the slider: the handle is
+                the control, and the strip has an Add button to fit beside it. */}
+            <span className="hidden sm:inline">Card size</span>
             <input
               type="range"
               min={140}
@@ -245,7 +247,8 @@ export const MediaPane = () => {
               value={cardSize}
               onChange={event => setCardSize(Number(event.target.value))}
               style={{ '--range-fill': `${((cardSize - 140) / 180) * 100}%` } as CSSProperties}
-              className="studio-range h-1.5 w-32 cursor-pointer appearance-none rounded-full bg-studio-border"
+              className="studio-range h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-studio-border
+                sm:w-32"
             />
           </label>
         ) : null}
@@ -273,7 +276,7 @@ export const MediaPane = () => {
               focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40"
           >
             <Upload className="size-3.5" />
-            Add pictures
+            <span className="hidden sm:inline">Add pictures</span>
           </button>
         ) : null}
 
@@ -318,7 +321,8 @@ export const MediaPane = () => {
               event.preventDefault();
               setConfirming(folder);
             }}
-            className="studio-scroll w-40 shrink-0 overflow-y-auto border-r border-studio-border outline-none"
+            className="studio-scroll w-28 shrink-0 overflow-y-auto border-r border-studio-border outline-none
+              sm:w-40"
           >
             <li>
               <button
@@ -400,7 +404,7 @@ export const MediaPane = () => {
               words at once — that is the whole point of the pane. */}
           <div className="studio-scroll min-w-0 flex-1 overflow-y-auto p-2">
             {onBuiltIn ? (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(7rem,1fr))]">
                 {THEMES.map(theme => (
                   <button
                     key={theme.id}
@@ -434,7 +438,7 @@ export const MediaPane = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(7rem,1fr))]">
                     {shown.map(record => (
                       <div key={record.id} className="group/tile relative">
                         <button
@@ -460,7 +464,10 @@ export const MediaPane = () => {
                           />
                         </button>
 
-                        <span className="absolute top-1 right-1 opacity-0 transition-opacity group-hover/tile:opacity-100">
+                        {/* Always there on a touch screen: hover is a thing a
+                            finger cannot do, and this is the only way to take a
+                            picture off a shelf. */}
+                        <span className="absolute top-1 right-1 transition-opacity sm:opacity-0 sm:group-hover/tile:opacity-100">
                           <IconButton
                             label={`Remove ${record.name}`}
                             tone="danger"
