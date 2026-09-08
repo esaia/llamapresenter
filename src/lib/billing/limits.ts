@@ -22,7 +22,6 @@ import type { PlanId } from './plans';
 export const LIMIT_KEYS = [
   'sessions',
   'songs',
-  'libraries',
   'playlists',
   'songs_per_playlist',
   'audio_tracks',
@@ -92,7 +91,6 @@ export const remaining = (plan: PlanId, key: LimitKey, current: number): number 
 export const LIMIT_LABELS: Record<LimitKey, { one: string; many: string }> = {
   sessions: { one: 'session', many: 'sessions' },
   songs: { one: 'song', many: 'songs' },
-  libraries: { one: 'song library', many: 'song libraries' },
   playlists: { one: 'playlist', many: 'playlists' },
   songs_per_playlist: { one: 'song in a playlist', many: 'songs in a playlist' },
   audio_tracks: { one: 'track', many: 'tracks' },

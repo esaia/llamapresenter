@@ -1411,7 +1411,6 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       const fresh = imported.filter(song => !known.has(song.title.toLowerCase())).length;
 
       if (!allows(initial.plan, 'songs', songs.length, fresh)) refuse('songs');
-      if (intoNewLibrary && !allows(initial.plan, 'libraries', libraries.length)) refuse('libraries');
 
       // A shelf of its own, named after what was dropped. Two bundles of the
       // same name are two imports and get two shelves, because that is what
@@ -1708,8 +1707,6 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    */
   const addLibrary = useCallback<StudioValue['addLibrary']>(
     async name => {
-      if (!allows(initial.plan, 'libraries', libraries.length)) refuse('libraries');
-
       const { data, error } = await db
         .from('song_libraries')
         .insert({ user_id: initial.settings.user_id, name, position: libraries.length })
@@ -1722,7 +1719,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       setLibraries(current => [...current, data]);
       setOpenList({ kind: 'library', id: data.id });
     },
-    [db, failed, initial.plan, initial.settings.user_id, libraries.length, refuse],
+    [db, failed, initial.settings.user_id, libraries.length],
   );
 
   const addPlaylist = useCallback<StudioValue['addPlaylist']>(

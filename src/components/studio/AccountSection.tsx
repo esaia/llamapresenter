@@ -21,7 +21,6 @@ import { useStudio } from '@/lib/studio/StudioProvider';
 const ROWS: LimitKey[] = [
   'songs_per_playlist',
   'playlists',
-  'libraries',
   'songs',
   'languages',
   'audio_tracks',
