@@ -15,26 +15,22 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'mo
  * back, and a page that animates on its own animates while you are trying to
  * read it.
  *
- * Both figures are measured rather than guessed. The frame is asked how much
- * bigger the window is, capped so a short window crops none of it; and because
- * it sits below the words rather than in the middle of the screen, it rides up
- * to the middle as it grows — a frame that grew where it stood would go off
- * the bottom. `sizes="100vw"` on the shot inside is the other half of the
- * scale figure: the file fetched is the one the *zoomed* frame needs.
- *
  * A phone gets none of it: a pinned section costs two windows of scrolling to
  * read one picture, the picture is already the width of the screen there, and
  * the scroll on a touch device is the reader's own. Below `lg` — and for
  * anyone who has asked for less motion — the words and the frame are simply
- * stacked.
+ * stacked, by this component; the pinned version is `Stage`, below.
+ *
+ * The two are separate components rather than two returns of one, because the
+ * hooks that drive the zoom have to be able to *find* the thing they animate.
+ * Asking for a scroll against a ref that this render did not put on the page
+ * is what "target ref is defined but not hydrated" means: on the server, and
+ * on the first client render, `wide` is false and the track does not exist. So
+ * the hooks live in the component that only ever renders with the track.
  */
 export const ScrollZoom = ({ intro, children }: { intro: React.ReactNode; children: React.ReactNode }) => {
-  const track = useRef<HTMLDivElement>(null);
-  const group = useRef<HTMLDivElement>(null);
-  const box = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const [wide, setWide] = useState(false);
-  const [fit, setFit] = useState({ scale: 1, lift: 0 });
 
   // `lg`, the breakpoint the page's own two-column layouts turn on at.
   useEffect(() => {
@@ -44,6 +40,34 @@ export const ScrollZoom = ({ intro, children }: { intro: React.ReactNode; childr
     q.addEventListener('change', read);
     return () => q.removeEventListener('change', read);
   }, []);
+
+  if (reduced || !wide) {
+    return (
+      <div className="space-y-12">
+        {intro}
+        <div className="mx-auto max-w-7xl px-6">{children}</div>
+      </div>
+    );
+  }
+
+  return <Stage intro={intro}>{children}</Stage>;
+};
+
+/**
+ * The pinned version, mounted only where it is going to run.
+ *
+ * Both figures are measured rather than guessed. The frame is asked how much
+ * bigger the window is, capped so a short window crops none of it; and because
+ * it sits below the words rather than in the middle of the screen, it rides up
+ * to the middle as it grows — a frame that grew where it stood would go off
+ * the bottom. `sizes="100vw"` on the shot inside is the other half of the
+ * scale figure: the file fetched is the one the *zoomed* frame needs.
+ */
+const Stage = ({ intro, children }: { intro: React.ReactNode; children: React.ReactNode }) => {
+  const track = useRef<HTMLDivElement>(null);
+  const group = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState({ scale: 1, lift: 0 });
 
   const measure = useCallback(() => {
     const el = box.current;
@@ -66,14 +90,11 @@ export const ScrollZoom = ({ intro, children }: { intro: React.ReactNode; childr
     });
   }, []);
 
-  // Re-run when the page crosses into the animated layout: the box being
-  // measured does not exist until then, and a first pass against nothing would
-  // leave the frame at its natural size for the whole of the pin.
   useEffect(() => {
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
-  }, [measure, wide, reduced]);
+  }, [measure]);
 
   /**
    * Arriving here from another page is not the same as loading this one.
@@ -92,8 +113,6 @@ export const ScrollZoom = ({ intro, children }: { intro: React.ReactNode; childr
    * actually has rather than the one it started with.
    */
   useEffect(() => {
-    if (reduced || !wide) return;
-
     const settle = () => {
       measure();
       window.dispatchEvent(new Event('resize'));
@@ -107,7 +126,7 @@ export const ScrollZoom = ({ intro, children }: { intro: React.ReactNode; childr
       cancelAnimationFrame(frame);
       window.removeEventListener('load', settle);
     };
-  }, [measure, reduced, wide]);
+  }, [measure]);
 
   // The track is a window taller than the stage: that extra window is the
   // scroll the zoom is given, and the section lets go the moment it is spent.
@@ -120,15 +139,6 @@ export const ScrollZoom = ({ intro, children }: { intro: React.ReactNode; childr
   // holding it there before the page moves on.
   const scale = useTransform(t, [0.06, 0.78], [1, fit.scale]);
   const y = useTransform(t, [0.06, 0.78], [0, fit.lift]);
-
-  if (reduced || !wide) {
-    return (
-      <div className="space-y-12">
-        {intro}
-        <div className="mx-auto max-w-7xl px-6">{children}</div>
-      </div>
-    );
-  }
 
   return (
     <div ref={track} className="relative h-[200vh]">
