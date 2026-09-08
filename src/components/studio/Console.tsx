@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 
 import { useCustomFonts } from '@/components/projector/useCustomFonts';
@@ -61,7 +61,10 @@ export const Console = () => {
     removeSlide,
     limitNotice,
     dismissLimit,
+    room,
+    noteLimit,
   } = useStudio();
+
 
   // The console draws its own copies of the slide — the preview panel, every
   // card, the specimens in the settings dialog — so the operator's own faces
@@ -76,6 +79,26 @@ export const Console = () => {
   const [navOpen, setNavOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const [browsing, setBrowsing] = useState(false);
+
+  /**
+   * Open the passage browser, or say why not.
+   *
+   * The ceiling is met here rather than at the end of the browser, because
+   * everything in between is wasted: an operator picks a book, picks a chapter,
+   * picks a range, waits for it, and only then hears there was never room. Both
+   * ways in come through this — the button on the bar and the find shortcut.
+   */
+  const browse = useCallback(
+    (open: boolean) => {
+      if (open && !room('passages')) {
+        noteLimit('passages');
+        return;
+      }
+
+      setBrowsing(open);
+    },
+    [noteLimit, room],
+  );
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -109,7 +132,7 @@ export const Console = () => {
       if (event.key === 'f' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
 
-        if (tab === 'bible') setBrowsing(true);
+        if (tab === 'bible') browse(true);
         else setSearching(true);
 
         return;
@@ -164,7 +187,7 @@ export const Console = () => {
     window.addEventListener('keydown', onKey);
 
     return () => window.removeEventListener('keydown', onKey);
-  }, [browsing, live, removeSlide, searching, songs, stepLive, tab, updateTimer]);
+  }, [browse, browsing, live, removeSlide, searching, songs, stepLive, tab, updateTimer]);
 
   // A notice that has been read should not have to be dismissed. Long enough to
   // finish reading twice, and the button is still there for anyone who wants it
@@ -258,7 +281,7 @@ export const Console = () => {
           {tab === 'bible' ? (
             <>
               <div className="shrink-0 border-b border-studio-border bg-studio-bg px-4 py-3">
-                <SearchBar browsing={browsing} onBrowse={setBrowsing} />
+                <SearchBar browsing={browsing} onBrowse={browse} />
               </div>
 
               <div className="studio-scroll min-h-0 flex-1 overflow-y-auto">

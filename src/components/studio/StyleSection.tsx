@@ -5,7 +5,9 @@ import { MdFormatAlignCenter, MdFormatAlignLeft, MdFormatAlignRight } from 'reac
 
 import { Select } from '@/components/ui/Select';
 import { cn } from '@/lib/cn';
-import { fontOptions, type CustomFont } from '@/lib/projector/fonts';
+
+import { FontPicker } from './FontPicker';
+import type { CustomFont } from '@/lib/projector/fonts';
 import {
   asScaleMode,
   clampTextSize,
@@ -72,7 +74,7 @@ export const TypeRow = ({
 }) => (
   <Field label={label} hint={hint}>
     <div className="flex items-center gap-1.5">
-      <Select className="min-w-0 flex-1" value={font} onChange={setFont} options={fontOptions(fonts)} />
+      <FontPicker className="min-w-0 flex-1" label={label} value={font} onChange={setFont} fonts={fonts} />
 
       <div className="flex shrink-0 items-center gap-0.5 rounded-studio border border-studio-border p-0.5">
         {ALIGNMENTS.map(({ value, label: title, Icon }) => (

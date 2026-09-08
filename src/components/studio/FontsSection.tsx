@@ -5,60 +5,20 @@ import { Trash2 } from 'lucide-react';
 
 import { limitMessage } from '@/lib/billing/limits';
 import { LANG_LABELS } from '@/lib/bible/languages';
-import { cn } from '@/lib/cn';
 import { probeFont } from '@/components/projector/useCustomFonts';
 import {
   BUILT_IN_FONTS,
   DEFAULT_FONT,
   defaultLabelOf,
-  fontStyleOf,
   MAX_CUSTOM_FONTS,
   parseSource,
   valueOf,
   type CustomFont,
 } from '@/lib/projector/fonts';
 import { useStudio } from '@/lib/studio/StudioProvider';
-import type { Lang } from '@/lib/types';
 
+import { FontSpecimen } from './FontSpecimen';
 import { Field } from './StyleSection';
-
-/**
- * A line of each script, so a face that cannot draw one shows it here rather
- * than on the wall. Georgian is not a given: most of the faces on offer are
- * Latin and Cyrillic only, and an operator running a Georgian service needs to
- * see the tofu before the service, not during it.
- */
-const SAMPLE: Partial<Record<Lang, string>> = {
-  // Modern Georgian, as the 2015 revision has it — not the old `რამეთუ ესრეთ
-  // შეიყუარა ღმერთმან`, which is a different century's spelling and reads as
-  // one to anybody in the room.
-  geo: 'რადგან ისე შეიყვარა ღმერთმა ქვეყნიერება',
-  eng: 'For God so loved the world',
-  ru: 'Ибо так возлюбил Бог мир',
-  gr: 'Οὕτως γὰρ ἠγάπησεν ὁ Θεὸς',
-  ae: 'لِأَنَّهُ هَكَذَا أَحَبَّ ٱللهُ',
-  la: 'Sic enim dilexit Deus mundum',
-};
-
-const FALLBACK_SAMPLE = 'For God so loved the world';
-
-/** One face, drawn in itself, in each language the operator has armed. */
-const Specimen = ({ value, fonts, langs }: { value: string; fonts: CustomFont[]; langs: Lang[] }) => {
-  const type = fontStyleOf(value, fonts);
-
-  return (
-    <div
-      className={cn('min-w-0 space-y-0.5', type.className)}
-      style={type.style ? { fontFamily: type.style } : undefined}
-    >
-      {(langs.length ? langs : (['eng'] as Lang[])).map(lang => (
-        <p key={lang} className="truncate text-base leading-snug text-studio-text">
-          {SAMPLE[lang] ?? FALLBACK_SAMPLE}
-        </p>
-      ))}
-    </div>
-  );
-};
 
 /**
  * The operator's typefaces: the ones we ship, and the ones they add.
@@ -222,7 +182,7 @@ export const FontsSection = () => {
                     {font.kind === 'google' ? `Google Fonts · ${font.source}` : font.source}
                   </p>
                   <div className="mt-1.5">
-                    <Specimen value={valueOf(font)} fonts={settings.customFonts} langs={langs} />
+                    <FontSpecimen value={valueOf(font)} fonts={settings.customFonts} langs={langs} />
                   </div>
                 </div>
 
@@ -251,7 +211,7 @@ export const FontsSection = () => {
             <li key={font.value} className="rounded-studio border border-studio-border bg-studio-surface px-3 py-2">
               <p className="truncate text-[11px] text-studio-faint">{font.label}</p>
               <div className="mt-1">
-                <Specimen value={font.value} fonts={settings.customFonts} langs={langs} />
+                <FontSpecimen value={font.value} fonts={settings.customFonts} langs={langs} />
               </div>
             </li>
           ))}

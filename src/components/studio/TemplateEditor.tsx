@@ -36,7 +36,7 @@ import { Select } from '@/components/ui/Select';
 import { cn } from '@/lib/cn';
 import { loadFolders, loadLocalFiles, type LocalFile, type LocalFolder } from '@/lib/media/localMedia';
 import type { LocalFileMeta } from '@/lib/types';
-import { fontOptions, type CustomFont } from '@/lib/projector/fonts';
+import type { CustomFont } from '@/lib/projector/fonts';
 import {
   DEFAULT_GRADIENT,
   filesUsedBy,
@@ -78,6 +78,8 @@ import {
 } from '@/lib/studio/canvas';
 import { projectorStyle, streamLangOf, templatesFor } from '@/lib/studio/settings';
 import { limitMessage } from '@/lib/billing/limits';
+
+import { FontPicker } from './FontPicker';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { LANG_LABELS, type Align, type Lang, type ProjectorStyle } from '@/lib/types';
 
@@ -493,7 +495,7 @@ const TextStyleRows = ({
 }) => (
   <>
     <Row label="Font">
-      <Select value={style.font} onChange={value => patch({ font: value })} options={fontOptions(fonts)} />
+      <FontPicker label="Typeface" value={style.font} onChange={value => patch({ font: value })} fonts={fonts} />
     </Row>
 
     {/* One question, one pair of words — the same two the projector panel
