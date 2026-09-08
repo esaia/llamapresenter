@@ -56,49 +56,50 @@ const Feature = ({
   </section>
 );
 
-const SMALL = [
-  {
-    title: 'Psalms line up',
-    body: 'Translations disagree about where the psalms divide. Type one reference and every language on the slide lands on the verse it actually is.',
-  },
-  {
-    title: 'Songs come across',
-    body: 'Import a ProPresenter library and the lyrics arrive as slides you can step through, in the order the band plays them.',
-  },
-  {
-    title: 'Your own typefaces',
-    body: 'Paste a Google Fonts family or a link to a font file and it is on the wall. Nothing to install on the projector machine.',
-  },
-  {
-    title: 'A screen can join late',
-    body: 'A projector switched on halfway through the service opens the link and is already showing the verse the room is on.',
-  },
-  {
-    title: 'Backgrounds stay yours',
-    body: 'Your images and music live on your computer, not in our storage. The projector pulls them from you directly when it needs them.',
-  },
-  {
-    title: 'Two clicks to black',
-    body: 'Take the screen down without losing your place. The verse is still armed underneath when you bring it back.',
-  },
-];
-
 const FAQ = [
   {
-    q: 'Does anything need installing?',
-    a: 'No. The console, the projector and the stage display are browser tabs, and the stream overlay is an OBS browser source. The machine at the back of the room needs a browser and nothing else.',
+    q: 'What is LlamaPresenter?',
+    a: 'LlamaPresenter is a web-based presentation tool made for churches. Use it to show Bible verses, song lyrics, announcements, and media on your projector, stage display, and livestream.',
+  },
+  {
+    q: 'Do I need to install anything?',
+    a: 'No. LlamaPresenter runs in your web browser, so there is nothing to install. Open it on your computer and start presenting.',
+  },
+  {
+    q: 'Can I show Bible verses in multiple languages?',
+    a: 'Yes. You can display multiple languages at the same time and choose which languages appear on the screen. Turn languages on or off whenever you need.',
+  },
+  {
+    q: 'Can I control the projector, stage, and livestream separately?',
+    a: 'Yes. LlamaPresenter gives you three views: Projector, Stage, and Lower Third. Each screen can show different content while everything stays connected to the same presentation.',
+  },
+  {
+    q: 'Can I use my phone as a remote?',
+    a: 'Yes. You can control your presentation from your phone. Move between slides and change what is being shown without staying next to the main computer.',
+  },
+  {
+    q: 'Can I create my own templates?',
+    a: 'Yes. You can start with our built-in templates or create your own. Design custom templates for Bible verses and lyrics on your projector or livestream.',
+  },
+  {
+    q: 'Does it work on Mac and Windows?',
+    a: 'Yes. Because LlamaPresenter runs in a web browser, you can use it on both Mac and Windows.',
+  },
+  {
+    q: 'Is LlamaPresenter only for large churches?',
+    a: 'No. LlamaPresenter works for churches of any size. Whether you have one screen or a full setup with projector, stage display, and livestream, you can use the features you need.',
+  },
+  {
+    q: 'Can I use LlamaPresenter for livestreams?',
+    a: 'Yes. LlamaPresenter works with livestreaming tools like OBS. Simply add a Browser source in OBS and paste your LlamaPresenter stream URL. Your Bible verses, lyrics, and other content can then appear directly in your livestream.',
+  },
+  {
+    q: 'Can I use it for song lyrics?',
+    a: 'Yes. You can add your songs and display lyrics on your projector, stage display, or livestream. You can also import song lyrics from a file exported from ProPresenter, so you do not have to add all your songs again.',
   },
   {
     q: 'How does the projector know which session it belongs to?',
     a: 'Each session has its own unguessable link. Whoever opens it sees that session and nothing else — which is why the projector needs no account and no password. Treat the link the way you would a meeting link.',
-  },
-  {
-    q: 'Which translations can I use?',
-    a: 'Six languages and seventeen translations, and any three of them can share a slide. The text comes out of our own database rather than a third-party API, so a service never depends on somebody else being up.',
-  },
-  {
-    q: 'What happens if the internet drops mid-service?',
-    a: 'Whatever is on the screens stays there. The outputs count their own clocks, so a countdown keeps running, and when the connection returns the next slide goes through as normal.',
   },
   {
     q: 'Can two people run it at once?',
@@ -163,11 +164,12 @@ export default function HomePage() {
             intro={
               <div className="mx-auto max-w-3xl px-6 text-center">
                 <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
-                  Built for the person at the back of the room.
+                  Everything you need for your next service
                 </h2>
                 <p className="mt-5 text-[17px] leading-relaxed text-site-muted">
-                  Type “John 14:6-7” and it is on the wall. The whole chapter loads with it, so stepping to the next
-                  verse costs nothing — no waiting, no second search, no dead air while somebody finds the passage.
+                  Show Bible verses, lyrics, announcements, and media across your projector, stage display, and
+                  livestream. Switch languages, control your service from your phone, and create your own look with
+                  flexible templates.
                 </p>
               </div>
             }
@@ -189,7 +191,7 @@ export default function HomePage() {
       {/* --------------------------------------------------------- features */}
       <Feature
         id="languages"
-        title="Several languages, stacked the way your congregation reads them."
+        title="One service. Every language."
         visual={
           <Art
             src="/images/features/languages.png"
@@ -198,19 +200,14 @@ export default function HomePage() {
         }
       >
         <p>
-          Seventeen translations across six languages, and any three of them can share a slide, in whatever order your
-          congregation reads them. Each one keeps its own book names and its own verse numbering.
-        </p>
-        <p>
-          That last part matters more than it sounds. Translations do not agree about where the psalms divide, so one
-          reference can be three different verses. LlamaPresenter reconciles them, and the line on the wall is the line
-          being read from the front.
+          Choose which languages appear on the projector, stage display, or livestream and turn them on or off whenever
+          you need.
         </p>
       </Feature>
 
       <Feature
         flip
-        title="A clock the person on stage can trust."
+        title="Give your team the view they need"
         visual={
           <Art
             src="/images/features/stage-timer.png"
@@ -219,16 +216,13 @@ export default function HomePage() {
         }
       >
         <p>
-          The stage display shows what is on the screen now, what is coming next, and how long is left. Give the
-          preacher five more minutes and the number changes under them without anyone waving from the back.
-        </p>
-        <p>
-          Nothing about the countdown travels over the network second by second. Each screen counts its own, so a slow
-          connection shows the same time as the console rather than drifting behind it.
+          See the current slide, next slide, clock, agenda, and timer in Stage View. Show only the timer on your stage
+          display when you need a clean view.
         </p>
       </Feature>
 
-      <Feature title="Or draw the slide yourself."
+      <Feature
+        title="Your content. Your style."
         visual={
           <Art
             src="/images/features/template-editor.png"
@@ -237,19 +231,14 @@ export default function HomePage() {
         }
       >
         <p>
-          Eight finished layouts ship with it, and when none of them is your church, there is a canvas. Drag boxes,
-          shapes and pictures where you want them, set the type, and keep as many layouts as you have Sundays that need
-          one — a Christmas slide and an ordinary one, each under its own name.
-        </p>
-        <p>
-          Text is fitted inside the box you drew rather than spilling out of it, so a long passage comes down a size and
-          a short one fills the frame. The projector, the preview and the tile in your settings all run the same fit.
+          Start with beautiful ready-made templates or create your own. Design custom looks for Bible verses and lyrics
+          on your projector and livestream.
         </p>
       </Feature>
 
       <Feature
         flip
-        title="One link, and the screen is in the service."
+        title="Three screens. One service."
         visual={
           <Art
             src="/images/features/outputs.png"
@@ -258,18 +247,13 @@ export default function HomePage() {
         }
       >
         <p>
-          Send the address to the projector machine, the stage monitor and OBS — or point a phone at the code and hand
-          it over. Each screen starts following the console the moment it opens, with nothing installed and nobody
-          signed in.
-        </p>
-        <p>
-          The stream overlay comes through on a transparent background, so it drops onto the camera shot as a browser
-          source and nothing else in your scene has to move.
+          Control your projector, stage display, and livestream from one place. Each screen gets exactly what it needs,
+          while your team stays in sync.
         </p>
       </Feature>
 
       <Feature
-        title="The console fits in your pocket, too."
+        title="Control your service from your phone"
         visual={
           <Art
             src="/images/features/remote-phone.webp"
@@ -278,37 +262,16 @@ export default function HomePage() {
         }
       >
         <p>
-          The console is a browser tab, so a phone is another one. Open the session on it and the running order, the
-          live slide and the next-verse button are under your thumb — from the front row, the sound desk, or the
-          doorway you ended up standing in.
-        </p>
-        <p>
-          Two people can hold it at once. Whoever is at the laptop and whoever is on their feet see the same order and
-          the same live card, and either of them can put the next thing up.
+          Move through slides and control your presentation right from your phone. Stay close to the service instead of
+          being tied to the computer.
         </p>
       </Feature>
 
-      {/* ------------------------------------------------------- small print */}
-      <section className="border-y border-site-rule bg-site-band">
-        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-          <h2 className={`${DISPLAY} max-w-lg text-3xl leading-[1.1] sm:text-4xl`}>
-            The small things a service actually turns on.
-          </h2>
-
-          <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            {SMALL.map(item => (
-              <div key={item.title} className="border-t border-site-rule pt-4">
-                <h3 className="text-base font-medium text-site-ink">{item.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-site-muted">{item.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ------------------------------------------------------------ price */}
-      <section className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+      {/* The band the "what they see" section uses, so price reads as its own
+          stop on the page rather than more of the paper the features sit on. */}
+      <section className="border-y border-site-rule bg-site-band">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:py-24 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
           <div>
             <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Free is a real plan.</h2>
             <p className="mt-5 max-w-prose text-[17px] leading-relaxed text-site-muted">
@@ -324,10 +287,12 @@ export default function HomePage() {
             {Object.values(PLANS).map(plan => (
               <div
                 key={plan.id}
+                // Both cards take a ground of their own now that the section
+                // has one: on the band, a transparent card is not a card.
                 className={
                   plan.id === 'pro'
-                    ? 'rounded-studio-lg border border-site-ink bg-site-surface p-6'
-                    : 'rounded-studio-lg border border-site-rule p-6'
+                    ? 'rounded-studio-lg border border-site-ink bg-site-surface p-6 shadow-sm'
+                    : 'rounded-studio-lg border border-site-rule bg-site-bg p-6'
                 }
               >
                 <h3 className="text-sm text-site-muted">{plan.name}</h3>
@@ -347,23 +312,21 @@ export default function HomePage() {
       </section>
 
       {/* -------------------------------------------------------------- faq */}
-      <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-6 py-16 sm:py-24">
-        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Questions we get asked</h2>
+      {/* Every answer open, in two columns. A dozen questions behind
+          disclosure triangles is a dozen clicks to find out whether the thing
+          runs on Windows — the answers are short enough to simply print. */}
+      <section id="faq" className="mx-auto max-w-6xl scroll-mt-20 px-6 py-16 sm:py-24">
+        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Frequently asked questions</h2>
 
-        <div className="mt-10">
+        {/* Columns rather than a grid: the questions run down one column and
+            continue in the next, and the browser balances the two whatever
+            length the answers are. */}
+        <div className="mt-12 gap-x-14 sm:columns-2">
           {FAQ.map(item => (
-            <details key={item.q} className="group border-t border-site-rule py-5 last:border-b">
-              <summary className="flex items-start justify-between gap-6 text-[17px] text-site-ink marker:content-none">
-                {item.q}
-                <span
-                  aria-hidden
-                  className="mt-1 shrink-0 text-site-faint transition-transform duration-200 group-open:rotate-45"
-                >
-                  +
-                </span>
-              </summary>
-              <p className="mt-3 max-w-prose text-[16px] leading-relaxed text-site-muted">{item.a}</p>
-            </details>
+            <div key={item.q} className="mb-9 break-inside-avoid">
+              <h3 className="text-[19px] leading-snug font-medium text-site-ink">{item.q}</h3>
+              <p className="mt-2.5 text-[16px] leading-relaxed text-site-muted">{item.a}</p>
+            </div>
           ))}
         </div>
       </section>
