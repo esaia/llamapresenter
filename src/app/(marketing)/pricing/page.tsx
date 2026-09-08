@@ -3,7 +3,7 @@ import { Fragment } from 'react';
 
 import { LIMIT_LABELS } from '@/lib/billing/limits';
 import { PLANS } from '@/lib/billing/plans';
-import { freeLimitValue, INCLUDED, LIMIT_GROUPS, proLimitValue } from '@/lib/billing/table';
+import { freeLimitValue, INCLUDED, LIMIT_GROUPS, LIMIT_NOTES, proLimitValue } from '@/lib/billing/table';
 
 export const metadata = {
   title: 'Pricing',
@@ -126,6 +126,12 @@ export default function PricingPage() {
           table is the entire difference between the two plans.
         </p>
 
+        {/* One rule per group and none between rows.
+            A hairline under every row drew nineteen lines down the page and
+            made the reader work out which of them meant anything; the rows are
+            two lines of type each and separate themselves. What the eye needs
+            is help running *across* — so the Pro column keeps a ground of its
+            own the whole way down, and the group titles are the only rules. */}
         <div className="mt-8 overflow-x-auto">
           <table className="w-full min-w-md border-collapse text-left text-[15px]">
             <thead>
@@ -133,8 +139,8 @@ export default function PricingPage() {
                 <th className="py-2 pr-4 text-left text-sm font-normal">
                   <span className="sr-only">What is being counted</span>
                 </th>
-                <th className="w-28 px-3 py-2 text-right text-sm font-normal">Free</th>
-                <th className="w-28 py-2 pl-3 text-right text-sm font-normal">Pro</th>
+                <th className="w-28 px-4 py-2 text-right text-sm font-normal">Free</th>
+                <th className="w-32 rounded-t-studio bg-site-surface px-4 py-2 text-right text-sm font-normal">Pro</th>
               </tr>
             </thead>
 
@@ -143,24 +149,42 @@ export default function PricingPage() {
                 <Fragment key={group.title}>
                   <tr>
                     <th
-                      colSpan={3}
+                      colSpan={2}
                       scope="colgroup"
-                      className="border-t border-site-rule pt-6 pb-1 text-left text-[11px] font-semibold
+                      className="border-t border-site-rule pt-7 pb-2 text-left text-[11px] font-semibold
                         tracking-wider text-site-faint uppercase"
                     >
                       {group.title}
                     </th>
+                    <td className="bg-site-surface" />
                   </tr>
 
                   {group.keys.map(key => (
-                    <tr key={key} className="border-t border-site-rule/60">
-                      <td className="py-2.5 pr-4 text-site-ink">{LIMIT_LABELS[key].many}</td>
-                      <td className="px-3 py-2.5 text-right text-site-muted">{freeLimitValue(key)}</td>
-                      <td className="py-2.5 pl-3 text-right text-site-ink">{proLimitValue(key)}</td>
+                    <tr key={key} className="align-top">
+                      {/* The noun on its own was a riddle to anyone who has not
+                          run the console — "sessions, 1" most of all — so each
+                          row says what the thing is underneath its name. */}
+                      <td className="py-3.5 pr-6">
+                        <span className="block text-site-ink">{LIMIT_LABELS[key].many}</span>
+                        <span className="mt-1 block max-w-prose text-[13px] leading-relaxed text-site-faint">
+                          {LIMIT_NOTES[key]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap text-site-muted">{freeLimitValue(key)}</td>
+                      <td className="bg-site-surface px-4 py-3.5 text-right whitespace-nowrap text-site-ink">
+                        {proLimitValue(key)}
+                      </td>
                     </tr>
                   ))}
                 </Fragment>
               ))}
+
+              {/* Closes the ground the Pro column has been standing on. */}
+              <tr aria-hidden>
+                <td className="border-t border-site-rule" />
+                <td className="border-t border-site-rule" />
+                <td className="h-3 rounded-b-studio bg-site-surface" />
+              </tr>
             </tbody>
           </table>
         </div>

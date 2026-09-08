@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
+import { Art } from '@/components/marketing/Art';
 import { Frame } from '@/components/marketing/Frame';
 import { HeroScene } from '@/components/marketing/HeroScene';
 import { ScrollZoom } from '@/components/marketing/ScrollZoom';
@@ -9,25 +9,6 @@ import { PLANS } from '@/lib/billing/plans';
 /* The two type roles for the page: the rounded display face the brand is drawn
    in, and the interface stack for everything read as a sentence. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
-
-/**
- * The drawing beside a feature: screens of the app, arranged and annotated by
- * hand rather than screenshotted.
- *
- * Every one is the same 1000x700 artboard on a transparent ground, so they
- * share a column width and need no frame around them — the shadows and the
- * coloured card behind each are part of the picture.
- */
-const Art = ({ src, alt }: { src: string; alt: string }) => (
-  <Image
-    src={src}
-    alt={alt}
-    width={1000}
-    height={700}
-    sizes="(min-width: 1024px) 38rem, 100vw"
-    className="h-auto w-full"
-  />
-);
 
 /** A feature: a paragraph on one side, a screen on the other. */
 const Feature = ({

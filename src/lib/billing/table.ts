@@ -21,6 +21,29 @@ export const LIMIT_GROUPS: { title: string; keys: LimitKey[] }[] = [
   { title: 'Sessions', keys: ['sessions'] },
 ];
 
+/**
+ * What each row is, for a reader who has never opened the console.
+ *
+ * The console's own panel needs none of this — an operator who has just been
+ * refused a fourth name card knows what a name card is. Someone on the pricing
+ * page reading a bare noun and a number does not, and "sessions — 1" is the
+ * row that makes them close the tab rather than ask.
+ */
+export const LIMIT_NOTES: Record<LimitKey, string> = {
+  passages: 'Bible passages open in the console at once, each broken into verses and ready to send.',
+  languages: 'Translations stacked on the same slide, so the room can read the verse in both at once.',
+  songs: 'Songs kept in your library, typed in or imported from a ProPresenter bundle.',
+  songs_per_playlist: 'How long one running order can be — the songs for a single service.',
+  playlists: 'Running orders. One per service, or one per team that leads.',
+  audio_tracks: 'Your own music files, played from the console. They stay on your machine.',
+  audio_categories: 'Shelves you sort that music onto — prelude, communion, after the service.',
+  name_cards: 'The strap across the bottom of your livestream saying who is speaking, and what they do.',
+  custom_templates: 'Slide designs you draw yourself, instead of the ones we ship.',
+  custom_fonts: 'Typefaces of your own, added as a Google Fonts family or a link to a font file.',
+  sessions: 'A session is one set of screens — its own projector, stage and stream links. A second session is a '
+    + 'second room, running its own service at the same time.',
+};
+
 /** Pro is unlimited everywhere except languages, where three is how many fit. */
 export const proLimitValue = (key: LimitKey) => (key === 'languages' ? String(MAX_LANGS) : 'Unlimited');
 

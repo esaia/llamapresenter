@@ -7,6 +7,7 @@ import { createServerClient } from '@supabase/ssr';
 const PUBLIC = [
   '/',
   '/pricing',
+  '/propresenter-alternative',
   '/docs',
   '/login',
   '/auth',
