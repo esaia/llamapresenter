@@ -22,6 +22,40 @@
   font-display: swap;
 }
 
+/* The marketing site's text face.
+ *
+ * A webfont rather than the system stack, and this is the whole reason: the
+ * stack resolves to San Francisco, and San Francisco is not rasterised the
+ * same way on the two Apple platforms. `-webkit-font-smoothing: antialiased`
+ * on <html> thins it on macOS and is ignored outright on iOS, and iOS's own
+ * Bold Text setting can pick a heavier cut again — so the same paragraph came
+ * out normal on a laptop and bold on a phone. A face we ship is a face that
+ * cannot be swapped under us.
+ *
+ * One file per subset carries the whole weight axis, so `font-weight: 100 900`
+ * is not a range we are claiming: 500 and 600 on this page are real cuts of
+ * Inter rather than a browser thickening 400 by hand, which is the other way
+ * WebKit and Blink disagree. Kept apart from the `Inter` the projector's font
+ * picker offers, which is a static 400 and stays exactly as it was.
+ */
+@font-face {
+  font-family: 'Inter Var';
+  src: url('/fonts/InterVar-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Inter Var';
+  src: url('/fonts/InterVar-latin-ext.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* Georgian faces that set English too, subset to Latin and the Georgian block.
    A church here reads a verse in Georgian and the one under it in English, so a
    face that does only one of the two makes the operator pick twice and get two
@@ -382,6 +416,10 @@
   --font-bebas: 'Bebas Neue', sans-serif;
   --font-ui:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans Georgian', 'Helvetica Neue', Arial, sans-serif;
+
+  /* What the marketing pages read in. The system stack stays behind it for the
+     moment before the file lands, and for anything it cannot set. */
+  --font-site: 'Inter Var', var(--font-ui);
 
   /* The console's design system. Dark only: the operator sits in a dark booth
      with a lit screen in front of them, and a white console is a lamp pointed
@@ -2030,6 +2068,7 @@ html[data-preview='stage'] [data-preview-only='stage'] {
 /* Scoped rather than global: the console still owns `body`. */
 .site {
   color-scheme: light;
+  font-family: var(--font-site);
   color: var(--color-site-ink);
   background-color: var(--color-site-bg);
   background-image:
