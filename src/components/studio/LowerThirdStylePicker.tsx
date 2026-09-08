@@ -149,7 +149,7 @@ const Preview = ({
  * operator whose church is not black or white was out of luck.
  */
 export const LowerThirdStylePicker = () => {
-  const { settings, showData, update, room, noteLimit } = useStudio();
+  const { settings, showData, update, room } = useStudio();
 
   // Opens on whichever kind of slide is live. An operator who hits the pencil
   // over a song is there about the song, and landing on the verse grid means
@@ -219,11 +219,12 @@ export const LowerThirdStylePicker = () => {
       template: startingTemplate(kind),
     };
 
-    // A drawn look is a plan ceiling like any other. Checked here rather than
-    // left to the settings write, which is debounced and fire-and-forget — a
-    // refusal on the way out would never reach the operator who drew it.
+    // Over the plan's ceiling the editor still opens — on a template that was
+    // never written. Refusing at the door answered "is this worth paying for?"
+    // by never showing the thing being sold; this way they draw on it, and the
+    // line is found at Save, which is where it actually is.
     if (!room('custom_templates')) {
-      noteLimit('custom_templates');
+      setEditing(row.id);
       return;
     }
 

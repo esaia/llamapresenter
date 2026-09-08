@@ -77,6 +77,7 @@ import {
   type Handle,
 } from '@/lib/studio/canvas';
 import { projectorStyle, streamLangOf, templatesFor } from '@/lib/studio/settings';
+import { limitMessage } from '@/lib/billing/limits';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { LANG_LABELS, type Align, type Lang, type ProjectorStyle } from '@/lib/types';
 
@@ -1232,7 +1233,7 @@ export const TemplateEditor = ({
   id: string;
   onClose: () => void;
 }) => {
-  const { settings, update } = useStudio();
+  const { settings, update, room } = useStudio();
 
   const lyrics = target === 'lyrics' || target === 'streamLyrics';
   // The stream composites over live video, so its canvas has no photograph
@@ -1240,6 +1241,18 @@ export const TemplateEditor = ({
   const stream = target === 'stream' || target === 'streamLyrics';
 
   const entry = templatesFor(settings, target).find(row => row.id === id);
+
+  /**
+   * A drawing the plan will not let them keep.
+   *
+   * The picker used to refuse at the door, which answered the question — is
+   * this worth paying for? — by never showing the thing being sold. So the
+   * editor opens for everyone and it is Save that holds: draw on it, move the
+   * boxes, see what it does, and find the line at the moment you would have
+   * kept it. Only a template that is not in the library yet can be locked;
+   * editing one already saved has nothing to do with the ceiling.
+   */
+  const locked = !entry && !room('custom_templates');
 
   const saved = entry?.template ?? startingTemplate(target);
 
@@ -1697,6 +1710,8 @@ export const TemplateEditor = ({
   });
 
   const save = () => {
+    if (locked) return;
+
     update({
       customTemplates: settings.customTemplates.map(row =>
         row.id === id ? { ...row, name: name.trim() || 'Custom', template: draft } : row,
@@ -1748,9 +1763,12 @@ export const TemplateEditor = ({
           />
 
           <div className="flex items-center gap-2">
-            <IconButton label="Delete this layout" tone="danger" onClick={discard}>
-              <HiOutlineTrash className="text-base" />
-            </IconButton>
+            {/* Nothing to delete until there is something kept. */}
+            {locked ? null : (
+              <IconButton label="Delete this layout" tone="danger" onClick={discard}>
+                <HiOutlineTrash className="text-base" />
+              </IconButton>
+            )}
 
             <div className="flex items-center gap-0.5 rounded-studio border border-studio-border bg-studio-surface p-0.5">
               <IconButton label="Undo (⌘Z)" disabled={!canUndo(history)} onClick={() => step(undo)}>
@@ -2095,6 +2113,12 @@ export const TemplateEditor = ({
           </button>
 
           <div className="flex items-center gap-2">
+            {locked ? (
+              <p className="mr-1 max-w-64 text-[11px] leading-relaxed text-studio-muted">
+                {limitMessage('custom_templates')} Draw all you like here — it just cannot be kept.
+              </p>
+            ) : null}
+
             <button
               type="button"
               onClick={onClose}
@@ -2105,15 +2129,26 @@ export const TemplateEditor = ({
               Cancel
             </button>
 
-            <button
-              type="button"
-              onClick={save}
-              className="rounded-studio bg-studio-accent px-4 py-1.5 text-xs font-semibold text-studio-onaccent
-                transition-opacity duration-150 hover:opacity-90 focus:outline-none focus-visible:ring-2
-                focus-visible:ring-studio-accent/40"
-            >
-              Save
-            </button>
+            {locked ? (
+              <a
+                href="/pricing"
+                className="rounded-studio bg-studio-accent px-4 py-1.5 text-xs font-semibold text-studio-onaccent
+                  transition-opacity duration-150 hover:opacity-90 focus:outline-none focus-visible:ring-2
+                  focus-visible:ring-studio-accent/40"
+              >
+                Get Pro to keep this
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={save}
+                className="rounded-studio bg-studio-accent px-4 py-1.5 text-xs font-semibold text-studio-onaccent
+                  transition-opacity duration-150 hover:opacity-90 focus:outline-none focus-visible:ring-2
+                  focus-visible:ring-studio-accent/40"
+              >
+                Save
+              </button>
+            )}
           </div>
         </footer>
       </div>

@@ -118,7 +118,7 @@ export const ProjectorLookPicker = ({
   target: LookTarget;
   onTarget: (target: LookTarget) => void;
 }) => {
-  const { settings, update, room, noteLimit } = useStudio();
+  const { settings, update, room } = useStudio();
 
   // Which of the operator's own layouts is open on the canvas, if any.
   const [editing, setEditing] = useState('');
@@ -189,11 +189,12 @@ export const ProjectorLookPicker = ({
       template: startingTemplate(target),
     };
 
-    // A drawn look is a plan ceiling like any other. Checked here rather than
-    // left to the settings write, which is debounced and fire-and-forget — a
-    // refusal on the way out would never reach the operator who drew it.
+    // Over the plan's ceiling the editor still opens — on a template that was
+    // never written. Refusing at the door answered "is this worth paying for?"
+    // by never showing the thing being sold; this way they draw on it, and the
+    // line is found at Save, which is where it actually is.
     if (!room('custom_templates')) {
-      noteLimit('custom_templates');
+      setEditing(row.id);
       return;
     }
 
