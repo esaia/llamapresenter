@@ -108,7 +108,7 @@ export const DevicesSection = () => {
             <PresenceRow
               icon={<HiOutlineVideoCamera className="text-base" />}
               label="Stream"
-              hint="A Browser Source in OBS."
+              hint="A browser source in OBS, vMix or whatever you stream with."
               count={peers.lower3rd}
             />
             <PresenceRow icon={<MdPhoneIphone className="text-base" />} label="Consoles" count={peers.console} />
@@ -120,11 +120,11 @@ export const DevicesSection = () => {
         <Field label="Links" hint="Each one carries the session, so nothing has to be typed at the other end.">
           <div className="space-y-2">
             <CopyRow label="Screen" url={`${origin}/show/${session.outputKey}`} />
-            <CopyRow label="OBS" url={`${origin}/lower3rd/${session.outputKey}`} />
+            <CopyRow label="Stream" url={`${origin}/lower3rd/${session.outputKey}`} />
           </div>
 
           <p className="mt-3 text-[11px] leading-relaxed text-studio-faint">
-            Anyone holding the Screen or OBS link can see what you put on screen — they carry the session key, which is
+            Anyone holding the Screen or Stream link can see what you put on screen — they carry the session key, which is
             what lets a machine with no sign-in follow along.
           </p>
         </Field>

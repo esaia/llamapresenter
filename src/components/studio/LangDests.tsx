@@ -18,7 +18,7 @@ import { cn } from '@/lib/cn';
  */
 export const DESTS = [
   { key: 'stage' as const, label: 'Stage', group: 'stage-language', name: 'the stage display' },
-  { key: 'lower3rd' as const, label: 'Lower3rd', group: 'stream-language', name: 'the lower third in OBS' },
+  { key: 'lower3rd' as const, label: 'Lower3rd', group: 'stream-language', name: 'the lower third in your stream' },
 ];
 
 /** The column head. Every width here is repeated on the rows below it. */

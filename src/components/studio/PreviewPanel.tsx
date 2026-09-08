@@ -342,7 +342,7 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
           {/* The real /lower3rd page, scaled down, rather than a second
               rendering of the same design: it joins the session's channel like
               any other output, and its vh/vw padding resolves against its own
-              1920x1080 viewport, so what shows here is what OBS draws. The
+              1920x1080 viewport, so what shows here is what the stream tool draws. The
               chequerboard stands in for the camera and reads as transparency.
               `?preview=1` is what keeps it out of the Present menu's count —
               the same trap the stage pane below sidesteps by not being a

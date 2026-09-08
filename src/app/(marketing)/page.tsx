@@ -72,7 +72,7 @@ const FAQ = [
   },
   {
     q: 'Can I use LlamaPresenter for livestreams?',
-    a: 'Yes. LlamaPresenter works with livestreaming tools like OBS. Simply add a Browser source in OBS and paste your LlamaPresenter stream URL. Your Bible verses, lyrics, and other content can then appear directly in your livestream.',
+    a: 'Yes. The stream output is an ordinary web page with a transparent background, so it works with OBS, vMix, Wirecast, Streamlabs, Ecamm Live or any other tool that can take a browser source. Add a browser source, paste your LlamaPresenter stream link, and your Bible verses, lyrics and name cards appear over the camera in your livestream.',
   },
   {
     q: 'Can I use it for song lyrics?',

@@ -290,7 +290,7 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
         <PresentMenu />
 
-        <Button icon={<Settings className="size-3.5" />} onClick={onSettings} title="Settings — background, type, OBS">
+        <Button icon={<Settings className="size-3.5" />} onClick={onSettings} title="Settings — background, type, stream">
           <span className="hidden md:inline">Settings</span>
         </Button>
       </div>

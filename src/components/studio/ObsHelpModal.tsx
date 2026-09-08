@@ -7,14 +7,21 @@ import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 
 /**
- * In-app setup for the OBS lower third.
+ * In-app setup for the stream lower third.
  *
  * In the old app this ran to three steps: enable obs-websocket, add the Browser
  * Source, then come back and connect — plus a warning about mixed content,
  * because a ws:// connection from an https page only reaches loopback. None of
  * that survives: the overlay joins the session's realtime channel like any
- * other output, so adding the Browser Source *is* the setup, and it works from
+ * other output, so adding the browser source *is* the setup, and it works from
  * a phone or another machine with nothing extra.
+ *
+ * Which is also why the steps below name more than one program. Nothing here
+ * is an integration with OBS: the overlay is a web page, so every tool that
+ * can put a web page over a camera — vMix, Wirecast, Streamlabs, Ecamm — takes
+ * it the same way, and the only thing that differs is where each one keeps the
+ * menu item. OBS goes first because it is what most churches have, not because
+ * it is the one we support.
  */
 
 const Code = ({ children }: { children: ReactNode }) => (
@@ -31,7 +38,7 @@ const Strong = ({ children }: { children: ReactNode }) => (
 );
 
 /**
- * A value to be carried into OBS, with the copy button next to it.
+ * A value to be carried into the streaming tool, with the copy button next to it.
  *
  * `label` names the value for the copy button's accessible name only — the
  * field it sits in already says what the value is in type the operator can
@@ -114,20 +121,22 @@ const More = ({ title, children }: { title: string; children: ReactNode }) => (
 );
 
 export const ObsHelpModal = ({ onClose, sourceUrl }: { onClose: () => void; sourceUrl: string }) => (
-  <Modal open onClose={onClose} title="Set up the OBS lower third" width="max-w-xl">
+  <Modal open onClose={onClose} title="Set up the stream lower third" width="max-w-xl">
     <div className="space-y-5 pb-4">
       <p className="text-xs leading-relaxed text-studio-muted">
-        Two steps, and nothing to install. The overlay is an ordinary web page that follows this console, so OBS can be
-        on this machine or another one.
+        Two steps, and nothing to install. The overlay is an ordinary web page that follows this console, so anything
+        that takes a browser source shows it — OBS, vMix, Wirecast, Streamlabs, Ecamm Live — running on this machine
+        or another one.
       </p>
 
       <ol className="space-y-4">
-        <Step n="1" title="Add the Browser Source" where="OBS → Sources → + → Browser">
+        <Step n="1" title="Add a browser source" where="OBS → Sources → + → Browser · vMix → Add Input → Web Browser">
           <CopyField label="URL" value={sourceUrl} />
 
           <p>
             Size <Code>1920</Code> × <Code>1080</Code>. Leave <Strong>Shutdown source when not visible</Strong>{' '}
-            unticked, and drag the source <Strong>above your camera</Strong>.
+            unticked, and put the source <Strong>above your camera</Strong> in the layer order. Any other tool with a
+            web or browser input takes the same link on the same terms.
           </p>
         </Step>
 
@@ -140,7 +149,7 @@ export const ObsHelpModal = ({ onClose, sourceUrl }: { onClose: () => void; sour
       </ol>
 
       <div className="space-y-2">
-        <More title="Nothing is showing up in OBS">
+        <More title="Nothing is showing up in the stream">
           <p>
             Add <Code>?debug=1</Code> to the Browser Source URL and <Strong>Refresh</Strong> the source — a panel in
             the corner shows what the page is receiving.
@@ -158,8 +167,8 @@ export const ObsHelpModal = ({ onClose, sourceUrl }: { onClose: () => void; sour
               link carries the same session key as the one in Devices.
             </li>
             <li>
-              <Strong>Panel right, screen empty</Strong> — the source is under the camera, its eye is off, or the
-              overlay is blanked in the Stream panel.
+              <Strong>Panel right, screen empty</Strong> — the source is under the camera, it is hidden in your
+              switcher, or the overlay is blanked in the Stream panel.
             </li>
             <li>
               <Strong>Nothing changed after an update</Strong> — reload this console <em>and</em> refresh the source.
@@ -169,8 +178,9 @@ export const ObsHelpModal = ({ onClose, sourceUrl }: { onClose: () => void; sour
 
         <More title="Sending it on as NDI">
           <p>
-            A web page cannot produce NDI. Install the <Strong>DistroAV</Strong> plugin in OBS and switch on its NDI
-            output — OBS then broadcasts the whole program, lower third included.
+            A web page cannot produce NDI on its own, so this is a job for whatever is holding the browser source. In
+            OBS, install the <Strong>DistroAV</Strong> plugin and switch on its NDI output; vMix and Wirecast can send
+            NDI themselves. Either way it is the whole program that goes out, lower third included.
           </p>
         </More>
       </div>

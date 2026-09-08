@@ -75,7 +75,7 @@ export const INCLUDED = [
     items: [
       'A projector output for the wall',
       'A stage display for the people on the platform',
-      'A transparent lower third for OBS and your livestream',
+      'A transparent lower third for OBS, vMix or any other streaming tool',
       'A countdown timer the room can see',
       'As many screens as you can open — every output is a link',
     ],

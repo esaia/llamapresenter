@@ -33,7 +33,7 @@ export const PLANS: Record<PlanId, Plan> = {
     blurb: 'Everything a congregation needs to put scripture on a screen.',
     highlights: [
       'The whole Bible, in every translation we hold',
-      'Projector, stage and OBS lower third',
+      'Projector, stage and a lower third for your stream',
       `${FREE_LIMITS.languages} languages side by side`,
       `${THEMES.length} built-in backgrounds`,
       `${FREE_LIMITS.songs} songs, ${FREE_LIMITS.songs_per_playlist} to a playlist`,

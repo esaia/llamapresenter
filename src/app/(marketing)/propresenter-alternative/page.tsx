@@ -90,7 +90,7 @@ const COMPARISON: { group: string; rows: { label: string; theirs: string; ours: 
       {
         label: 'Livestream overlay',
         theirs: 'Yes, via an alpha-keyed output your switcher or streaming software takes.',
-        ours: 'Yes — a transparent lower third you paste into OBS as a browser source.',
+        ours: 'Yes — a transparent lower third you paste into OBS, vMix or any other tool as a browser source.',
       },
       {
         label: 'How many screens',
@@ -404,8 +404,9 @@ export default function ProPresenterAlternativePage() {
         </p>
         <p>
           Here the session is the service, and the screens are readers of it. The projector opens one link, the stage
-          display another, OBS takes a third as a browser source. They can be three machines, or one machine with
-          three windows, and none of them needs an account or a copy of your media.
+          display another, and OBS, vMix or whatever you stream with takes a third as a browser source. They can be
+          three machines, or one machine with three windows, and none of them needs an account or a copy of your
+          media.
         </p>
       </Detail>
 
