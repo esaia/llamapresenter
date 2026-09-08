@@ -64,7 +64,7 @@ const QUESTIONS = [
 
 export default function PricingPage() {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
+    <main className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
       <h1 className={`${DISPLAY} text-4xl sm:text-5xl`}>Pricing</h1>
       <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
         Putting scripture on the screen costs nothing, on every screen you have, for as long as you like. Pro is for
@@ -196,7 +196,7 @@ export default function PricingPage() {
           the day you pay us.
         </p>
 
-        <div className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+        <div className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {INCLUDED.map(group => (
             <div key={group.title}>
               <h3 className="text-sm font-semibold text-site-ink">{group.title}</h3>
@@ -218,7 +218,7 @@ export default function PricingPage() {
       <section className="mt-20">
         <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Questions about paying</h2>
 
-        <div className="mt-10 gap-x-12 sm:columns-2">
+        <div className="mt-10 gap-x-12 sm:columns-2 lg:columns-3">
           {QUESTIONS.map(item => (
             <div key={item.q} className="mb-8 break-inside-avoid">
               <h3 className="text-[17px] leading-snug font-medium text-site-ink">{item.q}</h3>
