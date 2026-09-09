@@ -1,10 +1,12 @@
 import Link from 'next/link';
 
 import { Wordmark } from '@/components/brand/Wordmark';
+import { SOLUTIONS } from '@/lib/marketing/solutions';
 import { USE_CASES } from '@/lib/marketing/useCases';
 import { getUser } from '@/lib/supabase/server';
 
 const NAV = [
+  { href: '/solutions', label: 'Solutions' },
   { href: '/use-cases', label: 'Use cases' },
   { href: '/compare', label: 'Compare' },
   { href: '/pricing', label: 'Pricing' },
@@ -47,6 +49,16 @@ const FOOTER = [
         label: useCase.name,
       })),
       { href: '/use-cases', label: 'Every use case' },
+    ],
+  },
+  {
+    title: 'Your church',
+    links: [
+      ...SOLUTIONS.slice(0, 4).map(solution => ({
+        href: `/solutions/${solution.slug}`,
+        label: solution.name,
+      })),
+      { href: '/solutions', label: 'Every kind of church' },
     ],
   },
 ];
@@ -98,7 +110,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
 
       <footer className="border-t border-site-rule">
         <div className="mx-auto max-w-7xl px-6 py-14">
-          <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(3,minmax(0,1fr))] md:gap-8">
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.2fr_repeat(4,minmax(0,1fr))] lg:gap-8">
             <div>
               <Wordmark on="light" className="text-[17px] sm:text-[19px]" />
               <p className="mt-3 max-w-xs text-sm leading-relaxed text-site-muted">

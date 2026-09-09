@@ -2,10 +2,11 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Art } from '@/components/marketing/Art';
+import { LinkCard } from '@/components/marketing/LinkCard';
 import { Marker } from '@/components/marketing/Marker';
 import { Tick } from '@/components/marketing/Tick';
-import { LinkCard } from '@/components/marketing/LinkCard';
-import { USE_CASES, findUseCase } from '@/lib/marketing/useCases';
+import { findSolution, SOLUTIONS } from '@/lib/marketing/solutions';
+import { findUseCase } from '@/lib/marketing/useCases';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -14,37 +15,38 @@ const OURS = 'LlamaPresenter';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://llamapresenter.com';
 
-/** Every use case is a page at build time; there is no other source of them. */
-export const generateStaticParams = () => USE_CASES.map(useCase => ({ slug: useCase.slug }));
+/** Every solution is a page at build time; there is no other source of them. */
+export const generateStaticParams = () => SOLUTIONS.map(solution => ({ slug: solution.slug }));
 
-export const generateMetadata = async ({ params }: PageProps<'/use-cases/[slug]'>) => {
+export const generateMetadata = async ({ params }: PageProps<'/solutions/[slug]'>) => {
   const { slug } = await params;
-  const useCase = findUseCase(slug);
+  const solution = findSolution(slug);
 
-  if (!useCase) return {};
+  if (!solution) return {};
 
   return {
-    title: useCase.title,
-    description: useCase.description,
-    alternates: { canonical: `/use-cases/${useCase.slug}` },
+    title: solution.title,
+    description: solution.description,
+    alternates: { canonical: `/solutions/${solution.slug}` },
     openGraph: {
       type: 'article',
       siteName: OURS,
-      url: `/use-cases/${useCase.slug}`,
-      title: useCase.title,
-      description: useCase.description,
+      url: `/solutions/${solution.slug}`,
+      title: solution.title,
+      description: solution.description,
     },
-    twitter: { card: 'summary_large_image', title: useCase.title, description: useCase.description },
+    twitter: { card: 'summary_large_image', title: solution.title, description: solution.description },
   };
 };
 
-export default async function UseCasePage({ params }: PageProps<'/use-cases/[slug]'>) {
+export default async function SolutionPage({ params }: PageProps<'/solutions/[slug]'>) {
   const { slug } = await params;
-  const useCase = findUseCase(slug);
+  const solution = findSolution(slug);
 
-  if (!useCase) notFound();
+  if (!solution) notFound();
 
-  const related = useCase.related.map(findUseCase).filter(item => item !== undefined);
+  const jobs = solution.useCases.map(findUseCase).filter(item => item !== undefined);
+  const nearby = solution.related.map(findSolution).filter(item => item !== undefined);
 
   /* The questions on the page and the questions a search result may quote are
      the same list, so an answer can never appear in one and not the other. */
@@ -53,7 +55,7 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
     '@graph': [
       {
         '@type': 'FAQPage',
-        mainEntity: useCase.faq.map(item => ({
+        mainEntity: solution.faq.map(item => ({
           '@type': 'Question',
           name: item.q,
           acceptedAnswer: { '@type': 'Answer', text: item.a },
@@ -62,8 +64,8 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
       {
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Use cases', item: `${SITE_URL}/use-cases` },
-          { '@type': 'ListItem', position: 2, name: useCase.name, item: `${SITE_URL}/use-cases/${useCase.slug}` },
+          { '@type': 'ListItem', position: 1, name: 'Solutions', item: `${SITE_URL}/solutions` },
+          { '@type': 'ListItem', position: 2, name: solution.name, item: `${SITE_URL}/solutions/${solution.slug}` },
         ],
       },
     ],
@@ -76,21 +78,21 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
       {/* ------------------------------------------------------------- hero */}
       <section className="mx-auto max-w-7xl px-6 pt-10 pb-8 sm:pt-14">
         <p className="text-sm font-medium tracking-wide text-site-faint uppercase">
-          <Link href="/use-cases" className="transition-colors hover:text-site-muted">
-            Use cases
+          <Link href="/solutions" className="transition-colors hover:text-site-muted">
+            Solutions
           </Link>
         </p>
 
         <div className="mt-5 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-14">
           <div>
             <h1 className={`${DISPLAY} text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-              {useCase.headline[0]}{' '}
-              <Marker>{useCase.headline[1]}</Marker>
+              {solution.headline[0]}{' '}
+              <Marker>{solution.headline[1]}</Marker>
             </h1>
 
             <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
-            <p className="mt-7 max-w-[56ch] text-lg leading-relaxed text-site-muted">{useCase.lede}</p>
+            <p className="mt-7 max-w-[56ch] text-lg leading-relaxed text-site-muted">{solution.lede}</p>
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Link
@@ -102,42 +104,56 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
               </Link>
 
               <Link
-                href="/#room"
+                href="/compare"
                 className="rounded-studio border border-site-rule px-6 py-3.5 text-[17px] text-site-ink
                   transition-colors duration-150 hover:bg-site-band"
               >
-                See how it works
+                Compare it with yours
               </Link>
             </div>
           </div>
 
-          <Art src={useCase.art.src} alt={useCase.art.alt} />
+          <Art src={solution.art.src} alt={solution.art.alt} />
+        </div>
+      </section>
+
+      {/* ----------------------------------------------------- what goes wrong */}
+      <section className="border-y border-site-rule bg-site-band">
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 py-14 sm:py-16 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
+          <h2 className={`${DISPLAY} text-2xl leading-[1.1] sm:text-3xl`}>What usually goes wrong</h2>
+
+          <ul className="space-y-3">
+            {solution.problem.map(item => (
+              <li key={item} className="flex gap-3 text-[17px] leading-relaxed text-site-muted">
+                <span aria-hidden className="mt-[11px] size-1.5 shrink-0 rounded-full bg-site-faint" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {/* ------------------------------------------------------------ points */}
-      <section className="border-y border-site-rule bg-site-band">
-        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-          <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>What you get</h2>
+      <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>What answers it</h2>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
-            {useCase.points.map(point => (
-              <div key={point.title} className="rounded-studio-lg border border-site-rule bg-site-bg p-6">
-                <h3 className={`${DISPLAY} text-xl`}>{point.title}</h3>
-                <p className="mt-3 text-[15px] leading-relaxed text-site-muted">{point.body}</p>
-              </div>
-            ))}
-          </div>
+        <div className="mt-10 grid gap-6 sm:grid-cols-2">
+          {solution.points.map(point => (
+            <div key={point.title} className="rounded-studio-lg border border-site-rule bg-site-surface p-6">
+              <h3 className={`${DISPLAY} text-xl`}>{point.title}</h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-site-muted">{point.body}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ------------------------------------------------------------- steps */}
-      <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
+      <section className="border-y border-site-rule bg-site-band">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:py-20 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
           <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>How a Sunday runs</h2>
 
           <ol className="space-y-5">
-            {useCase.steps.map(step => (
+            {solution.steps.map(step => (
               <li key={step} className="flex gap-3 text-[17px] leading-relaxed text-site-ink">
                 <Tick className="mt-[7px] size-3.5 shrink-0 text-site-ink" />
                 <span>{step}</span>
@@ -147,13 +163,33 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
         </div>
       </section>
 
+      {/* -------------------------------------------------------- the jobs */}
+      <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>What a church like this uses</h2>
+        <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
+          The jobs behind the sections above, each with a page of its own.
+        </p>
+
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {jobs.map(job => (
+            <LinkCard
+              key={job.slug}
+              href={`/use-cases/${job.slug}`}
+              name={job.name}
+              blurb={job.card}
+              icon={job.icon}
+            />
+          ))}
+        </div>
+      </section>
+
       {/* --------------------------------------------------------- questions */}
       <section className="border-y border-site-rule bg-site-band">
         <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
           <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Questions</h2>
 
           <div className="mt-10 gap-x-14 sm:columns-2">
-            {useCase.faq.map(item => (
+            {solution.faq.map(item => (
               <div key={item.q} className="mb-8 break-inside-avoid">
                 <h3 className="text-[19px] leading-snug font-medium text-site-ink">{item.q}</h3>
                 <p className="mt-2.5 text-[16px] leading-relaxed text-site-muted">{item.a}</p>
@@ -165,13 +201,13 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
 
       {/* ------------------------------------------------------------ nearby */}
       <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Nearby</h2>
+        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Churches like yours</h2>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {related.map(item => (
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          {nearby.map(item => (
             <LinkCard
               key={item.slug}
-              href={`/use-cases/${item.slug}`}
+              href={`/solutions/${item.slug}`}
               name={item.name}
               blurb={item.card}
               icon={item.icon}
@@ -180,15 +216,15 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
         </div>
 
         <p className="mt-10 max-w-[62ch] text-[16px] leading-relaxed text-site-muted">
-          Every use case is on the{' '}
-          <Link href="/use-cases" className="text-site-ink underline underline-offset-4">
-            use cases
+          Every kind of church is on the{' '}
+          <Link href="/solutions" className="text-site-ink underline underline-offset-4">
+            solutions
           </Link>{' '}
           page, and the{' '}
-          <Link href="/compare" className="text-site-ink underline underline-offset-4">
-            comparison
+          <Link href="/pricing" className="text-site-ink underline underline-offset-4">
+            pricing
           </Link>{' '}
-          puts {OURS} beside ProPresenter, EasyWorship, FreeShow and Proclaim.
+          page has what the free plan holds before Pro is worth it.
         </p>
       </section>
 

@@ -1,3 +1,7 @@
+import type { CardIcon } from '@/components/marketing/LinkCard';
+
+import { LANGUAGES_ART, type MarketingArt, OUTPUTS_ART, TEMPLATE_ART, TIMER_ART } from './art';
+
 /**
  * The use cases, and everything each page is made of.
  *
@@ -7,17 +11,6 @@
  * shape, so `use-cases/[slug]` renders every one of them.
  */
 
-export type UseCaseIcon =
-  | 'languages'
-  | 'book'
-  | 'lyrics'
-  | 'stream'
-  | 'stage'
-  | 'timer'
-  | 'lower3rd'
-  | 'plant'
-  | 'team';
-
 export type UseCase = {
   /** The path segment, and what the whole row is keyed by. */
   slug: string;
@@ -25,13 +18,13 @@ export type UseCase = {
   name: string;
   /** The card's one line. */
   card: string;
-  icon: UseCaseIcon;
+  icon: CardIcon;
   title: string;
   description: string;
   /** The headline, split where the yellow stroke starts. */
   headline: [string, string];
   lede: string;
-  art: { src: string; alt: string };
+  art: MarketingArt;
   /** What the church gets, in three or four cards. */
   points: { title: string; body: string }[];
   /** The same thing again as a running order, because that is how it is used. */
@@ -39,31 +32,6 @@ export type UseCase = {
   faq: { q: string; a: string }[];
   /** Slugs of the two or three pages a reader of this one wants next. */
   related: string[];
-};
-
-const LANGUAGES_ART = {
-  src: '/images/features/languages.png',
-  alt: 'A slide carrying the same verse in Georgian and English, beside the panel that arms each language',
-};
-
-const OUTPUTS_ART = {
-  src: '/images/features/outputs.png',
-  alt: 'One session feeding a stage display, a projector slide and a transparent stream overlay, each at its own link',
-};
-
-const TIMER_ART = {
-  src: '/images/features/stage-timer.png',
-  alt: 'A stage view carrying the current slide, what is next, the clock and a countdown',
-};
-
-const TEMPLATE_ART = {
-  src: '/images/features/template-editor.png',
-  alt: 'The template editor, with a verse laid out over a background',
-};
-
-const REMOTE_ART = {
-  src: '/images/features/remote-phone.webp',
-  alt: 'The same session open on a laptop and on a phone, the same card selected on both',
 };
 
 export const USE_CASES: UseCase[] = [
@@ -359,7 +327,7 @@ export const USE_CASES: UseCase[] = [
         a: 'Yes. The timer has a link of its own for a display that should show nothing else.',
       },
     ],
-    related: ['service-timing', 'worship-song-lyrics', 'volunteer-tech-teams'],
+    related: ['service-timing', 'worship-song-lyrics', 'lower-thirds'],
   },
   {
     slug: 'service-timing',
@@ -416,7 +384,7 @@ export const USE_CASES: UseCase[] = [
           + 'being pushed to it.',
       },
     ],
-    related: ['stage-display', 'volunteer-tech-teams', 'church-plants'],
+    related: ['stage-display', 'lower-thirds', 'bible-verses-on-screen'],
   },
   {
     slug: 'lower-thirds',
@@ -473,120 +441,6 @@ export const USE_CASES: UseCase[] = [
       },
     ],
     related: ['church-livestream-graphics', 'worship-song-lyrics', 'stage-display'],
-  },
-  {
-    slug: 'church-plants',
-    name: 'Church plants',
-    card: 'A borrowed room, a borrowed laptop, and a service on the screen anyway.',
-    icon: 'plant',
-    title: 'Church Presentation Software for Church Plants | LlamaPresenter',
-    description:
-      'Run a full service from a browser on whatever computer the room has. Free to start, nothing to install, '
-      + 'and no licence to move between machines.',
-    headline: ['A school hall,', 'a borrowed laptop'],
-    lede:
-      'A plant meets where it can, sets up in half an hour and packs away again. Presentation software that has '
-      + 'to be installed and licensed on a particular machine is the wrong shape for that week.',
-    art: OUTPUTS_ART,
-    points: [
-      {
-        title: 'Whatever computer is there',
-        body: 'A Chromebook, somebody’s MacBook, the machine the hall already has. Sign in and your service is '
-          + 'there.',
-      },
-      {
-        title: 'Free to start, and it stays free',
-        body: 'The Bible, both outputs and the stage display are never gated. Pro is for when a church grows past '
-          + 'the limits.',
-      },
-      {
-        title: 'The screen is a link',
-        body: 'The hall TV or the projector laptop opens a link. There is no second install and no second licence.',
-      },
-      {
-        title: 'Nothing to carry',
-        body: 'The service lives in your account rather than in a folder on the laptop that stayed home.',
-      },
-    ],
-    steps: [
-      'Build the service during the week, from anywhere.',
-      'Sign in on whatever computer the room has on Sunday.',
-      'Open the projector link on the screen, and the stage link on a second one if you have it.',
-      'Pack away. Nothing was installed and nothing needs uninstalling.',
-    ],
-    faq: [
-      {
-        q: 'What does it cost to start?',
-        a: 'Nothing. The free plan runs a full service, and it has no time limit — it is not a trial.',
-      },
-      {
-        q: 'Does it work on a Chromebook?',
-        a: 'Yes. Anything with a modern browser runs the console and the outputs.',
-      },
-      {
-        q: 'What if the hall has no internet?',
-        a: 'That is the honest limit today: changing what is on the screens needs a connection. Native Mac and '
-          + 'Windows apps are on the way for exactly that room.',
-      },
-    ],
-    related: ['volunteer-tech-teams', 'service-timing', 'bible-verses-on-screen'],
-  },
-  {
-    slug: 'volunteer-tech-teams',
-    name: 'Volunteer teams',
-    card: 'Whoever is in the booth signs in. Nothing to install, and one version for everybody.',
-    icon: 'team',
-    title: 'Church Presentation Software for Volunteer Teams | LlamaPresenter',
-    description:
-      'A rota of volunteers can run the same service from any computer: nothing to install, one version for '
-      + 'everyone, and a phone remote that needs no app.',
-    headline: ['A different volunteer', 'every Sunday'],
-    lede:
-      'The hard part of church tech is rarely the software. It is that the person who knows it is away, and the '
-      + 'person covering has never opened it on that machine.',
-    art: REMOTE_ART,
-    points: [
-      {
-        title: 'They sign in, not install',
-        body: 'Whoever is covering opens the console on whatever computer is in the booth. There is no install, no '
-          + 'licence and no admin password.',
-      },
-      {
-        title: 'One version, everybody',
-        body: 'Nobody is a release behind. There is no update waiting to run ten minutes before the service.',
-      },
-      {
-        title: 'Two people, one service',
-        body: 'A second person can open the same session on their own laptop or phone, and both see the same live '
-          + 'slide.',
-      },
-      {
-        title: 'The phone is the remote',
-        body: 'Any phone with a browser can drive the service. Nothing to install on it, and nothing to pair.',
-      },
-    ],
-    steps: [
-      'Invite the volunteer to your church account.',
-      'They sign in on the booth computer on the day.',
-      'The service, the songs and the templates are already there.',
-      'A second person can pick up the phone and take over mid-service.',
-    ],
-    faq: [
-      {
-        q: 'How many people can be in the account?',
-        a: 'The plans have the numbers. What matters here is that a volunteer is a sign-in rather than another '
-          + 'install to license.',
-      },
-      {
-        q: 'Can two people run the service at once?',
-        a: 'Yes. Both see the same live slide, so handing over mid-service is a matter of who picks up the phone.',
-      },
-      {
-        q: 'Does the projector machine need an account?',
-        a: 'No. Every output is an unguessable link. Only the person running the console signs in.',
-      },
-    ],
-    related: ['church-plants', 'stage-display', 'service-timing'],
   },
 ];
 

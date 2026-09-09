@@ -1,57 +1,56 @@
 import Link from 'next/link';
 
-import { Marker } from '@/components/marketing/Marker';
 import { LinkCard } from '@/components/marketing/LinkCard';
-import { USE_CASES } from '@/lib/marketing/useCases';
+import { Marker } from '@/components/marketing/Marker';
+import { SOLUTIONS } from '@/lib/marketing/solutions';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
 
 const OURS = 'LlamaPresenter';
 
-const TITLE = 'What LlamaPresenter Is Used For | Church Presentation Software';
+const TITLE = 'Church Presentation Software for Every Kind of Church | LlamaPresenter';
 
 const DESCRIPTION =
-  'Bilingual services, Bible verses, worship lyrics, livestream graphics, stage displays, service timing and '
-  + 'lower thirds — the jobs churches run LlamaPresenter for, one page each.';
+  'Small churches, church plants, bilingual congregations, multisite rooms, online church, worship teams, '
+  + 'volunteer rotas and youth groups — what LlamaPresenter looks like for each of them.';
 
 export const metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  alternates: { canonical: '/use-cases' },
+  alternates: { canonical: '/solutions' },
   openGraph: {
     type: 'website',
     siteName: 'LlamaPresenter',
-    url: '/use-cases',
+    url: '/solutions',
     title: TITLE,
     description: DESCRIPTION,
   },
   twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 };
 
-export default function UseCasesPage() {
+export default function SolutionsPage() {
   return (
     <main>
       {/* ------------------------------------------------------------- hero */}
       <section className="mx-auto max-w-7xl px-6 pt-10 pb-8 sm:pt-14">
-        <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Use cases</p>
+        <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Solutions</p>
 
         <h1 className={`${DISPLAY} mt-5 max-w-3xl text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-          What {OURS} is{' '}
-          <Marker>used for</Marker>
+          Built for{' '}
+          <Marker>your kind of church</Marker>
         </h1>
 
         <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
         <div className="mt-7 grid max-w-5xl gap-6 text-[17px] leading-relaxed text-site-muted lg:grid-cols-2">
           <p>
-            It is one console and four screens, and churches point it at different problems. Some came for a second
-            language on the wall, some for a stream that needed lyrics, some because the laptop in the booth
-            belongs to whoever turned up.
+            A church of forty in a school hall and a church with three rooms and a livestream are running the same
+            Sunday on very different ground. What goes wrong is different too, and so is what fixes it.
           </p>
           <p>
-            Each page below is one of those jobs: what it looks like, how a Sunday runs with it, and the questions
-            churches ask before they try it.
+            These pages are by congregation rather than by feature: what your room already has, who is on the desk,
+            and the part of this that answers it.
           </p>
         </div>
       </section>
@@ -60,27 +59,27 @@ export default function UseCasesPage() {
       <section className="border-t border-site-rule bg-site-band">
         <div className="mx-auto max-w-7xl px-6 py-14 sm:py-20">
           <div className="grid gap-5 md:grid-cols-2">
-            {USE_CASES.map(useCase => (
+            {SOLUTIONS.map(solution => (
               <LinkCard
-                key={useCase.slug}
-                href={`/use-cases/${useCase.slug}`}
-                name={useCase.name}
-                blurb={useCase.card}
-                icon={useCase.icon}
+                key={solution.slug}
+                href={`/solutions/${solution.slug}`}
+                name={solution.name}
+                blurb={solution.card}
+                icon={solution.icon}
               />
             ))}
           </div>
 
           <p className="mt-10 max-w-[62ch] text-[16px] leading-relaxed text-site-muted">
-            Looking for your kind of church rather than a job? The{' '}
-            <Link href="/solutions" className="text-site-ink underline underline-offset-4">
-              solutions
+            Looking for a particular job rather than a kind of church? The{' '}
+            <Link href="/use-cases" className="text-site-ink underline underline-offset-4">
+              use cases
             </Link>{' '}
-            pages are written that way. Weighing it against something you already run? The{' '}
+            cover those, and the{' '}
             <Link href="/compare" className="text-site-ink underline underline-offset-4">
               comparison
             </Link>{' '}
-            puts {OURS} beside ProPresenter, EasyWorship, FreeShow and Proclaim on one grid.
+            puts {OURS} beside ProPresenter, EasyWorship, FreeShow and Proclaim.
           </p>
         </div>
       </section>
@@ -93,8 +92,7 @@ export default function UseCasesPage() {
               Try it on this Sunday
             </h2>
             <p className="mt-4 max-w-md text-[17px] leading-relaxed text-studio-muted">
-              Bible verses, lyrics, screens, livestream and stage timer in one browser tab, on a free plan that is
-              not a countdown.
+              Nothing to install, a free plan that is not a countdown, and every screen a link.
             </p>
           </div>
 
