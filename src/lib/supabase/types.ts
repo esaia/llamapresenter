@@ -23,6 +23,7 @@ export interface Database {
         avatar_url: string | null;
         created_at: string;
         updated_at: string;
+        is_admin: boolean;
       }>;
       subscriptions: Row<{
         user_id: string;

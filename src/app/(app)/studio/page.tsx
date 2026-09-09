@@ -36,41 +36,56 @@ export default async function StudioPage() {
 
   if (!user) redirect('/login?next=/studio');
 
-  const [settings, session, subscription, songs, libraries, playlists, nameCards, translations, claimed] = await Promise.all([
-    supabase.from('settings').select('*').eq('user_id', user.id).single(),
-    supabase.from('sessions').select('id, name, output_key').eq('user_id', user.id).order('created_at').limit(1).single(),
-    supabase
-      .from('subscriptions')
-      .select('plan, status, current_period_end, cancel_at_period_end')
-      .eq('user_id', user.id)
-      .maybeSingle(),
-    supabase.from('songs').select('id, title, slides, langs, library_id, source').eq('user_id', user.id).order('title'),
-    supabase.from('song_libraries').select('id, name').eq('user_id', user.id).order('position').order('created_at'),
-    supabase
-      .from('song_playlists')
-      .select('id, name, songs')
-      .eq('user_id', user.id)
-      .order('position')
-      .order('created_at'),
-    // Saved speakers, in the order the operator dragged them.
-    supabase
-      .from('name_cards')
-      .select('id, title, subtitle, template, position')
-      .eq('user_id', user.id)
-      .order('position')
-      .order('created_at'),
-    // The Bibles the operator uploaded. Metadata only — the chapters
-    // themselves are read a chapter at a time through /api/bible, the same as
-    // ours are.
-    supabase
-      .from('bible_translations')
-      .select('id, lang, label, psalms, lang_label, book_names')
-      .eq('user_id', user.id)
-      .order('created_at'),
-    // What Pro costs today, so the account panel's upgrade button names the
-    // price the checkout route is about to charge rather than a stale one.
-    claimedSpots(),
-  ]);
+  const [settings, session, subscription, profile, songs, libraries, playlists, nameCards, translations, claimed] =
+    await Promise.all([
+      supabase.from('settings').select('*').eq('user_id', user.id).single(),
+      supabase
+        .from('sessions')
+        .select('id, name, output_key')
+        .eq('user_id', user.id)
+        .order('created_at')
+        .limit(1)
+        .single(),
+      supabase
+        .from('subscriptions')
+        .select('plan, status, current_period_end, cancel_at_period_end')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      // Whether to show the Admin link. Read under the operator's own RLS —
+      // this only ever decides whether a link is drawn, never whether /admin
+      // itself lets them in, so there's nothing to gain by forging it.
+      supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle(),
+      supabase
+        .from('songs')
+        .select('id, title, slides, langs, library_id, source')
+        .eq('user_id', user.id)
+        .order('title'),
+      supabase.from('song_libraries').select('id, name').eq('user_id', user.id).order('position').order('created_at'),
+      supabase
+        .from('song_playlists')
+        .select('id, name, songs')
+        .eq('user_id', user.id)
+        .order('position')
+        .order('created_at'),
+      // Saved speakers, in the order the operator dragged them.
+      supabase
+        .from('name_cards')
+        .select('id, title, subtitle, template, position')
+        .eq('user_id', user.id)
+        .order('position')
+        .order('created_at'),
+      // The Bibles the operator uploaded. Metadata only — the chapters
+      // themselves are read a chapter at a time through /api/bible, the same
+      // as ours are.
+      supabase
+        .from('bible_translations')
+        .select('id, lang, label, psalms, lang_label, book_names')
+        .eq('user_id', user.id)
+        .order('created_at'),
+      // What Pro costs today, so the account panel's upgrade button names the
+      // price the checkout route is about to charge rather than a stale one.
+      claimedSpots(),
+    ]);
 
   // The signup trigger creates all of these; a missing row means the account
   // predates it, and sending them through the console would only fail later.
@@ -117,6 +132,7 @@ export default async function StudioPage() {
   const initial: StudioInitial = {
     session: { id: session.data.id, name: session.data.name, outputKey: session.data.output_key },
     email: user.email ?? '',
+    isAdmin: profile.data?.is_admin ?? false,
     settings: settings.data as SettingsRow,
     translations: asCustomTranslations(translations.data),
     workspace: {

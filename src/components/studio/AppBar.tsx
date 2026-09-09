@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   BookOpen,
   Captions,
@@ -14,6 +15,7 @@ import {
   MonitorPlay,
   Music,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
@@ -180,7 +182,8 @@ const PresentMenu = () => {
 };
 
 export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOpenNav: () => void }) => {
-  const { tab, setTab, timer } = useStudio();
+  const { tab, setTab, timer, isAdmin } = useStudio();
+  const router = useRouter();
 
   return (
     <header
@@ -289,6 +292,16 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
 
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
         <PresentMenu />
+
+        {isAdmin ? (
+          <Button
+            icon={<ShieldCheck className="size-3.5" />}
+            onClick={() => router.push('/admin')}
+            title="Admin — every signed-up operator and their plan"
+          >
+            <span className="hidden md:inline">Admin</span>
+          </Button>
+        ) : null}
 
         <Button icon={<Settings className="size-3.5" />} onClick={onSettings} title="Settings — background, type, stream">
           <span className="hidden md:inline">Settings</span>
