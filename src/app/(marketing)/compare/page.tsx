@@ -161,6 +161,11 @@ const PAGES = [
     title: 'vs StageTimer',
     body: 'Not a presenter at all: the church stage timer on its own.',
   },
+  {
+    href: '/propresenter-vs-easyworship',
+    title: 'ProPresenter vs EasyWorship',
+    body: 'The two of them against each other, with us as the third column.',
+  },
 ];
 
 export const revalidate = 60;

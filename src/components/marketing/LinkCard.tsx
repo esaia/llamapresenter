@@ -21,7 +21,9 @@ export type CardIcon =
   | 'multisite'
   | 'youth'
   | 'online'
-  | 'events';
+  | 'events'
+  | 'phone'
+  | 'template';
 
 const PATHS: Record<CardIcon, string> = {
   languages: 'M4 7h9M8.5 5v2M11 7c0 4-3.5 7-7 7M6 10.5c1.6 2 3.6 3 5.5 3.5M13.5 20l4-9 4 9M15 17.5h5',
@@ -38,6 +40,8 @@ const PATHS: Record<CardIcon, string> = {
   youth: 'M12 8.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM12 8.5v7M8 11.5l4-1 4 1M9.5 20.5 12 15.5l2.5 5',
   online: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3.2 9.5h17.6M3.2 14.5h17.6M12 3c-2.4 2.4-3.6 5.4-3.6 9s1.2 6.6 3.6 9c2.4-2.4 3.6-5.4 3.6-9S14.4 5.4 12 3z',
   events: 'M4.5 20.5V8l7.5-4 7.5 4v12.5M2.5 20.5h19M9 20.5v-6h6v6M9.5 10.5h5',
+  phone: 'M8 2.5h8a1.5 1.5 0 0 1 1.5 1.5v16a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 20V4A1.5 1.5 0 0 1 8 2.5zM10.5 18.5h3M6.5 6h11',
+  template: 'M3.5 4.5h17v15h-17zM3.5 9h17M8 9v10.5M11 12h6.5M11 15h4',
 };
 
 const Glyph = ({ icon }: { icon: CardIcon }) => (

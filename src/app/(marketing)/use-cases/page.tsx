@@ -12,8 +12,8 @@ const OURS = 'LlamaPresenter';
 const TITLE = 'What LlamaPresenter Is Used For | Church Presentation Software';
 
 const DESCRIPTION =
-  'Bilingual services, Bible verses, worship lyrics, livestream graphics, stage displays, service timing and '
-  + 'lower thirds — the jobs churches run LlamaPresenter for, one page each.';
+  'What web-based worship presentation software is used for: dual language Bible verse display, worship song '
+  + 'lyrics, church livestream lower thirds, stage displays, service timing and a phone remote.';
 
 export const metadata = {
   title: TITLE,

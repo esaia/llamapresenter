@@ -12,12 +12,12 @@ import { claimedSpots } from '@/lib/billing/seats';
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
 
-const TITLE = 'ProPresenter Alternative for Churches | LlamaPresenter';
+const TITLE = 'Web-Based ProPresenter Alternative for Churches | LlamaPresenter';
 
 const DESCRIPTION =
-  'Looking for a ProPresenter alternative? LlamaPresenter is a browser-based church presentation tool for Bible '
-  + 'verses, lyrics, multiple languages, projector, stage, livestream, templates, and remote control. No install '
-  + 'required.';
+  'Looking for a free ProPresenter alternative for churches? LlamaPresenter is browser-based church presentation '
+  + 'software for Bible verses, lyrics, multiple languages, projector, stage, livestream, templates and remote '
+  + 'control. No install required.';
 
 export const metadata = {
   title: TITLE,
@@ -185,13 +185,13 @@ const THEIRS_IS_BETTER = [
 
 const QUESTIONS = [
   {
-    q: 'Is LlamaPresenter a good ProPresenter alternative for churches?',
+    q: 'Is LlamaPresenter a good web based ProPresenter alternative?',
     a: 'Yes, for churches that want a browser-based system instead of installed software. LlamaPresenter covers the '
       + 'core church presentation workflow — Bible verses in multiple languages, song lyrics, projector output, a '
       + 'stage display, livestream graphics and remote control — without anything to download or license.',
   },
   {
-    q: 'Is there a free ProPresenter alternative?',
+    q: 'Is there a free ProPresenter alternative for churches?',
     a: 'LlamaPresenter has a free plan that runs your Bible, both outputs and the stage with no gate on any of them. '
       + 'Pro raises the limits — more languages, more songs, custom templates — for churches that outgrow Free.',
   },

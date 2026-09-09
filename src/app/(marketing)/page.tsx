@@ -9,6 +9,29 @@ import { ScrollZoom } from '@/components/marketing/ScrollZoom';
 import { plansFor } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 
+/* The home page is the one most likely to be met by somebody searching the
+   category, so it carries its own title rather than inheriting the brand's. */
+const TITLE = 'Web-Based Church Presentation Software';
+
+const DESCRIPTION =
+  'LlamaPresenter is browser-based church presentation software: dual language Bible verse display, worship song '
+  + 'lyrics, projector, stage display, livestream lower thirds and a phone remote. Free church projection '
+  + 'software with nothing to install.';
+
+export const metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: 'LlamaPresenter',
+    url: '/',
+    title: `${TITLE} | LlamaPresenter`,
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image', title: `${TITLE} | LlamaPresenter`, description: DESCRIPTION },
+};
+
 /* The two type roles for the page: the rounded display face the brand is drawn
    in, and the interface stack for everything read as a sentence. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -123,9 +146,9 @@ export default async function HomePage() {
             <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
             <p className="mt-7 max-w-[54ch] text-lg leading-relaxed text-site-muted">
-              Present scripture, lyrics, announcements, and media from one browser-based tool. Display verses in
-              multiple languages side by side so everyone can follow along — in any language, including Bibles you add
-              yourself. Ideal for multilingual congregations.
+              Web-based worship presentation software for scripture, lyrics, announcements and media. Show verses
+              in multiple languages side by side so everyone can follow along — in any language, including Bibles
+              you add yourself. Ideal for multilingual congregations.
             </p>
 
             <Link

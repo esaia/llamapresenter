@@ -1,6 +1,6 @@
 import type { CardIcon } from '@/components/marketing/LinkCard';
 
-import { LANGUAGES_ART, type MarketingArt, OUTPUTS_ART, TEMPLATE_ART, TIMER_ART } from './art';
+import { LANGUAGES_ART, type MarketingArt, OUTPUTS_ART, REMOTE_ART, TEMPLATE_ART, TIMER_ART } from './art';
 
 /**
  * The use cases, and everything each page is made of.
@@ -40,19 +40,19 @@ export const USE_CASES: UseCase[] = [
     name: 'Multilingual services',
     card: 'Two or more languages on the same slide, and each screen showing the ones it needs.',
     icon: 'languages',
-    title: 'Multilingual Church Presentation Software | LlamaPresenter',
+    title: 'Dual Language Bible Verse Display Software | LlamaPresenter',
     description:
-      'Run a bilingual or multilingual church service: two or more Bible translations on one slide, songs in '
-      + 'every language they are sung in, and a different pair on the projector, the stage and the stream.',
+      'Dual language Bible verse display software for bilingual churches: two or more translations side by side '
+      + 'on one slide, songs in every language they are sung in, and a different pair on each screen.',
     headline: ['A service in two languages,', 'without two sets of slides'],
     lede:
       'A bilingual church usually pays for it twice: once when somebody types the second language into every '
-      + 'slide, and again on Sunday when the two sets drift apart. Here a language is something you arm, not '
-      + 'something you type.',
+      + 'slide, and again on Sunday when the two sets drift apart. This is side by side scripture on the '
+      + 'projector without a second set of slides — a language is something you arm, not something you type.',
     art: LANGUAGES_ART,
     points: [
       {
-        title: 'One passage, every language',
+        title: 'Side by side scripture on the projector',
         body: 'Send a verse and it is drawn in each language you have on, in the order you set. Nothing is pasted '
           + 'and nothing is duplicated.',
       },
@@ -79,6 +79,11 @@ export const USE_CASES: UseCase[] = [
       'Turn a language on or off mid-service with one click, without touching the slides.',
     ],
     faq: [
+      {
+        q: 'Is this dual language Bible verse display software?',
+        a: 'Yes. Two or more translations are drawn on the same slide from one passage read once, which is the '
+          + 'part a church usually does by hand in other presentation software.',
+      },
       {
         q: 'How many languages can one slide carry?',
         a: 'As many as your plan allows and the screen can hold legibly. Two is the common case, and three is '
@@ -281,8 +286,8 @@ export const USE_CASES: UseCase[] = [
     icon: 'stage',
     title: 'Church Stage Display and Confidence Monitor | LlamaPresenter',
     description:
-      'Give the platform a stage view with the current slide, what is next, the running order, a clock and a '
-      + 'countdown. It opens on any screen with a browser.',
+      'Multi-screen worship software: give the platform a stage view with the current slide, what is next, the '
+      + 'running order, a clock and a countdown. It opens on any screen with a browser.',
     headline: ['The screen the platform', 'actually needs'],
     lede:
       'The person preaching needs three things: what is on the wall, what is coming, and how long is left. The '
@@ -323,6 +328,11 @@ export const USE_CASES: UseCase[] = [
         a: 'Yes. The link can be opened on as many screens as you like, and there is no per-screen cost.',
       },
       {
+        q: 'Can the stage screen carry a countdown?',
+        a: 'Yes. The church stage display countdown timer sits beside the current slide and what is next, and it '
+          + 'has a link of its own for a screen that should show only the clock.',
+      },
+      {
         q: 'Is there a timer-only screen?',
         a: 'Yes. The timer has a link of its own for a display that should show nothing else.',
       },
@@ -334,10 +344,10 @@ export const USE_CASES: UseCase[] = [
     name: 'Service timing',
     card: 'Countdowns, a running order and a message on the platform screen when time is tight.',
     icon: 'timer',
-    title: 'Church Service Timer and Running Order | LlamaPresenter',
+    title: 'Worship Stage Timer Online | Church Countdown | LlamaPresenter',
     description:
-      'Keep a service on schedule with countdowns, an agenda and a timer display of its own — part of the same '
-      + 'session that runs your verses, lyrics and screens.',
+      'A worship stage timer online: countdowns, a running order and a church stage display countdown timer on a '
+      + 'screen of its own — part of the same session that runs your verses, lyrics and screens.',
     headline: ['A service that ends', 'when it should'],
     lede:
       'Most churches solve timing with a separate timer in a separate tab, run by a separate person. Here the '
@@ -350,8 +360,8 @@ export const USE_CASES: UseCase[] = [
       },
       {
         title: 'On the stage, or on its own',
-        body: 'The countdown sits on the stage view beside the slides, and has a link of its own for a screen that '
-          + 'shows only the clock.',
+        body: 'The church stage display countdown timer sits beside the slides, and has a link of its own for a '
+          + 'screen that shows only the clock.',
       },
       {
         title: 'Adjust without restarting',
@@ -387,14 +397,134 @@ export const USE_CASES: UseCase[] = [
     related: ['stage-display', 'lower-thirds', 'bible-verses-on-screen'],
   },
   {
+    slug: 'phone-remote-control',
+    name: 'Phone remote control',
+    card: 'Drive the service from the phone in your hand, with no app to install.',
+    icon: 'phone',
+    title: 'Mobile Remote Control for Worship Presentation | LlamaPresenter',
+    description:
+      'A mobile remote control worship presentation app that is not an app: open the console on any phone '
+      + 'browser, signed in, and move the service from wherever you are standing.',
+    headline: ['The remote is', 'the phone in your pocket'],
+    lede:
+      'Remote control for worship presentation usually means a companion app, on the same wifi as the machine at '
+      + 'the front. Here the console is a page, so a phone that can open it can run the service.',
+    art: REMOTE_ART,
+    points: [
+      {
+        title: 'No app, no pairing',
+        body: 'Sign in on the phone browser and you have the console: the running order, the search box, the '
+          + 'arrows. There is nothing to install and nothing to discover on the network.',
+      },
+      {
+        title: 'From anywhere, not just the booth',
+        body: 'Lead from the platform, run the reading from the second row, or fix a slide from the back of the '
+          + 'hall. It is the same session either way.',
+      },
+      {
+        title: 'Two people, one service',
+        body: 'A phone and a laptop can drive the same service at once, and both see the same live slide.',
+      },
+      {
+        title: 'Everything, not a subset',
+        body: 'Verses, songs, the timer and the name cards are all there. A phone remote here is the console, not '
+          + 'a next-slide button.',
+      },
+    ],
+    steps: [
+      'Open the console on your phone and sign in.',
+      'Pick the service you are running.',
+      'Search, send and clear from where you are standing.',
+      'Hand over by handing over the phone, or let somebody else open it on theirs.',
+    ],
+    faq: [
+      {
+        q: 'Is there an app to install on the phone?',
+        a: 'No. The console is a web page, so any modern phone browser is the remote. There is nothing to install '
+          + 'and nothing to pair.',
+      },
+      {
+        q: 'Does the phone have to be on the church wifi?',
+        a: 'No. It signs in like any other device, so mobile data works as well as the building’s network.',
+      },
+      {
+        q: 'Can two people control the service at once?',
+        a: 'Yes. Both see the same live slide, so a hand-over mid-service is a matter of who picks up the phone.',
+      },
+    ],
+    related: ['stage-display', 'service-timing', 'worship-song-lyrics'],
+  },
+  {
+    slug: 'church-slide-templates',
+    name: 'Slide templates',
+    card: 'An online church slides editor: set the look once, and every verse and lyric comes out in it.',
+    icon: 'template',
+    title: 'Online Church Slides Editor and Templates | LlamaPresenter',
+    description:
+      'An online church slides editor for scripture and lyrics: set the typeface, the size, the background and '
+      + 'the position once, and every slide the service sends comes out in your own look.',
+    headline: ['Set the look once,', 'not slide by slide'],
+    lede:
+      'Most presentation software makes you design the slide and then fill it in. The online church slides editor '
+      + 'here works the other way: you design the template and the service fills it, so every verse and every '
+      + 'lyric arrives in the look you set, on each screen.',
+    art: TEMPLATE_ART,
+    points: [
+      {
+        title: 'Design in the browser',
+        body: 'Drag the text where it belongs, set the typeface and the size, drop a background behind it. It is '
+          + 'the same editor wherever you sign in.',
+      },
+      {
+        title: 'A template per screen',
+        body: 'The projector and the stream are different shapes with different problems, so each carries its own '
+          + 'template rather than a scaled copy of one.',
+      },
+      {
+        title: 'Your typeface, not ours',
+        body: 'Add a Google font or a link to a woff2 and the pickers carry it. A font you added travels with the '
+          + 'slide to every output.',
+      },
+      {
+        title: 'It applies to everything',
+        body: 'Verses, lyrics and name cards all come out of templates, so a change to the look is one change '
+          + 'rather than a pass over every slide.',
+      },
+    ],
+    steps: [
+      'Open the template editor and lay out a verse the way you want it.',
+      'Give the stream its own template, with the text where your camera framing wants it.',
+      'Choose the typeface, or add your own.',
+      'Run the service. Every slide arrives in that look, on the screen it belongs to.',
+    ],
+    faq: [
+      {
+        q: 'Do I design every slide?',
+        a: 'No. You design the template, and the verses and lyrics you send are drawn into it. There are no slides '
+          + 'to keep in step with each other.',
+      },
+      {
+        q: 'Can the stream look different from the projector?',
+        a: 'Yes. Each output carries its own template, which is usually the point: a wall and a stream want very '
+          + 'different type.',
+      },
+      {
+        q: 'Can we use our own font?',
+        a: 'Yes. A Google Fonts family or a link to a woff2, woff, ttf or otf file. It travels with the slide, so '
+          + 'the outputs draw it too.',
+      },
+    ],
+    related: ['bible-verses-on-screen', 'church-livestream-graphics', 'lower-thirds'],
+  },
+  {
     slug: 'lower-thirds',
     name: 'Lower thirds',
     card: 'Name cards for whoever is speaking, laid over the stream and gone on their own.',
     icon: 'lower3rd',
-    title: 'Church Lower Thirds and Name Cards | LlamaPresenter',
+    title: 'Church Livestream Lower Thirds Software | LlamaPresenter',
     description:
-      'Fire a name card over your livestream from the console. It lays over whatever is showing, holds for as '
-      + 'long as you set, and clears itself.',
+      'Church livestream lower thirds software: fire a name card over your stream from the console as an OBS '
+      + 'lower third overlay. It lays over whatever is showing, holds for as long as you set, and clears itself.',
     headline: ['Who is speaking,', 'on the stream'],
     lede:
       'A name card is a small thing that looks unprofessional when it is missing and worse when it is left up. '
@@ -427,6 +557,11 @@ export const USE_CASES: UseCase[] = [
       'Let it clear itself, or take it down early.',
     ],
     faq: [
+      {
+        q: 'How do I add an OBS lower third overlay for church streams?',
+        a: 'Open the lower third output link and add it to OBS as a browser source, sized to your canvas. It is '
+          + 'transparent behind the card, so it sits over your camera.',
+      },
       {
         q: 'Does the projector show the name card too?',
         a: 'No. It goes to the lower third output alone, which is usually the stream and nothing else.',

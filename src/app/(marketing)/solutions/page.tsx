@@ -12,8 +12,8 @@ const OURS = 'LlamaPresenter';
 const TITLE = 'Church Presentation Software for Every Kind of Church | LlamaPresenter';
 
 const DESCRIPTION =
-  'Small churches, church plants, bilingual congregations, multisite rooms, online church, worship teams, '
-  + 'volunteer rotas and youth groups — what LlamaPresenter looks like for each of them.';
+  'Browser-based church presentation software for small churches, church plants, bilingual congregations, '
+  + 'multisite rooms, online church, worship teams, volunteer rotas and youth groups.';
 
 export const metadata = {
   title: TITLE,

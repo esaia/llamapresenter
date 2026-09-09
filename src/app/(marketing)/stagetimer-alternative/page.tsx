@@ -8,7 +8,7 @@ import { Tick } from '@/components/marketing/Tick';
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
 
-const TITLE = 'StageTimer Alternative for Churches | LlamaPresenter';
+const TITLE = 'StageTimer Alternative: Worship Stage Timer Online | LlamaPresenter';
 
 const DESCRIPTION =
   'Looking for a StageTimer alternative for your church? LlamaPresenter combines Bible verses, song lyrics, stage '

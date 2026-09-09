@@ -43,10 +43,10 @@ export const SOLUTIONS: Solution[] = [
     name: 'Small churches',
     card: 'One volunteer, one screen and no budget for a licence per computer.',
     icon: 'small',
-    title: 'Church Presentation Software for Small Churches | LlamaPresenter',
+    title: 'Free Church Projection Software for Small Churches | LlamaPresenter',
     description:
-      'Run a full Sunday from a browser on the computer you already have. Free with no time limit, nothing to '
-      + 'install, and every screen is a link rather than a licence.',
+      'Free church projection software that runs in the browser on the computer you already have: no time limit, '
+      + 'nothing to install, and every screen is a link rather than a licence.',
     headline: ['Everything a small church needs,', 'and none of the licence'],
     lede:
       'A church of forty people has the same Sunday as a church of four hundred: a reading, some songs, a screen '
@@ -59,7 +59,7 @@ export const SOLUTIONS: Solution[] = [
     ],
     points: [
       {
-        title: 'Free, and not a trial',
+        title: 'Free church projection software, not a trial',
         body: 'The Bible, both outputs and the stage display are never gated. Pro raises the limits for a church '
           + 'that grows past them, and until then nothing expires.',
       },
@@ -237,10 +237,10 @@ export const SOLUTIONS: Solution[] = [
     name: 'Multisite churches',
     card: 'Two rooms, three screens and one running order that all of them follow.',
     icon: 'multisite',
-    title: 'Presentation Software for Multisite Churches | LlamaPresenter',
+    title: 'Multi-Screen Worship Software for Multisite Churches | LlamaPresenter',
     description:
-      'Run the overflow room, the foyer and the second campus from one service. Every screen is a link, so an '
-      + 'extra room costs nothing and shows the same slide.',
+      'Multi-screen worship software for the overflow room, the foyer and the second campus: every screen is a '
+      + 'link, so an extra room costs nothing and shows the same live slide.',
     headline: ['Another room is', 'another link'],
     lede:
       'The second room is usually solved with a cable, a splitter and somebody who understands both. Here it is '
@@ -299,10 +299,10 @@ export const SOLUTIONS: Solution[] = [
     name: 'Online church',
     card: 'Verses, lyrics and name cards over the stream, without a capture card.',
     icon: 'online',
-    title: 'Presentation Software for Online Church and Livestream | LlamaPresenter',
+    title: 'Church Livestream Lower Thirds and Graphics Software | LlamaPresenter',
     description:
-      'Put scripture, lyrics and lower thirds over your church livestream with a transparent browser source in '
-      + 'OBS. The stream gets its own look and its own language.',
+      'Church livestream lower thirds software and scripture graphics for online church: an OBS lower third '
+      + 'overlay as a transparent browser source, with its own look and its own language.',
     headline: ['The stream needs its own', 'version of the slide'],
     lede:
       'What works on a projector rarely works on a stream. The text is too big, it sits in the wrong place, and it '
@@ -329,7 +329,8 @@ export const SOLUTIONS: Solution[] = [
       },
       {
         title: 'Name cards that clear themselves',
-        body: 'A lower third for whoever is speaking is fired from the console and counts its own hold down.',
+        body: 'An OBS lower third overlay for whoever is speaking, fired from the console, counting its own hold '
+          + 'down.',
       },
     ],
     steps: [
@@ -424,7 +425,7 @@ export const SOLUTIONS: Solution[] = [
     title: 'Church Presentation Software for Volunteer Teams | LlamaPresenter',
     description:
       'A rota of volunteers can run the same service from any computer: nothing to install, one version for '
-      + 'everyone, and a phone remote that needs no app.',
+      + 'everyone, and mobile remote control for worship presentation with no app to install.',
     headline: ['A different volunteer', 'every Sunday'],
     lede:
       'The hard part of church tech is rarely the software. It is that the person who knows it is away, and the '

@@ -39,6 +39,7 @@ const FOOTER = [
       { href: '/freeshow-alternative', label: 'vs FreeShow' },
       { href: '/proclaim-alternative', label: 'vs Proclaim' },
       { href: '/stagetimer-alternative', label: 'vs StageTimer' },
+      { href: '/propresenter-vs-easyworship', label: 'ProPresenter vs EasyWorship' },
     ],
   },
   {
