@@ -1,15 +1,54 @@
 import Link from 'next/link';
 
 import { Wordmark } from '@/components/brand/Wordmark';
+import { USE_CASES } from '@/lib/marketing/useCases';
 import { getUser } from '@/lib/supabase/server';
 
 const NAV = [
-  { href: '/#room', label: 'How it works' },
-  { href: '/#languages', label: 'Languages' },
   { href: '/use-cases', label: 'Use cases' },
   { href: '/compare', label: 'Compare' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/#faq', label: 'Questions' },
+];
+
+/**
+ * The footer, in columns.
+ *
+ * Ten links in one wrapping row was a list nobody could scan and every page on
+ * the site now hangs off it, so they are grouped the way a reader would group
+ * them: what the product is, what it is instead of, and what it is used for.
+ * The use-case column is the first four rows of the catalogue rather than all
+ * nine — the rest are one click further on, on their own page.
+ */
+const FOOTER = [
+  {
+    title: 'Product',
+    links: [
+              { href: '/pricing', label: 'Pricing' },
+      { href: '/#faq', label: 'Questions' },
+    ],
+  },
+  {
+    title: 'Compare',
+    links: [
+      { href: '/compare', label: 'All five, side by side' },
+      { href: '/propresenter-alternative', label: 'vs ProPresenter' },
+      { href: '/easyworship-alternative', label: 'vs EasyWorship' },
+      { href: '/freeshow-alternative', label: 'vs FreeShow' },
+      { href: '/proclaim-alternative', label: 'vs Proclaim' },
+      { href: '/stagetimer-alternative', label: 'vs StageTimer' },
+    ],
+  },
+  {
+    title: 'Used for',
+    links: [
+      ...USE_CASES.slice(0, 4).map(useCase => ({
+        href: `/use-cases/${useCase.slug}`,
+        label: useCase.name,
+      })),
+      { href: '/use-cases', label: 'Every use case' },
+    ],
+  },
 ];
 
 /**
@@ -58,45 +97,46 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
       <div className="flex-1">{children}</div>
 
       <footer className="border-t border-site-rule">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-10 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <Wordmark on="light" className="text-[17px] sm:text-[19px]" />
-            <p className="mt-2 max-w-sm text-sm text-site-muted">
-              Scripture and songs on the projector, the stream and the stage — from one browser tab.
-            </p>
+        <div className="mx-auto max-w-7xl px-6 py-14">
+          <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(3,minmax(0,1fr))] md:gap-8">
+            <div>
+              <Wordmark on="light" className="text-[17px] sm:text-[19px]" />
+              <p className="mt-3 max-w-xs text-sm leading-relaxed text-site-muted">
+                Scripture and songs on the projector, the stream and the stage — from one browser tab.
+              </p>
+            </div>
+
+            {FOOTER.map(column => (
+              <nav key={column.title} aria-label={column.title}>
+                <h2 className="text-[13px] font-semibold tracking-wide text-site-faint uppercase">{column.title}</h2>
+
+                <ul className="mt-4 space-y-2.5">
+                  {column.links.map(link => (
+                    <li key={link.href}>
+                      <Link href={link.href} className="text-sm text-site-muted transition-colors hover:text-site-ink">
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
           </div>
 
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-site-muted">
-            <Link href="/pricing" className="transition-colors hover:text-site-ink">
-              Pricing
-            </Link>
-            <Link href="/use-cases" className="transition-colors hover:text-site-ink">
-              Use cases
-            </Link>
-            <Link href="/compare" className="transition-colors hover:text-site-ink">
-              Compare
-            </Link>
-            <Link href="/propresenter-alternative" className="transition-colors hover:text-site-ink">
-              vs ProPresenter
-            </Link>
-            <Link href="/stagetimer-alternative" className="transition-colors hover:text-site-ink">
-              vs StageTimer
-            </Link>
-            <Link href="/freeshow-alternative" className="transition-colors hover:text-site-ink">
-              vs FreeShow
-            </Link>
-            <Link href="/easyworship-alternative" className="transition-colors hover:text-site-ink">
-              vs EasyWorship
-            </Link>
-            <Link href="/proclaim-alternative" className="transition-colors hover:text-site-ink">
-              vs Proclaim
-            </Link>
-            <Link href="/login" className="transition-colors hover:text-site-ink">
-              Sign in
-            </Link>
-            <a href="mailto:hello@llamapresenter.com" className="transition-colors hover:text-site-ink">
-              hello@llamapresenter.com
-            </a>
+          <div
+            className="mt-12 flex flex-col gap-3 border-t border-site-rule pt-6 text-sm text-site-muted
+              sm:flex-row sm:items-center sm:justify-between"
+          >
+            <p>© {new Date().getFullYear()} LlamaPresenter</p>
+
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <a href="mailto:hello@llamapresenter.com" className="transition-colors hover:text-site-ink">
+                hello@llamapresenter.com
+              </a>
+              <Link href={user ? '/studio' : '/login'} className="transition-colors hover:text-site-ink">
+                {user ? 'Open console' : 'Sign in'}
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
