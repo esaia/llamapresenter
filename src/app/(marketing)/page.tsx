@@ -9,7 +9,7 @@ import { HomePlanCards } from '@/components/marketing/HomePlanCards';
 import { Marker } from '@/components/marketing/Marker';
 import { ScrollZoom } from '@/components/marketing/ScrollZoom';
 import { Vignette } from '@/components/marketing/Vignette';
-import { Vimeo } from '@/components/marketing/Vimeo';
+import { DemoVideo } from '@/components/marketing/DemoVideo';
 import { bothPlansFor } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 import { FAQ } from '@/lib/marketing/faq';
@@ -179,7 +179,7 @@ export default async function HomePage() {
               }
             >
               <Frame url="llamapresenter.com/studio" paneClassName="aspect-[10000/5622]" className="shadow-site-frame">
-                <Vimeo id="1225360285" title="LlamaPresenter" />
+                <DemoVideo />
               </Frame>
             </ScrollZoom>
           </div>

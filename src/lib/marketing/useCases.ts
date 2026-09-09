@@ -44,7 +44,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'Dual language Bible verse display software for bilingual churches: two or more translations side by side '
       + 'on one slide, songs in every language they are sung in, and a different pair on each screen.',
-    headline: ['A service in two languages,', 'without two sets of slides'],
+    headline: ['Dual language Bible verses,', 'on the same slide'],
     lede:
       'A bilingual church usually pays for it twice: once when somebody types the second language into every '
       + 'slide, and again on Sunday when the two sets drift apart. This is side by side scripture on the '
@@ -111,7 +111,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'Search a passage and send it to the projector, the stage and the stream in seconds. Multiple '
       + 'translations, your own layout, and nothing to install.',
-    headline: ['Scripture on the wall,', 'in seconds'],
+    headline: ['Bible verses on the screen,', 'in seconds'],
     lede:
       'The reading is announced and the passage has to be up before the second sentence. That is the whole job, '
       + 'and everything here is built around doing it in one search box.',
@@ -170,7 +170,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'Keep your song library online, build the running order for Sunday, and send lyrics to the projector, the '
       + 'stage and the stream. Import an existing ProPresenter library.',
-    headline: ['The words on the wall,', 'a beat before they are sung'],
+    headline: ['Worship song lyrics,', 'up before the first line is sung'],
     lede:
       'A song is a running order of its own, and the person on the keys is not the person on the laptop. The '
       + 'library, the order and the blocks are built during the week so Sunday is arrows and nothing else.',
@@ -229,7 +229,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'Put Bible verses, song lyrics and lower thirds over your church livestream with a transparent browser '
       + 'source. No capture card, no NDI, nothing to install on the streaming machine.',
-    headline: ['Verses and lyrics over', 'your livestream'],
+    headline: ['Church livestream graphics,', 'without a broadcast rig'],
     lede:
       'The stream needs its own version of the slide: smaller, lower, and often in a different language from the '
       + 'wall. It is a link you paste into OBS once, and it stays right for the rest of the service.',
@@ -288,7 +288,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'Multi-screen worship software: give the platform a stage view with the current slide, what is next, the '
       + 'running order, a clock and a countdown. It opens on any screen with a browser.',
-    headline: ['The screen the platform', 'actually needs'],
+    headline: ['A church stage display,', 'not just a bigger monitor'],
     lede:
       'The person preaching needs three things: what is on the wall, what is coming, and how long is left. The '
       + 'stage view is those three, on a screen that costs whatever an old laptop costs.',
@@ -348,7 +348,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'A worship stage timer online: countdowns, a running order and a church stage display countdown timer on a '
       + 'screen of its own — part of the same session that runs your verses, lyrics and screens.',
-    headline: ['A service that ends', 'when it should'],
+    headline: ['A worship stage timer,', 'that keeps the service on time'],
     lede:
       'Most churches solve timing with a separate timer in a separate tab, run by a separate person. Here the '
       + 'countdown belongs to the same service as the slides, so the person running Sunday is running all of it.',
@@ -405,7 +405,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'A mobile remote control worship presentation app that is not an app: open the console on any phone '
       + 'browser, signed in, and move the service from wherever you are standing.',
-    headline: ['The remote is', 'the phone in your pocket'],
+    headline: ['Remote control your service,', 'from your phone'],
     lede:
       'Remote control for worship presentation usually means a companion app, on the same wifi as the machine at '
       + 'the front. Here the console is a page, so a phone that can open it can run the service.',
@@ -463,7 +463,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'An online church slides editor for scripture and lyrics: set the typeface, the size, the background and '
       + 'the position once, and every slide the service sends comes out in your own look.',
-    headline: ['Set the look once,', 'not slide by slide'],
+    headline: ['Church slide templates,', 'set once and reused every week'],
     lede:
       'Most presentation software makes you design the slide and then fill it in. The online church slides editor '
       + 'here works the other way: you design the template and the service fills it, so every verse and every '
@@ -525,7 +525,7 @@ export const USE_CASES: UseCase[] = [
     description:
       'Church livestream lower thirds software: fire a name card over your stream from the console as an OBS '
       + 'lower third overlay. It lays over whatever is showing, holds for as long as you set, and clears itself.',
-    headline: ['Who is speaking,', 'on the stream'],
+    headline: ['Church livestream lower thirds,', 'with your own look'],
     lede:
       'A name card is a small thing that looks unprofessional when it is missing and worse when it is left up. '
       + 'It is one click here, and it takes itself down.',
