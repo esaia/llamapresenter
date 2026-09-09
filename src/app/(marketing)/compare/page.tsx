@@ -198,10 +198,10 @@ export default async function ComparePage() {
           </div>
 
           <Monitor
-            src="/images/console-audio.webp"
-            alt="The console on a desk monitor: the audio libraries and their tracks in the middle, and the stream
-              output previewing a lower-third verse over a transparent background"
-            aspect="2000/1062"
+            src="/images/console-verses.webp"
+            alt="The console on a desk monitor: Philippians 1 broken into verse cards with one of them live, and
+              the projector preview carrying that verse"
+            aspect="2000/1063"
             sizes="(min-width: 1024px) 40rem, 100vw"
           />
         </div>
