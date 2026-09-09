@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { FoundingSpots } from '@/components/marketing/FoundingSpots';
+import { Monitor } from '@/components/marketing/Monitor';
 import { soldOut, tierNow } from '@/lib/billing/founding';
 import { plansFor, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
@@ -175,21 +176,35 @@ export default async function PricingPage() {
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
-      <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Pricing</p>
+      <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-14">
+        <div>
+          <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Pricing</p>
 
-      <h1 className={`${DISPLAY} mt-5 text-4xl sm:text-5xl`}>
-        {gone ? 'Simple pricing for your church' : 'Start early. Keep your price.'}
-      </h1>
+          <h1 className={`${DISPLAY} mt-5 text-4xl sm:text-5xl`}>
+            {gone ? 'Simple pricing for your church' : 'Start early. Keep your price.'}
+          </h1>
 
-      <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-site-muted">
-        {gone
-          ? 'Free covers the Bible, the projector, the stage and your stream. Pro lifts the ceilings.'
-          : 'LlamaPresenter is $9/month for the first 10 subscribers. After those spots are gone, the price moves to '
-            + '$14 for the next 5, then $19/month after that. The price you join at stays yours as long as you keep '
-            + 'your Pro plan.'}
-      </p>
+          <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-site-muted">
+            {gone
+              ? 'Free covers the Bible, the projector, the stage and your stream. Pro lifts the ceilings.'
+              : 'LlamaPresenter is $9/month for the first 10 subscribers. After those spots are gone, the price '
+                + 'moves to $14 for the next 5, then $19/month after that. The price you join at stays yours as '
+                + 'long as you keep your Pro plan.'}
+          </p>
 
-      <FoundingSpots claimed={claimed} />
+          <FoundingSpots claimed={claimed} />
+        </div>
+
+        {/* What the money is not buying: the timer, the stage and the outputs
+            are all on Free. The plans under it are about volume. */}
+        <Monitor
+          src="/images/console-timer.webp"
+          alt="The console on a desk monitor: the stage timer counting down beside the current and next slide, the
+            agenda and the stage messages, with the projector carrying the live verse"
+          aspect="2000/1060"
+          sizes="(min-width: 1024px) 36rem, 100vw"
+        />
+      </div>
 
       {/* ----------------------------------------------------- the two columns */}
       {/* One column per plan, each carrying the whole product rather than the
