@@ -6,7 +6,7 @@ import { railWidthScript } from '@/lib/studio/railWidth';
 import './globals.css';
 
 const DESCRIPTION =
-  'Put scripture on the screen — in up to three languages at once, on any machine in the room.';
+  'Put scripture on the screen — in any language, up to three at once, on any machine in the room.';
 
 export const metadata: Metadata = {
   // The card in app/opengraph-image.tsx is unfurled by other people's servers,

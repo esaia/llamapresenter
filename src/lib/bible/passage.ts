@@ -1,5 +1,5 @@
 import { englishBooks } from '@/lib/bible/englishBooks';
-import { LANGS, specOf, type Lang } from '@/lib/bible/languages';
+import { LANGS, onLangsChanged, registeredLangs, specOf, type Lang } from '@/lib/bible/languages';
 
 export interface BookEntry {
   book: number;
@@ -156,9 +156,13 @@ export const normalizeName = (value: string | number): string =>
  *
  * Cached because the search bar asks for this on every keystroke, once per
  * book, and fourteen names normalised sixty-six times over is real work to
- * repeat for a list that never changes.
+ * repeat for a list that rarely changes. It does change once: a language the
+ * operator adds brings sixty-six more names, so the cache is dropped when the
+ * registered set does.
  */
 const searchKeys = new Map<number, string[]>();
+
+onLangsChanged(() => searchKeys.clear());
 
 export const bookSearchKeys = (book: number): string[] => {
   const cached = searchKeys.get(book);
@@ -169,7 +173,7 @@ export const bookSearchKeys = (book: number): string[] => {
 
   const keys = new Set<string>();
 
-  LANGS.forEach(lang => {
+  [...LANGS, ...registeredLangs()].forEach(lang => {
     const name = bookName(book, lang);
 
     if (name) {

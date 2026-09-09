@@ -1,12 +1,10 @@
 import Link from 'next/link';
-import { Fragment } from 'react';
 
 import { FoundingSpots } from '@/components/marketing/FoundingSpots';
 import { soldOut, tierNow } from '@/lib/billing/founding';
-import { LIMIT_LABELS } from '@/lib/billing/limits';
-import { plansFor } from '@/lib/billing/plans';
+import { plansFor, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
-import { freeLimitValue, INCLUDED, LIMIT_GROUPS, LIMIT_NOTES, proLimitValue } from '@/lib/billing/table';
+import { COMPARISON, type ComparisonRow, type PlanCell } from '@/lib/billing/table';
 
 export const metadata = {
   title: 'Pricing',
@@ -27,9 +25,17 @@ export const revalidate = 60;
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
 
-/** The tick beside a line both plans carry. Drawn rather than a font's glyph. */
-const Tick = () => (
-  <svg viewBox="0 0 16 16" aria-hidden focusable="false" className="mt-[5px] size-3.5 shrink-0 text-site-ink">
+/* What both cards are, minus the border and paper that tell them apart. */
+const CARD = 'flex flex-col rounded-studio-lg border p-6 sm:p-8 lg:row-span-5 lg:grid lg:grid-rows-subgrid';
+
+/** The tick beside a line a plan carries. Drawn rather than a font's glyph. */
+const Tick = ({ muted = false }: { muted?: boolean }) => (
+  <svg
+    viewBox="0 0 16 16"
+    aria-hidden
+    focusable="false"
+    className={`mt-[3px] size-3.5 shrink-0 ${muted ? 'text-site-faint' : 'text-site-ink'}`}
+  >
     <path
       d="M3 8.5 6.2 12 13 4.5"
       fill="none"
@@ -40,6 +46,74 @@ const Tick = () => (
     />
   </svg>
 );
+
+/** The cross beside a line a plan does not carry. */
+const Cross = () => (
+  <svg viewBox="0 0 16 16" aria-hidden focusable="false" className="mt-[3px] size-3.5 shrink-0 text-site-faint">
+    <path
+      d="M4 4l8 8M12 4l-8 8"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+/**
+ * A line, worded for the plan reading it.
+ *
+ * The count goes inside the sentence rather than in a column of its own — "up
+ * to 3 languages on a slide" is the thing someone is deciding about, and a
+ * bare 3 in a right-hand column makes them look back at the label to find out
+ * what it counted.
+ */
+const wording = (row: ComparisonRow, cell: PlanCell) => {
+  if (cell === false || cell === true) return { lead: '', value: '', tail: row.label };
+  if (cell === 'Unlimited') return { lead: '', value: 'Unlimited', tail: ` ${row.label}` };
+
+  // "Up to 1 sessions" is the sentence a ceiling of one writes if nobody stops
+  // it, and it is the row a church on Free reads first.
+  return { lead: 'Up to ', value: cell, tail: ` ${cell === '1' ? (row.one ?? row.label) : row.label}` };
+};
+
+/** One line of one plan's column. */
+const Line = ({ row, plan }: { row: ComparisonRow; plan: PlanId }) => {
+  const cell = row[plan];
+  const has = cell !== false;
+  const { lead, value, tail } = wording(row, cell);
+
+  return (
+    <li className="flex gap-2.5 py-[7px] text-[15px] leading-snug">
+      {has ? <Tick muted={plan === 'free' && value === ''} /> : <Cross />}
+
+      <span className={has ? 'text-site-ink' : 'text-site-faint line-through decoration-site-faint/60'}>
+        {lead}
+        {value && <span className="font-semibold">{value}</span>}
+        {/* The note is a hover, not a second line: nineteen explanations printed
+            under nineteen labels turned the column into an essay, and the
+            reader who needs "what is a session?" is one reader in ten. */}
+        {row.note
+          ? (
+              <span tabIndex={0} className="group/tip relative outline-none">
+                <span className="border-b border-dotted border-site-faint/70">{tail}</span>
+
+                <span
+                  role="tooltip"
+                  className="pointer-events-none invisible absolute bottom-full left-0 z-10 mb-2 w-64 rounded-studio
+                    border border-site-rule bg-site-surface px-3 py-2 text-[13px] leading-relaxed text-site-muted
+                    opacity-0 shadow-sm transition-opacity duration-150 group-hover/tip:visible
+                    group-hover/tip:opacity-100 group-focus/tip:visible group-focus/tip:opacity-100"
+                >
+                  {row.note}
+                </span>
+              </span>
+            )
+          : tail}
+      </span>
+    </li>
+  );
+};
 
 /** The questions, plus the one the founding rate raises. */
 const foundingQuestion = (claimed: number) =>
@@ -69,6 +143,13 @@ const QUESTIONS = [
     q: 'What happens to my work if I stop paying?',
     a: 'It stays exactly where it is. A ceiling only ever refuses something new: going back to Free never deletes a '
       + 'song, a playlist or a template you made, and you can still open, reorder and remove them.',
+  },
+  {
+    q: 'Do you carry my language?',
+    a: 'We carry Georgian, English, Russian, Greek, Arabic and Latin, and every other language is a Bible you add '
+      + 'yourself — the console browses public archives holding over a thousand of them and fetches the one you tick. '
+      + 'A Bible you add reads exactly like ours and sits beside them on the same slide. Free covers one; Pro makes '
+      + 'it unlimited.',
   },
   {
     q: 'Do I need an account for the projector machine?',
@@ -110,148 +191,81 @@ export default async function PricingPage() {
 
       <FoundingSpots claimed={claimed} />
 
-      {/* ------------------------------------------------------- the two cards */}
-      <div className="mt-12 grid gap-6 sm:grid-cols-2">
+      {/* ----------------------------------------------------- the two columns */}
+      {/* One column per plan, each carrying the whole product rather than the
+          half that differs. Someone deciding reads the plan they think they
+          want from top to bottom; a three-column diff makes them assemble that
+          answer themselves. Every line the plan does not carry is still printed,
+          struck through, because what Pro adds is the thing they came to read. */}
+      {/* The two cards share their rows rather than merely sitting side by
+          side: Pro's blurb runs to two lines and Free's to one, which walked
+          the price, the button and every heading below them out of step. A
+          subgrid of five rows — name, blurb, price, button, the lines — makes
+          each row as tall as the taller card needs and puts the two buttons on
+          one line, which is the pair a reader is actually comparing. */}
+      <div className="mt-14 grid items-start gap-6 lg:grid-cols-2 lg:grid-rows-[auto_auto_auto_auto_auto] lg:gap-y-0">
         {Object.values(PLANS).map(plan => (
           <div
             key={plan.id}
             className={
               plan.id === 'pro'
-                ? 'flex flex-col rounded-studio-lg border border-site-ink bg-site-surface p-6 shadow-sm'
-                : 'flex flex-col rounded-studio-lg border border-site-rule p-6'
+                ? `${CARD} border-site-ink bg-site-surface shadow-sm`
+                : `${CARD} border-site-rule bg-site-surface/60`
             }
           >
-            <h2 className="text-sm text-site-muted">{plan.name}</h2>
+            <h2 className={`${DISPLAY} text-xl`}>{plan.name}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-site-muted">{plan.blurb}</p>
 
-            <p className="mt-4 flex items-baseline gap-2">
-              <span className={`${DISPLAY} text-4xl`}>{plan.price}</span>
+            <p className="mt-6 flex items-baseline gap-2 self-end">
+              <span className={`${DISPLAY} text-5xl`}>{plan.price}</span>
               <span className="text-sm text-site-faint">{plan.cadence}</span>
             </p>
 
-            <p className="mt-4 text-sm leading-relaxed text-site-muted">{plan.blurb}</p>
+            {/* Button and small print are one row, so the note under one card
+                cannot push the lines below it past the other's. */}
+            <div className="mt-6 self-end">
+              <Link
+                href={plan.cta.href}
+                className={
+                  plan.id === 'pro'
+                    ? 'block rounded-studio bg-site-accent px-4 py-3 text-center text-sm font-medium text-site-onaccent transition-colors duration-150 hover:bg-site-accent/85'
+                    : 'block rounded-studio border border-site-rule px-4 py-3 text-center text-sm text-site-ink transition-colors duration-150 hover:bg-site-band'
+                }
+              >
+                {plan.cta.label}
+              </Link>
 
-            <ul className="mt-6 flex-1 space-y-2 text-sm text-site-ink">
-              {plan.highlights.map(item => (
-                <li key={item} className="flex gap-2">
-                  <span className="text-site-faint">·</span>
-                  {item}
-                </li>
+              <p className="mt-3 text-center text-[13px] text-site-faint">
+                {plan.id === 'pro' ? 'Monthly subscription. Cancel any time.' : 'No card required.'}
+              </p>
+            </div>
+
+            <div className="mt-8 space-y-7">
+              {COMPARISON.map(group => (
+                <section key={group.title}>
+                  {/* No mark on the heading. A tick against a group whose rows
+                      are not all ticked says two things at once, and the rows
+                      underneath are already saying the true one. */}
+                  <h3 className="border-b border-site-rule pb-2 text-[15px] font-semibold text-site-ink">
+                    {group.title}
+                  </h3>
+
+                  <ul className="mt-2 pl-1">
+                    {group.rows.map(row => (
+                      <Line key={row.label} row={row} plan={plan.id} />
+                    ))}
+                  </ul>
+                </section>
               ))}
-            </ul>
-
-            <Link
-              href={plan.cta.href}
-              className={
-                plan.id === 'pro'
-                  ? 'mt-8 block rounded-studio bg-site-accent px-4 py-2.5 text-center text-sm font-medium text-site-onaccent transition-colors duration-150 hover:bg-site-accent/85'
-                  : 'mt-8 block rounded-studio border border-site-rule px-4 py-2.5 text-center text-sm text-site-ink transition-colors duration-150 hover:bg-site-band'
-              }
-            >
-              {plan.id === 'pro' ? `${plan.cta.label} for ${plan.price}/month` : plan.cta.label}
-            </Link>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* ------------------------------------------------------------- ceilings */}
-      {/* The whole table, not a curated half of it: someone deciding whether
-          Free is enough for their church is asking about the one row we have
-          not printed. It is the table the console shows an operator who has
-          hit a ceiling, from the same `LIMIT_GROUPS`. */}
-      <section className="mt-20">
-        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Everything, side by side</h2>
-        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-          See exactly what is included in Free and what you get with Pro. The limits are shown clearly so you can
-          choose the plan that fits your church.
-        </p>
-
-        {/* One card, one rule per group, and no lines between rows.
-            A hairline under every row drew nineteen of them down the page; a
-            band behind the Pro column instead drew one long white stripe, which
-            read as something broken rather than as a column. So the table sits
-            on its own paper and Pro is told apart by the weight of its type —
-            the thing the reader is actually comparing is two numbers on one
-            line, and those are already side by side. */}
-        <div className="mt-8 overflow-x-auto rounded-studio-lg border border-site-rule bg-site-surface px-5 py-1 sm:px-8">
-          <table className="w-full min-w-md border-collapse text-left text-[15px]">
-            <thead>
-              <tr className="text-site-faint">
-                <th className="py-4 pr-6 text-left text-sm font-normal">
-                  <span className="sr-only">What is being counted</span>
-                </th>
-                <th className="w-24 px-4 py-4 text-right text-sm font-normal sm:w-28">Free</th>
-                <th className="w-24 py-4 pl-4 text-right text-sm font-normal text-site-ink sm:w-28">Pro</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {LIMIT_GROUPS.map((group, index) => (
-                <Fragment key={group.title}>
-                  <tr>
-                    <th
-                      colSpan={3}
-                      scope="colgroup"
-                      className={`border-t border-site-rule pb-2 text-left text-[11px] font-semibold tracking-wider
-                        text-site-faint uppercase ${index === 0 ? 'pt-5' : 'pt-8'}`}
-                    >
-                      {group.title}
-                    </th>
-                  </tr>
-
-                  {group.keys.map(key => (
-                    <tr key={key} className="align-top">
-                      {/* The noun on its own was a riddle to anyone who has not
-                          run the console — "sessions, 1" most of all — so each
-                          row says what the thing is underneath its name. */}
-                      <td className="py-3.5 pr-6">
-                        <span className="block text-site-ink">{LIMIT_LABELS[key].many}</span>
-                        <span className="mt-1 block max-w-prose text-[13px] leading-relaxed text-site-faint">
-                          {LIMIT_NOTES[key]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 text-right whitespace-nowrap text-site-muted">{freeLimitValue(key)}</td>
-                      <td className="py-3.5 pl-4 text-right font-medium whitespace-nowrap text-site-ink">
-                        {proLimitValue(key)}
-                      </td>
-                    </tr>
-                  ))}
-                </Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-site-faint">
-          Three languages on a slide is the one number Pro does not make unlimited. It is how many fit before a
-          slide stops being readable from the back of the room, and not something we would charge for.
-        </p>
-      </section>
-
-      {/* ------------------------------------------------------- in both plans */}
-      <section className="mt-20">
-        <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Included with every plan</h2>
-        <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-          Both plans include the core tools you need to run a church service. Pro simply gives you more room to use
-          them.
-        </p>
-
-        <div className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {INCLUDED.map(group => (
-            <div key={group.title}>
-              <h3 className="text-sm font-semibold text-site-ink">{group.title}</h3>
-
-              <ul className="mt-4 space-y-2.5 text-[15px] leading-relaxed text-site-muted">
-                {group.items.map(item => (
-                  <li key={item} className="flex gap-2.5">
-                    <Tick />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </section>
+      <p className="mt-6 max-w-2xl text-sm leading-relaxed text-site-faint">
+        Three languages on a slide is the one number Pro does not make unlimited. It is how many fit before a
+        slide stops being readable from the back of the room, and not something we would charge for.
+      </p>
 
       {/* ------------------------------------------------------------ questions */}
       <section className="mt-20">

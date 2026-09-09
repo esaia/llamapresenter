@@ -196,12 +196,41 @@ export interface Database {
         verses: Json;
         fetched_at: string;
       }>;
+      /** A translation the operator added, in one of the six or a language of their own. */
+      bible_translations: Row<{
+        id: string;
+        user_id: string;
+        lang: string;
+        label: string;
+        psalms: string;
+        /** What an `x:` language is called, and its 66 book names. Null for one of ours. */
+        lang_label: string | null;
+        book_names: Json;
+        format: string | null;
+        books: number;
+        verse_count: number;
+        created_at: string;
+      }>;
+      /** Its chapters, in the same shape `bible_text` holds ours. */
+      bible_translation_text: Row<{
+        translation_id: string;
+        book: number;
+        chapter: number;
+        wigni: number;
+        chapters: number;
+        verses: Json;
+      }>;
     };
     Views: Record<string, never>;
     Functions: {
       /** Verses whose text contains a phrase, in one translation and optionally one book. */
       bible_search: {
         Args: { p_lang: string; p_version: string; p_query: string; p_book?: number | null; p_limit?: number };
+        Returns: { book: number; wigni: number; chapter: number; verse: number; text: string }[];
+      };
+      /** The same, in a translation the operator uploaded. Runs as the caller, so RLS is the check. */
+      bible_custom_search: {
+        Args: { p_translation: string; p_query: string; p_book?: number | null; p_limit?: number };
         Returns: { book: number; wigni: number; chapter: number; verse: number; text: string }[];
       };
       /** How many of the fifteen founding spots are gone, live reservations included. */

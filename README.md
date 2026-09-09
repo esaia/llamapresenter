@@ -166,6 +166,87 @@ These scripts are the only things that reach the network, they are run by hand,
 and they hold their own address — nothing in `.env` points at a scripture host,
 because the running product has no use for one.
 
+### A translation the operator brings
+
+The corpus above is what we mirrored, which is the right rule right up to the
+church whose Bible we hold nothing of. The **Translations** tab takes a file —
+Zefania XML, OpenSong, USX, OSIS or Beblia — and makes it a translation in that
+account alone.
+
+**It can be a language of its own, and usually should be.** Filing everything
+under the six was the first arrangement and it was wrong: `showData` is keyed
+by language, so a Spanish Bible filed under English could never sit beside
+English on a slide, which is the one thing a bilingual congregation wants. So
+`Lang` is now `BuiltInLang | \`x:${string}\``, a custom code resolves through a
+registry rather than through `languages.json`, and the languages a slide
+carries ride in its payload — an output has no account and cannot look one up,
+exactly as it cannot look up a typeface. `registerLangs` is the one impure act
+and it happens in a memo, before anything is drawn, because a book name is read
+in the same render that draws the verse.
+
+The picker is not our six — it is the 184 ISO 639-1 languages, English names,
+alphabetical, in `lib/bible/isoLanguages.json`. A Korean church is not choosing
+between our translations; they are saying what language their file is in. Six
+of those resolve to the scripture API's own codes so that picking English means
+*our* English, with the WEB and the KJV behind it, and the rest become the
+operator's own keyed by the same ISO code — so two Spanish Bibles added a year
+apart land in one Spanish rather than two, and the rail shows one row. Nothing
+in the interface names the distinction, because an operator has no reason to
+care which side of it their language falls on.
+
+A language exists only while a translation of it does: delete the last Spanish
+Bible and Spanish leaves the rail. Its book
+names come out of the file when it carries them — Zefania, OpenSong and USX do,
+Beblia and OSIS do not — and are English otherwise, which is only ever the name
+beside the verse. Its order is always canonical, because every file in these
+formats is.
+
+Reading a Bible under one of the six is still there, and is right for a second
+English translation or a church's own revision. The one thing an upload is
+allowed to disagree with its language about is how the psalms are split, and
+`lib/bible/custom.ts` is what answers that instead of `specOf(lang).psalms`,
+because a Masoretic file read under Russian would otherwise put Psalm 23 on the
+screen when Psalm 22 was asked for.
+
+**That split is measured, not asked.** It was a dropdown once. "Septuagint or
+Masoretic" is not a preference an operator holds — it is a fact about the file,
+and the obvious guess is wrong often enough to matter: the Russian Synodal
+Bible is Septuagint-numbered in print and the machine-readable copy of it in
+the archives has been renumbered to Masoretic. `import/psalms.ts` measures the
+ninth psalm, which the Septuagint runs together with the tenth and so makes
+twice as long, and confirms it against the two-verse psalm. So the panel asks
+one question — which language it is read under — because that is the only one
+the file cannot answer.
+
+**There are two ways in, and the first is the one that gets used.** The panel
+browses two public archives — [Beblia](https://github.com/Beblia/Holy-Bible-XML-Format)
+and [gratis-bible](https://github.com/gratis-bible/bible) — because they publish
+a machine-readable index and serve `access-control-allow-origin: *`. The
+operator ticks a translation and this browser fetches it straight from GitHub;
+nothing of ours stands in the middle and no file is uploaded anywhere. The other
+three archives publish no index a browser may read, so they stay links and a
+download. `lib/bible/import/archives.ts` is the catalogue and the pure half —
+what a path becomes, how the list is searched — and `listArchive` is the one
+call that touches the network.
+
+That is not a third party in a Sunday morning. The chapters land in our own rows
+the moment they are imported and every reading afterwards is a primary-key
+lookup, which is the same arrangement `scripts/mirror.mjs` has: a network call
+made by hand, once, to fill a table that is then read from forever.
+
+**The file is read in the browser and the rows go up under RLS**, the way the
+ProPresenter import already works. A whole Bible is about 1,200 chapters, so
+they go in batches with the panel counting them, and a batch that fails deletes
+the metadata row and takes the half-written chapters with it — a translation
+that is half a Bible looks armed and goes blank mid-reading. `bible_translation_text`
+has deliberately the same columns as `bible_text`, so `/api/bible` reads either
+through the one `chapterOf`.
+
+**Ownership is the RLS policy, not a check in a route.** `/api/bible` and
+`/api/bible/search` read a `custom:<id>` translation with the caller's own
+client rather than the service role, so there is nothing in either file to
+forget. Their answers are `private` rather than `public` for the same reason.
+
 ## Languages
 
 A console opens on English and the operator adds up to two more, from the six
@@ -181,6 +262,11 @@ language is mirrored.
 
 English cannot be removed: it is what every output falls back to when the
 language the stream or the stage was pointed at goes away.
+
+A translation the operator uploaded is a row in `bible_translations` rather than
+a row in this catalogue, and `lib/bible/custom.ts` is the one place a stored
+`custom:<id>` becomes a name, a psalm scheme or a picker entry — the same job
+`lib/projector/fonts.ts` does for a typeface.
 
 ## Domain vocabulary
 
@@ -260,6 +346,7 @@ The ceilings live in `lib/billing/limits.json`:
 | Languages on a slide | 2 | 3 |
 | Audio tracks | 5 | ∞ |
 | Name cards | 3 | ∞ |
+| Translations you upload | 1 | ∞ |
 | Custom fonts | — | ∞ |
 | Templates you draw | — | ∞ |
 | Bible, outputs, 33 backgrounds | full | full |

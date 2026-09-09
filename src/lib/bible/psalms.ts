@@ -1,4 +1,4 @@
-import { specOf, type Lang } from '@/lib/bible/languages';
+import type { LangSpec } from '@/lib/bible/languages';
 
 /**
  * Psalm numbering.
@@ -100,10 +100,19 @@ export const englishToCanonical = (chapter: number, verse: number): Ref => {
   return verse <= 11 ? { chapter: 146, verse } : { chapter: 147, verse: verse - 11 };
 };
 
-/** A language's own reference -> the shared Septuagint numbering. */
-export const toCanonicalRef = (book: number, lang: Lang, chapter: number, verse: number): Ref =>
-  book === PSALMS_BOOK && specOf(lang).psalms === 'masoretic' ? englishToCanonical(chapter, verse) : { chapter, verse };
+/**
+ * Which split is being read, rather than which language: an uploaded
+ * translation carries its own, and a Masoretic file read under Russian — whose
+ * own translations are Septuagint-numbered — would otherwise land Psalm 23 on
+ * Psalm 22. `lib/bible/custom.ts` is what answers it for a translation;
+ * `specOf(lang).psalms` still answers it for one of ours.
+ */
+export type PsalmScheme = LangSpec['psalms'];
 
-/** Shared Septuagint numbering -> the reference `lang` uses. */
-export const fromCanonicalRef = (book: number, lang: Lang, chapter: number, verse: number): Ref =>
-  book === PSALMS_BOOK && specOf(lang).psalms === 'masoretic' ? canonicalToEnglish(chapter, verse) : { chapter, verse };
+/** A translation's own reference -> the shared Septuagint numbering. */
+export const toCanonicalRef = (book: number, psalms: PsalmScheme, chapter: number, verse: number): Ref =>
+  book === PSALMS_BOOK && psalms === 'masoretic' ? englishToCanonical(chapter, verse) : { chapter, verse };
+
+/** Shared Septuagint numbering -> the reference that translation uses. */
+export const fromCanonicalRef = (book: number, psalms: PsalmScheme, chapter: number, verse: number): Ref =>
+  book === PSALMS_BOOK && psalms === 'masoretic' ? canonicalToEnglish(chapter, verse) : { chapter, verse };

@@ -4,7 +4,7 @@ import { StageOutput, type StageInitial } from '@/components/projector/StageOutp
 import { asBlackout } from '@/lib/live/blackout';
 import { admin } from '@/lib/supabase/admin';
 import { asTimerState } from '@/lib/timer/model';
-import { LANGS, emptyShowData, type Lang, type ProjectorStyle, type ShowData } from '@/lib/types';
+import { emptyShowData, isLang, type ProjectorStyle, type ShowData } from '@/lib/types';
 
 export const metadata = { title: 'Stage', robots: { index: false } };
 
@@ -33,7 +33,7 @@ export default async function StagePage({ params }: PageProps<'/stage/[key]'>) {
     showData: (state?.show_data as ShowData) ?? emptyShowData(),
     next: (state?.next_show_data as ShowData) ?? emptyShowData(),
     projector: (state?.projector as Partial<ProjectorStyle>) ?? {},
-    stageLang: LANGS.includes(state?.stage_lang as Lang) ? (state?.stage_lang as Lang) : undefined,
+    stageLang: isLang(state?.stage_lang) ? state.stage_lang : undefined,
     timer: asTimerState(state?.timer),
     // A monitor switched back on while the stage is black stays black.
     black: asBlackout(state?.blackout).stage,

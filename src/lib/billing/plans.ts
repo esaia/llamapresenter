@@ -49,6 +49,7 @@ export const plansFor = (claimed: number): Record<PlanId, Plan> => {
     blurb: 'Everything you need to run your church service on screen.',
     highlights: [
       'The whole Bible, in every translation we hold',
+      'Any language — add a Bible of your own',
       'Projector, stage, and lower third for your stream',
       `${FREE_LIMITS.languages} languages side by side`,
       `${THEMES.length} built-in backgrounds`,
@@ -67,7 +68,7 @@ export const plansFor = (claimed: number): Record<PlanId, Plan> => {
       'Everything in Free, without the limits',
       'Unlimited songs, playlists, and music libraries',
       `${MAX_LANGS} languages on a slide`,
-      'Use your own music and fonts',
+      'Use your own music, fonts and Bible translations',
       'Create your own templates',
       'Run more than one session',
     ],

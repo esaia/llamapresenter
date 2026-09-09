@@ -16,7 +16,30 @@ import catalogue from '@/lib/bible/languages.json';
  */
 export const LANGS = ['geo', 'eng', 'ru', 'gr', 'ae', 'la'] as const;
 
-export type Lang = (typeof LANGS)[number];
+/** One of the six we hold a mirrored copy of. */
+export type BuiltInLang = (typeof LANGS)[number];
+
+/**
+ * A language an operator brought with a Bible of their own.
+ *
+ * The six above are the ones we mirrored, and for a long time they were the
+ * whole world: an uploaded translation was filed under one of them. That
+ * cannot be right for a Spanish church, because `showData` is keyed by
+ * language — filing Spanish under English means the two can never be on the
+ * same slide, which is the one thing a bilingual congregation actually wants.
+ *
+ * So a language is now either one of ours or one of theirs, and the prefix is
+ * what tells them apart in a settings row, a slide and a database column. What
+ * a custom one *is* — its name, and its book names — is registered below,
+ * because it lives in the operator's own rows rather than in `languages.json`.
+ */
+export const CUSTOM_LANG_PREFIX = 'x:';
+
+export type CustomLang = `${typeof CUSTOM_LANG_PREFIX}${string}`;
+
+export type Lang = BuiltInLang | CustomLang;
+
+export const isCustomLang = (value: string): value is CustomLang => value.startsWith(CUSTOM_LANG_PREFIX);
 
 /**
  * English is always in the operator's set and cannot be removed: it is the one
@@ -72,20 +95,84 @@ export interface LangSpec {
  * Abkhazian and Ossetian are New Testament only. Their Old Testament names fall
  * back to Russian upstream and an Old Testament request returns nothing.
  */
-export const LANG_SPECS = catalogue as unknown as Record<Lang, LangSpec>;
+export const LANG_SPECS = catalogue as unknown as Record<BuiltInLang, LangSpec>;
 
-export const specOf = (lang: Lang): LangSpec => LANG_SPECS[lang];
+/**
+ * The languages the operator added, by code.
+ *
+ * Module state, deliberately, and set from exactly two places: the console,
+ * which loads them with everything else it opens with, and an output, which is
+ * handed the ones a slide carries in the slide's own payload — an output page
+ * has no account and cannot read a row. It is the same arrangement the added
+ * typefaces have, and for the same reason.
+ *
+ * It is here rather than threaded through every signature because `specOf` is
+ * called from pure book and psalm code that has no business knowing about
+ * React, an account or a payload. Registering is the one impure act, and it
+ * happens before anything is drawn.
+ */
+let registered: Record<string, LangSpec> = {};
+
+const listeners = new Set<() => void>();
+
+/** Told when the set changes, so a cache keyed by language can drop itself. */
+export const onLangsChanged = (listener: () => void) => {
+  listeners.add(listener);
+
+  return () => listeners.delete(listener);
+};
+
+export const registerLangs = (specs: Record<string, LangSpec>) => {
+  registered = specs;
+  listeners.forEach(listener => listener());
+};
+
+export const registeredLangs = (): Lang[] => Object.keys(registered) as Lang[];
+
+/**
+ * What a language we know nothing about is read as.
+ *
+ * A settings row can name a language whose translation has since been deleted,
+ * and a payload can reach an output that has not been told about one. Neither
+ * is worth a blank screen: the verses are still the verses, and English book
+ * names over them is a smaller wrong than nothing at all.
+ */
+const UNKNOWN: LangSpec = {
+  label: 'Added language',
+  order: 'eng',
+  psalms: 'masoretic',
+  nameOffset: 0,
+  versions: [],
+  names: LANG_SPECS.eng.names,
+};
+
+export const specOf = (lang: Lang): LangSpec =>
+  isCustomLang(lang)
+    ? (registered[lang] ?? UNKNOWN)
+    : (LANG_SPECS[lang as BuiltInLang] ?? UNKNOWN);
 
 export const LANG_LABELS = Object.fromEntries(
   LANGS.map(lang => [lang, LANG_SPECS[lang].label]),
-) as Record<Lang, string>;
+) as Record<BuiltInLang, string>;
+
+/** What to call a language, ours or theirs. */
+export const labelOf = (lang: Lang): string => specOf(lang).label;
 
 /** The translations `lang` offers, as options for a picker. */
 export const versionsOf = (lang: Lang) =>
-  LANG_SPECS[lang].versions.map(version => ({ value: version, label: version }));
+  specOf(lang).versions.map(version => ({ value: version, label: version }));
 
 /** The translation a language opens on when the operator has not chosen one. */
-export const defaultVersionOf = (lang: Lang): string =>
-  LANG_SPECS[lang].defaultVersion ?? LANG_SPECS[lang].versions[0] ?? '';
+export const defaultVersionOf = (lang: Lang): string => {
+  const spec = specOf(lang);
 
-export const isLang = (value: unknown): value is Lang => LANGS.includes(value as Lang);
+  return spec.defaultVersion ?? spec.versions[0] ?? '';
+};
+
+/**
+ * Whether this is a language code at all. A custom one is checked for shape
+ * rather than for existence — `settings.ts` is what refuses a code naming a
+ * language the operator no longer has.
+ */
+export const isLang = (value: unknown): value is Lang =>
+  typeof value === 'string' && (LANGS.includes(value as BuiltInLang) || isCustomLang(value));

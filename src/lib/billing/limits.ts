@@ -31,6 +31,7 @@ export const LIMIT_KEYS = [
   'languages',
   'custom_fonts',
   'custom_templates',
+  'translations',
 ] as const;
 
 export type LimitKey = (typeof LIMIT_KEYS)[number];
@@ -101,6 +102,7 @@ export const LIMIT_LABELS: Record<LimitKey, { one: string; many: string }> = {
   languages: { one: 'language on a slide', many: 'languages on a slide' },
   custom_fonts: { one: 'custom font', many: 'custom fonts' },
   custom_templates: { one: 'custom look', many: 'custom looks' },
+  translations: { one: 'uploaded translation', many: 'uploaded translations' },
 };
 
 /**

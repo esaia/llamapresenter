@@ -1,8 +1,8 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { Fragment } from 'react';
 
 import { Art } from '@/components/marketing/Art';
-import { CompareScene } from '@/components/marketing/CompareScene';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 
@@ -12,8 +12,8 @@ const DISPLAY = 'font-valera tracking-tight text-site-ink';
 export const metadata = {
   title: 'LlamaPresenter vs ProPresenter',
   description:
-    'A browser-based ProPresenter alternative for churches. Nothing to install, every output is a link, '
-    + 'scripture in several languages at once, and your ProPresenter songs come with you. Free to start.',
+    'Modern church presentation software with no install required. Bible verses in any language, side by side, song lyrics, '
+    + 'stage timers and lower thirds from any web browser. A ProPresenter alternative that is free to start.',
   alternates: { canonical: '/propresenter-alternative' },
 };
 
@@ -54,24 +54,14 @@ const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label
     group: 'Getting it running',
     rows: [
       {
-        label: 'What you install',
-        theirs: 'A desktop application, downloaded and installed on each machine that runs it, and updated there.',
-        ours: 'Nothing. It is a web address. The machine needs a modern browser and no admin rights.',
+        label: 'Installation',
+        theirs: 'A heavy desktop app, downloaded and installed on every machine that runs it, and licensed there.',
+        ours: '100% web based. It runs in any modern browser, with nothing to download and no admin rights.',
       },
       {
-        label: 'What it runs on',
-        theirs: 'macOS and Windows.',
-        ours: 'Any recent browser — Windows, macOS, Linux, ChromeOS, and a phone or tablet for the remote.',
-      },
-      {
-        label: 'Setting up a second computer',
-        theirs: 'Install it again, and licence that machine too.',
-        ours: 'Open the same session in a browser tab. Two operators can sit on the same live slide.',
-      },
-      {
-        label: 'When something changes',
-        theirs: 'You download the new version when it suits your team.',
-        ours: 'The tab is always the current version — and never mid-service, because it loads at open.',
+        label: 'Remote control',
+        theirs: 'Its own remote app, installed on the phone and on the same network as the presenting machine.',
+        ours: 'Control it from any phone browser, on the same web link. Nothing to install and nothing to pair.',
       },
     ],
   },
@@ -79,54 +69,40 @@ const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label
     group: 'The screens',
     rows: [
       {
-        label: 'How the projector is fed',
-        theirs: 'A second video output of the presenting machine, or a video-over-network feed on the same network.',
-        ours: 'A link. You open it on whatever computer or stick is wired to the projector, in that room or another.',
+        label: 'Display outputs',
+        theirs: 'Limited by the physical video outputs of the presenting machine, or a video feed over the network.',
+        ours: 'Unlimited web outputs, each at its own URL — projector, stage display and lower third.',
       },
       {
-        label: 'Stage display',
-        theirs: 'Yes — the slide now, the next one, clocks and timers, on its own output.',
-        ours: 'Yes — the same, on its own link. No account on that machine either.',
+        label: 'Stage timer and clocks',
+        theirs: 'Built-in countdowns and clocks, carried on the stage display.',
+        ours: 'Advanced timer controls of the kind a dedicated timer app gives you, on a display feed of their own.',
       },
       {
         label: 'Livestream overlay',
-        theirs: 'Yes, via an alpha-keyed output your switcher or streaming software takes.',
-        ours: 'Yes — a transparent lower third you paste into OBS, vMix or any other tool as a browser source.',
-      },
-      {
-        label: 'How many screens',
-        theirs: 'As many as the machine has outputs, and as its licence tier allows.',
-        ours: 'As many as you can open. Every output is a link, and a link costs nothing.',
-      },
-      {
-        label: 'Running it from the room',
-        theirs: 'Its own remote app, on the same network as the presenting machine.',
-        ours: 'Your phone browser, on the same link. Nothing to pair and nothing to install.',
+        theirs: 'An alpha-keyed video output or a network video feed, taken by your switcher or streaming software.',
+        ours: 'A transparent browser source you paste straight into OBS or vMix. No capture hardware in between.',
       },
     ],
   },
   {
-    group: 'Scripture and songs',
+    group: 'Scripture, songs and looks',
     rows: [
       {
-        label: 'Bible translations',
-        theirs: 'Bibles are added to the app, some free and some bought.',
-        ours: 'Every translation we hold is there on the free plan, whole, with nothing to add or buy.',
+        label: 'Multi-language scripture',
+        theirs: 'Set up by hand, slide by slide.',
+        ours: 'Built in. Arm your languages and every verse comes out side by side on one slide.',
       },
       {
-        label: 'More than one language at once',
-        theirs: 'Possible, by building the slide that way.',
-        ours: 'Built in. Arm the languages you want and every verse comes out stacked on one slide.',
+        label: 'A Bible in your own language',
+        theirs: 'Buy the module, or find a file and hope it imports.',
+        ours: 'Pick it from a public archive inside the console. Over a thousand Bibles, hundreds of languages, '
+          + 'nothing to download.',
       },
       {
-        label: 'Your existing song library',
-        theirs: 'Lives in its documents and bundles.',
-        ours: 'Drop a ProPresenter 7 .pro or .proBundle file on the console and the lyrics come across.',
-      },
-      {
-        label: 'Backgrounds and music',
-        theirs: 'Files on that machine.',
-        ours: 'Files on that machine too — held in the browser, never uploaded to us.',
+        label: 'Template customization',
+        theirs: 'Themes and templates built in the app, on that machine.',
+        ours: 'A drag-and-drop template editor for scripture and lyrics, in the browser.',
       },
     ],
   },
@@ -134,19 +110,11 @@ const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label
     group: 'What it costs',
     rows: [
       {
-        label: 'To start',
-        theirs: 'A paid licence, per computer — see their site for this year’s tiers and prices.',
-        ours: `${PLANS.free.price}. No card, no trial clock, and no watermark on the wall.`,
-      },
-      {
-        label: 'To run a full service',
-        theirs: 'The licence tier that covers the outputs and campuses you need.',
-        ours: `${PLANS.pro.price} ${PLANS.pro.cadence} lifts the ceilings on songs, music and templates. Nothing else changes.`,
-      },
-      {
-        label: 'If you stop paying',
-        theirs: 'The version you bought keeps working.',
-        ours: 'The account becomes a free one. Nothing you made is deleted — a ceiling only refuses something new.',
+        label: 'Pricing model',
+        theirs: '$29 a month for one seat, and a seat is a computer that puts something on a screen. A campus '
+          + 'licence is $59 a month, and four seats or more come down to $19 each.',
+        ours: `A generous free plan, and one flexible subscription at ${PLANS.pro.price} ${PLANS.pro.cadence} when `
+          + 'your church outgrows it.',
       },
     ],
   },
@@ -155,22 +123,22 @@ const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label
 /** The three things a reader wants before they scroll. */
 const HEADLINES = [
   {
-    title: 'Nothing to install',
+    title: '100% web-based, zero install',
     body:
-      'No download, no admin password, no version to keep in step across the booth machine and the laptop in the '
-      + 'office. The console is a browser tab.',
+      'Run your entire Sunday service from a browser tab. No bulky desktop app, no licence to activate, and no '
+      + 'software update waiting for you right before the service starts.',
   },
   {
-    title: 'Every screen is a link',
+    title: 'Multi-screen and remote control',
     body:
-      'The projector, the stage display and the stream overlay each open at their own address, on whatever machine '
-      + 'is wired to them — and none of them signs in.',
+      'Send distinct feeds to your projector, your stage display and your livestream lower third. Control all of '
+      + 'them from a desktop or from your phone.',
   },
   {
-    title: 'Free is a real plan',
+    title: 'Fully custom template builder',
     body:
-      'The whole Bible, all three outputs and the stage display cost nothing, with no clock on them. Pro lifts the '
-      + 'ceilings for teams running songs and music every week.',
+      'Design your own templates for Bible verses and song lyrics. Fonts, backgrounds and layout are yours, on the '
+      + 'main screens and on the stream overlay alike.',
   },
 ];
 
@@ -235,27 +203,31 @@ export default async function ProPresenterAlternativePage() {
           {OURS} vs {THEIRS}
         </p>
 
-        <div className="mt-5 max-w-3xl">
+        {/* Headline on the left, the two machines on the right. The banner
+            used to run the full width under the text, which left the fold as a
+            column of words with nothing beside it — and the whole argument of
+            the page is the pair of screens, so it belongs where the reader
+            already is. The picture column is given the larger share: it is a
+            wide artboard, and at half the page neither laptop reads. */}
+        <div className="mt-5 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-12">
           <div>
             <h1 className={`${DISPLAY} text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-              A church presenter that{' '}
+              Modern church presentation software —{' '}
               <span className="relative inline-block">
                 <span
                   aria-hidden
                   className="absolute inset-x-[-0.08em] bottom-[0.06em] h-[0.38em] -rotate-[0.7deg]
                     rounded-[2px] bg-site-accent/60"
                 />
-                <span className="relative">nobody installs</span>
+                <span className="relative">no install required</span>
               </span>
             </h1>
 
             <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
             <p className="mt-7 max-w-[56ch] text-lg leading-relaxed text-site-muted">
-              {THEIRS} is a fine piece of software, and this page is not going to pretend otherwise. It is also an
-              application you install, licence and update on every machine that runs it. {OURS} is the same Sunday —
-              scripture, lyrics, the stage display and the stream overlay — with a browser tab where that machine used
-              to be.
+              Present dual-language Bible verses, song lyrics, stage timers and lower thirds straight from any web
+              browser.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
@@ -264,7 +236,7 @@ export default async function ProPresenterAlternativePage() {
                 className="rounded-studio bg-site-accent px-6 py-3.5 text-[17px] font-medium text-site-onaccent
                   shadow-sm transition-colors duration-150 hover:bg-site-accent/85"
               >
-                Try it free in the browser
+                Start free in browser
               </Link>
 
               <Link
@@ -272,24 +244,27 @@ export default async function ProPresenterAlternativePage() {
                 className="rounded-studio border border-site-rule px-6 py-3.5 text-[17px] text-site-ink
                   transition-colors duration-150 hover:bg-site-band"
               >
-                See the two side by side
+                Compare with {THEIRS}
               </Link>
             </div>
 
-            <p className="mt-4 text-sm text-site-faint">No credit card. Nothing to uninstall if you change your mind.</p>
+            <p className="mt-4 text-sm text-site-faint">Zero setup. No app downloads. Works on any device.</p>
           </div>
-        </div>
 
-        {/* The banner gets the full width rather than a column beside the
-            headline: the argument is two machines set against each other, and
-            at half the page neither screen can be read. */}
-        <div className="mt-12">
-          <CompareScene />
-
-          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-site-faint">
-            On the right, an application of the kind {THEIRS} is: installed on a machine, licensed to it, and updated
-            there. The screen is our own drawing of what that asks of you rather than any screenshot of theirs.
-          </p>
+          {/* Pulled out to the section's own gutter on a wide screen, so the
+              artboard finishes at the edge of the page rather than inside it. */}
+          <div className="lg:-mr-6">
+            <Image
+              src="/images/compare-propresenter.webp"
+              alt={`The ${OURS} console open in a browser on one laptop, with ${THEIRS} running on a second laptop `
+                + 'beside it'}
+              width={1919}
+              height={690}
+              sizes="(min-width: 1024px) 52rem, 100vw"
+              className="h-auto w-full"
+              priority
+            />
+          </div>
         </div>
       </section>
 
@@ -310,10 +285,12 @@ export default async function ProPresenterAlternativePage() {
           row in our favour and tell the reader nothing about the row where the
           difference is a shape rather than a shortfall. */}
       <section id="table" className="mx-auto max-w-7xl scroll-mt-20 px-6 py-16 sm:py-24">
-        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>The two, side by side</h2>
+        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
+          {THEIRS} vs {OURS}
+        </h2>
         <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-          The differences worth knowing before a Sunday, in the order you would meet them: setting it up, getting it
-          onto the screens, what goes on those screens, and what it costs.
+          Feature by feature, in the order a church tech team meets them: getting it running, getting it onto the
+          screens, what goes on those screens, and what it costs.
         </p>
 
         {/* The whole table on one sheet of paper, rather than a band behind
@@ -386,17 +363,11 @@ export default async function ProPresenterAlternativePage() {
             </tbody>
           </table>
         </div>
-
-        <p className="mt-6 max-w-2xl text-sm leading-relaxed text-site-faint">
-          The right-hand column is what this app does today. The left is a fair reading of what a native desktop
-          presenter of {THEIRS}’ kind does, taken from their own material — if we have something wrong there, write to
-          us and we will correct it.
-        </p>
       </section>
 
       {/* ---------------------------------------------------------- the detail */}
       <Detail
-        title="The booth machine stops being special"
+        title="Multi-screen output, without a video card"
         visual={
           <Art
             src="/images/features/outputs.png"
@@ -406,19 +377,18 @@ export default async function ProPresenterAlternativePage() {
       >
         <p>
           With a desktop presenter, one computer is the service: it holds the licence, the files and every video
-          output, and everything else in the room is wired back to it.
+          output, and how many screens you can feed is a question about that machine.
         </p>
         <p>
-          Here the session is the service, and the screens are readers of it. The projector opens one link, the stage
-          display another, and OBS, vMix or whatever you stream with takes a third as a browser source. They can be
-          three machines, or one machine with three windows, and none of them needs an account or a copy of your
-          media.
+          Here every output is a URL. The projector opens one, the stage display another, and OBS, vMix or whatever
+          you stream with takes a third as a browser source. Open as many as you need, on as many machines as you
+          like — none of them signs in, and none of them holds a copy of your media.
         </p>
       </Detail>
 
       <Detail
         flip
-        title="Your ProPresenter songs come with you"
+        title="A template builder for verses and lyrics"
         visual={
           <Art
             src="/images/features/template-editor.png"
@@ -427,19 +397,21 @@ export default async function ProPresenterAlternativePage() {
         }
       >
         <p>
-          Drop a <code className="rounded bg-site-band px-1.5 py-0.5 text-[0.9em]">.pro</code> file or a whole{' '}
-          <code className="rounded bg-site-band px-1.5 py-0.5 text-[0.9em]">.proBundle</code> on the console and we
-          read the lyrics out of it in slide order. Two hundred songs is an ordinary bundle; if that is more than your
-          plan holds, you tick the ones you are singing rather than being handed a refusal.
+          Drag boxes onto a 16:9 frame and put the verse, the reference, the lyric or a picture where you want them.
+          Fonts, colours, backgrounds and layout are yours, for the projector and for the stream overlay alike, and
+          the same template comes out right on a 4K wall and in the preview beside you.
         </p>
         <p>
-          We take the words, not the layout — the look comes from a template here, which is the part you were going to
-          want to change anyway.
+          It is also where your old library lands. Drop a{' '}
+          <code className="rounded bg-site-band px-1.5 py-0.5 text-[0.9em]">.pro</code> file or a whole{' '}
+          <code className="rounded bg-site-band px-1.5 py-0.5 text-[0.9em]">.proBundle</code> from {THEIRS} 7 on the
+          console and we read the lyrics out of it in slide order — the words come across, and the look comes from
+          your template here.
         </p>
       </Detail>
 
       <Detail
-        title="Two languages on the wall, without building the slide twice"
+        title="Dual-language Bible verses, side by side"
         visual={
           <Art
             src="/images/features/languages.png"
@@ -455,11 +427,16 @@ export default async function ProPresenterAlternativePage() {
           Nothing is duplicated and nothing is pasted: it is the same passage, read out of our own copy of each
           translation, so turning a language off mid-service is one click rather than a different set of slides.
         </p>
+        <p>
+          Your language does not have to be one of ours. The console browses public Bible archives — over a thousand
+          translations in hundreds of languages — and fetches the one you tick, with nothing to download and nothing to
+          upload. It then reads exactly like the ones we ship, side by side with them on the same slide.
+        </p>
       </Detail>
 
       <Detail
         flip
-        title="The platform sees what it needs. The room sees the verse."
+        title="A stage display and timers built for the platform"
         visual={
           <Art
             src="/images/features/stage-timer.png"
@@ -469,7 +446,9 @@ export default async function ProPresenterAlternativePage() {
       >
         <p>
           The stage display carries the slide on screen now, the one coming next, the clock, the running order and a
-          countdown the speaker can read from the platform — or just the countdown, when that is all they want.
+          countdown the speaker can read from the platform — or just the countdown, when that is all they want. Set
+          up your timers for the run of the service, start and adjust them mid-service, and send a message to the
+          platform without anybody in the room seeing it.
         </p>
         <p>
           It is a link like the others, so the screen at the front of the platform is a cheap stick or an old laptop
@@ -478,7 +457,7 @@ export default async function ProPresenterAlternativePage() {
       </Detail>
 
       <Detail
-        title="Run it from where you are standing"
+        title="Run it from your phone, from anywhere in the room"
         visual={
           <Art
             src="/images/features/remote-phone.webp"

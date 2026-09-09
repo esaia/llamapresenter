@@ -11,6 +11,7 @@ import { emptyShowData, type Lang, type ProjectorStyle, type ShowData } from '@/
 import { OutputChrome } from './OutputChrome';
 import { StageScreen } from './StageScreen';
 import { TimerScreen } from './TimerScreen';
+import { useCustomLangs } from './useCustomLangs';
 
 export interface StageInitial {
   showData: ShowData;
@@ -41,6 +42,10 @@ export interface StageInitial {
  */
 export const StageOutput = ({ outputKey, initial }: { outputKey: string; initial: StageInitial }) => {
   const [state, setState] = useState<StageInitial>(initial);
+
+  // The stage prints a reference under every verse, so it needs to know the
+  // operator's own languages exactly as the projector and the overlay do.
+  useCustomLangs(state.projector.langs);
 
   useEffect(() => {
     const channel = openLiveChannel(outputKey, 'stage');

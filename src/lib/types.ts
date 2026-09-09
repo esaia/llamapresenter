@@ -2,6 +2,10 @@ export {
   LANGS,
   LANG_LABELS,
   LANG_SPECS,
+  labelOf,
+  isCustomLang,
+  CUSTOM_LANG_PREFIX,
+  registerLangs,
   MAX_LANGS,
   REQUIRED_LANG,
   defaultVersionOf,
@@ -9,7 +13,7 @@ export {
   specOf,
   versionsOf,
 } from '@/lib/bible/languages';
-export type { Lang, LangSpec } from '@/lib/bible/languages';
+export type { BuiltInLang, CustomLang, Lang, LangSpec } from '@/lib/bible/languages';
 
 import type { Lang } from '@/lib/bible/languages';
 import type { Colorway } from '@/lib/lower3rd/colors';
@@ -115,6 +119,24 @@ export interface ProjectorStyle {
    * not the place to carry it.
    */
   fonts: CustomFont[];
+  /**
+   * The languages this slide carries that are the operator's own, and what
+   * their book names are.
+   *
+   * An output has no account, so it cannot look up a language any more than it
+   * can look up a typeface — and without this a Spanish verse would print
+   * under an English book name, or none. Only the ones on the slide travel,
+   * for the same reason only the faces in use do.
+   */
+  langs: CustomLangSpec[];
+}
+
+/** A language the operator added, as an output needs to know it. */
+export interface CustomLangSpec {
+  code: Lang;
+  label: string;
+  /** Three group headers then the 66 books, as `LangSpec.names` is. */
+  names: string[];
 }
 
 /**
@@ -150,6 +172,8 @@ export interface StreamStyle {
   versions: Partial<Record<Lang, string>>;
   /** As on `ProjectorStyle`: the added faces this overlay draws, and no more. */
   fonts: CustomFont[];
+  /** The same, for the languages it carries that are the operator's own. */
+  langs: CustomLangSpec[];
 }
 
 /** Identity of a file living in the operator's own browser, not on a server. */

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { QueryProvider } from '@/components/QueryProvider';
+import { asCustomTranslations } from '@/lib/bible/custom';
 import { Console } from '@/components/studio/Console';
 import { AudioProvider, type AudioInitial } from '@/lib/studio/AudioProvider';
 import { claimedSpots } from '@/lib/billing/seats';
@@ -35,7 +36,7 @@ export default async function StudioPage() {
 
   if (!user) redirect('/login?next=/studio');
 
-  const [settings, session, subscription, songs, libraries, playlists, nameCards, claimed] = await Promise.all([
+  const [settings, session, subscription, songs, libraries, playlists, nameCards, translations, claimed] = await Promise.all([
     supabase.from('settings').select('*').eq('user_id', user.id).single(),
     supabase.from('sessions').select('id, name, output_key').eq('user_id', user.id).order('created_at').limit(1).single(),
     supabase
@@ -57,6 +58,14 @@ export default async function StudioPage() {
       .select('id, title, subtitle, template, position')
       .eq('user_id', user.id)
       .order('position')
+      .order('created_at'),
+    // The Bibles the operator uploaded. Metadata only — the chapters
+    // themselves are read a chapter at a time through /api/bible, the same as
+    // ours are.
+    supabase
+      .from('bible_translations')
+      .select('id, lang, label, psalms, lang_label, book_names')
+      .eq('user_id', user.id)
       .order('created_at'),
     // What Pro costs today, so the account panel's upgrade button names the
     // price the checkout route is about to charge rather than a stale one.
@@ -109,6 +118,7 @@ export default async function StudioPage() {
     session: { id: session.data.id, name: session.data.name, outputKey: session.data.output_key },
     email: user.email ?? '',
     settings: settings.data as SettingsRow,
+    translations: asCustomTranslations(translations.data),
     workspace: {
       blocks: (workspace?.blocks as Block[]) ?? [],
       live: (workspace?.live as Live) ?? null,

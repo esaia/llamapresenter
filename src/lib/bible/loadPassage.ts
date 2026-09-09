@@ -1,13 +1,19 @@
 import type { QueryClient } from '@tanstack/react-query';
 
 import { chapterKey, fetchChapter, type ChapterQuery } from '@/lib/bible/api';
-import { fromCanonicalRef, toCanonicalRef } from '@/lib/bible/psalms';
-import type { Lang } from '@/lib/bible/languages';
+import { fromCanonicalRef, toCanonicalRef, type PsalmScheme } from '@/lib/bible/psalms';
+import { specOf, type Lang } from '@/lib/bible/languages';
 import type { ApiChapter, Verse } from '@/lib/types';
 
 export interface Target {
   lang: Lang;
   version?: string;
+  /**
+   * How this translation splits the psalms. The language's own scheme for one
+   * of ours, and the upload's own for a translation the operator brought —
+   * which is allowed to disagree with the language it is read under.
+   */
+  psalms: PsalmScheme;
 }
 
 export interface PassageRequest {
@@ -52,6 +58,7 @@ export const loadPassage = async (
 ): Promise<Passage> => {
   const adminTarget = targets.find(target => target.lang === adminLang);
   const adminChapter = await loadChapter(client, { book, chapter, lang: adminLang, version: adminTarget?.version });
+  const adminPsalms: PsalmScheme = adminTarget?.psalms ?? specOf(adminLang).psalms;
 
   const allVerses = adminChapter?.bibleData ?? [];
   const byNumber = new Map(allVerses.map(verse => [+verse.muxli, verse]));
@@ -63,13 +70,13 @@ export const loadPassage = async (
 
   const adminVerses = wanted.map(number => byNumber.get(number) ?? null);
   const chapterLength = allVerses.length;
-  const canonical = wanted.map(number => toCanonicalRef(book, adminLang, chapter, number));
+  const canonical = wanted.map(number => toCanonicalRef(book, adminPsalms, chapter, number));
 
   const results = await Promise.all(
-    targets.map(async ({ lang, version }): Promise<[Lang, (Verse | null)[]]> => {
+    targets.map(async ({ lang, version, psalms }): Promise<[Lang, (Verse | null)[]]> => {
       if (lang === adminLang) return [lang, adminVerses];
 
-      const refs = canonical.map(ref => fromCanonicalRef(book, lang, ref.chapter, ref.verse));
+      const refs = canonical.map(ref => fromCanonicalRef(book, psalms, ref.chapter, ref.verse));
       const chapters = [...new Set(refs.map(ref => ref.chapter))];
       const loaded: Record<number, Verse[]> = {};
 

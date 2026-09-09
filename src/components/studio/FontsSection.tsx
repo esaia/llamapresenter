@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { Trash2 } from 'lucide-react';
 
 import { limitMessage } from '@/lib/billing/limits';
-import { LANG_LABELS } from '@/lib/bible/languages';
+import { labelOf } from '@/lib/bible/languages';
 import { probeFont } from '@/components/projector/useCustomFonts';
 import {
   BUILT_IN_FONTS,
@@ -220,7 +220,7 @@ export const FontsSection = () => {
 
       <p className="text-[11px] leading-snug text-studio-faint">
         {langs.length
-          ? `Specimens are shown in ${langs.map(lang => LANG_LABELS[lang]).join(', ')} — the languages you have armed.`
+          ? `Specimens are shown in ${langs.map(lang => labelOf(lang)).join(', ')} — the languages you have armed.`
           : 'Arm a language on the rail to see specimens in it.'}
       </p>
     </div>

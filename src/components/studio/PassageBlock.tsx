@@ -15,7 +15,7 @@ import { IconButton } from '@/components/ui/IconButton';
 import { bookName } from '@/lib/bible/passage';
 import { cn } from '@/lib/cn';
 import { useStudio } from '@/lib/studio/StudioProvider';
-import { groupVerses, LANG_LABELS, type Block } from '@/lib/types';
+import { groupVerses, labelOf, type Block } from '@/lib/types';
 
 import { SortHandle } from './SortHandle';
 import type { Sortable } from './sortable';
@@ -263,7 +263,7 @@ export const PassageBlock = ({
           <div className="px-1 pt-4 pb-2">
             {groups.length === 0 ? (
               <p className="text-sm text-studio-muted">
-                No verses came back for this chapter in {LANG_LABELS[lang]}. Try another translation.
+                No verses came back for this chapter in {labelOf(lang)}. Try another translation.
               </p>
             ) : (
               <div

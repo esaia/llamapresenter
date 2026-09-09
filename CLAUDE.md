@@ -32,6 +32,33 @@ domain vocabulary. This file is the working agreement on top of it.
   missing row means "not copied yet" and falls through; a row with an empty
   `verses` array means the upstream genuinely has nothing there, which is the
   honest answer for Abkhazian and Ossetian outside the New Testament.
+- **A translation the operator uploaded is theirs, and it may bring a language
+  with it.** `Lang` is `BuiltInLang | \`x:${string}\``: the six are rows in
+  `languages.json`, and an `x:` code resolves through `registerLangs` instead,
+  because it lives in the operator's own rows. Filing everything under the six
+  could never let Spanish sit beside English on a slide, which is what
+  `showData` being keyed by language means. A custom language's spec rides in
+  the payload (`ProjectorStyle.langs`) exactly as an added typeface does, and
+  `useCustomLangs` registers it in a memo, before the book name is read. Its
+  names come out of the file or fall back to English; its order is always
+  canonical. The picker is the 184 ISO 639-1
+  languages (`isoLanguages.json`), and `langOf` is the one place an ISO code
+  becomes either one of the six or an `x:` code — keyed by the language, so two
+  files in it share a row. A language exists only while a translation of it
+  does. The only thing a translation may
+  disagree with its language about is the psalm split — measured off the file
+  by `import/psalms.ts`, never asked — and `lib/bible/custom.ts` — pure, tested —
+  is the one place a stored `custom:<id>` becomes a name, a scheme or a picker
+  entry, and where a pick naming a translation since deleted falls back rather
+  than 404-ing on the wall. `bible_translation_text` holds the same columns as
+  `bible_text` so `chapterOf` stays one function. The file is parsed in the
+  browser (`lib/bible/import/`, pure and tested) and the rows go up under RLS.
+  The panel also browses two public archives and fetches straight from them —
+  an import may reach the network, a *reading* never does, which is the same
+  line `scripts/mirror.mjs` sits on;
+  `/api/bible` reads a custom translation with the caller's own client, never
+  `admin()`, so the policy is the ownership check and no route has to remember
+  one.
 - **Nothing about the timer ticks over the channel.** `session_state.timer` and
   the `timer` field on the slide payload hold the *shape* of a run —
   `startedAt`, `elapsedBefore`, `adjustMs` — never a countdown. `sentAt` is

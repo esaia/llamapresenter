@@ -12,6 +12,12 @@ import {
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
+import { langSpecsOf, psalmSchemeOf, versionValueOf, type CustomTranslation } from '@/lib/bible/custom';
+import type { ArchiveEntry } from '@/lib/bible/import/archives';
+import { fetchArchiveEntry, parseBibleFiles } from '@/lib/bible/import/files';
+import { batched, rowsOf } from '@/lib/bible/import/rows';
+import { detectPsalms } from '@/lib/bible/import/psalms';
+import { bookNamesOf, verseCountOf, type ParsedBible } from '@/lib/bible/import/types';
 import { loadChapterCount, loadPassage, loadVerseCount, type Target } from '@/lib/bible/loadPassage';
 import { asBlackout, toggleScreen, type Blackout, type Screen } from '@/lib/live/blackout';
 import { openLiveChannel, type LiveChannel } from '@/lib/live/channel';
@@ -49,7 +55,10 @@ import { save } from '@/lib/supabase/save';
 import {
   defaultVersionOf,
   emptyShowData,
+  isCustomLang,
   MAX_LANGS,
+  registerLangs,
+  specOf,
   REQUIRED_LANG,
   type Block,
   type Lang,
@@ -114,11 +123,38 @@ export interface Billing {
   ending: boolean;
 }
 
+/**
+ * Where an imported Bible goes.
+ *
+ * The language is the only thing the operator is asked, because it is the only
+ * thing the file cannot answer: it decides the book names and the book order,
+ * and a file carries no opinion about either. `psalms` is measured off the
+ * file and is here only for a caller that knows better.
+ */
+export interface TranslationInto {
+  /**
+   * Which language it is read in: one of the six we hold translations of, or
+   * an `x:` code for any of the other 180-odd.
+   *
+   * A language of the operator's own is not a lesser kind of language — it is
+   * how a Spanish church reads a Spanish Bible, and it has to be a language
+   * rather than a translation filed under English because `showData` is keyed
+   * by language and the two could otherwise never share a slide.
+   */
+  lang: Lang;
+  /** What it is called, for a language we ship no row for. */
+  langLabel?: string;
+  label?: string;
+  psalms?: 'lxx' | 'masoretic';
+}
+
 export interface StudioInitial {
   session: StudioSession;
   /** Who is signed in, so the console can say so. */
   email: string;
   settings: SettingsRow;
+  /** The Bibles the operator uploaded. Rows of their own, so they arrive beside the settings. */
+  translations: CustomTranslation[];
   workspace: {
     blocks: Block[];
     live: Live;
@@ -204,6 +240,26 @@ interface StudioValue {
   setAdminLang: (lang: Lang) => void;
   addLang: (lang: Lang) => void;
   removeLang: (lang: Lang) => void;
+  /**
+   * The Bibles the operator uploaded, and what they are read under. Held here
+   * rather than in `settings` because they are rows of their own — a few
+   * megabytes of scripture is not a settings column.
+   */
+  translations: CustomTranslation[];
+  /**
+   * Read a Bible file and file it under a language. `label` defaults to what
+   * the file calls itself, `psalms` to that language's own split.
+   */
+  importTranslation: (files: Iterable<File>, into: TranslationInto) => Promise<void>;
+  /** The same, for translations ticked in a public archive. */
+  importFromArchive: (entries: ArchiveEntry[], into: TranslationInto) => Promise<void>;
+  removeTranslation: (id: string) => Promise<void>;
+  /**
+   * How far an import has got, or null when none is running. `done`/`total`
+   * count the chapters of the one being written; `from`/`of` count the
+   * translations, for a tick list that is more than one long.
+   */
+  importing: { done: number; total: number; label: string; from: number; of: number } | null;
   setLocalBackground: (file: LocalFileMeta | null) => void;
 
   blocks: Block[];
@@ -377,7 +433,20 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     return new PlanLimitError(key);
   }, []);
 
-  const [settings, setSettings] = useState<Settings>(() => fromRow(initial.settings));
+  const [translations, setTranslations] = useState<CustomTranslation[]>(initial.translations);
+
+  /**
+   * Tell the book and psalm code about the languages the operator added.
+   *
+   * `specOf` is called from pure modules that have no business reaching into
+   * React, so the set is registered rather than threaded through. It happens
+   * here, in a memo rather than an effect, because the first render already
+   * draws book names — an effect would paint the browse list in English and
+   * then correct it.
+   */
+  useMemo(() => registerLangs(langSpecsOf(translations)), [translations]);
+  const [importing, setImporting] = useState<StudioValue['importing']>(null);
+  const [settings, setSettings] = useState<Settings>(() => fromRow(initial.settings, initial.translations));
   const [workspace, setWorkspace] = useState<Workspace>({
     blocks: initial.workspace.blocks,
     live: initial.workspace.live,
@@ -481,12 +550,12 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
   // is a pure function of the settings and is needed on every push.
   const wireStyle = useMemo(
     () => ({
-      projector: projectorStyle(settings),
-      stream: streamStyle(settings),
+      projector: projectorStyle(settings, translations),
+      stream: streamStyle(settings, translations),
       streamLang: streamLangOf(settings),
       stageLang: stageLangOf(settings),
     }),
-    [settings],
+    [settings, translations],
   );
 
   // The last slide pushed. Held in a ref because a look change has to re-send
@@ -999,6 +1068,187 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     });
   }, []);
 
+  // -------------------------------------------------------- their own Bible
+
+  /**
+   * A Bible the operator uploaded, from file to picker.
+   *
+   * The file is read here rather than posted anywhere: parsing is pure and
+   * lives in `lib/bible/import`, and the rows go up under RLS the way the
+   * console writes everything else. A whole Bible is about 1,200 chapters, so
+   * they go in batches and the panel counts them.
+   *
+   * The metadata row is written first, because it is what the ceiling is
+   * checked against and what the chapters hang off — and if a batch fails it
+   * is deleted again, taking the half-written chapters with it on cascade. A
+   * translation that is half a Bible is worse than none: it looks armed and
+   * goes blank in the middle of a reading.
+   */
+  /**
+   * One parsed Bible into rows, which is the half both ways in share.
+   *
+   * The metadata row goes first, because it is what the ceiling is checked
+   * against and what the chapters hang off — and if a batch fails it is
+   * deleted again, taking the half-written chapters with it on cascade. A
+   * translation that is half a Bible is worse than none: it looks armed and
+   * goes blank in the middle of a reading.
+   */
+  const storeTranslation = useCallback(
+    async (bible: ParsedBible, { lang, langLabel, label, psalms }: TranslationInto, from = 0, of = 1) => {
+      const id = crypto.randomUUID();
+      const own = isCustomLang(lang);
+      const rows = rowsOf(bible, lang, id);
+      const translation: CustomTranslation = {
+        id,
+        lang,
+        label: (label || bible.name || 'Uploaded translation').trim(),
+        // Measured off the file, because it is a fact about the file and not a
+        // preference — and the obvious guess is wrong often enough to matter.
+        // A file with no psalms in it has nothing to measure and takes the
+        // language's own split. See `import/psalms.ts`.
+        psalms: psalms ?? detectPsalms(bible) ?? specOf(lang).psalms,
+        langLabel: own ? (langLabel || 'Added language').trim() : undefined,
+        // The file's own book names when it carries them — Zefania, OpenSong
+        // and USX do — and English otherwise, which is a smaller wrong on a
+        // reference line than a blank.
+        bookNames: own ? (bookNamesOf(bible, specOf(REQUIRED_LANG).names) ?? undefined) : undefined,
+      };
+
+      const step = (done: number) => setImporting({ done, total: rows.length, label: translation.label, from, of });
+
+      step(0);
+
+      const { error } = await db.from('bible_translations').insert({
+        id,
+        user_id: initial.settings.user_id,
+        lang: translation.lang,
+        label: translation.label,
+        psalms: translation.psalms,
+        lang_label: translation.langLabel ?? null,
+        book_names: translation.bookNames ?? null,
+        format: bible.format,
+        books: bible.books.length,
+        verse_count: verseCountOf(bible),
+      });
+
+      if (error) throw failed(error);
+
+      try {
+        let done = 0;
+
+        for (const batch of batched(rows)) {
+          const { error: chapters } = await db.from('bible_translation_text').insert(batch);
+
+          if (chapters) throw failed(chapters);
+
+          done += batch.length;
+          step(done);
+        }
+      } catch (error) {
+        await db.from('bible_translations').delete().eq('id', id);
+        throw error;
+      }
+
+      setTranslations(current => [...current, translation]);
+    },
+    [db, failed, initial.settings.user_id],
+  );
+
+  /**
+   * A Bible the operator uploaded, from file to picker.
+   *
+   * The file is read here rather than posted anywhere: parsing is pure and
+   * lives in `lib/bible/import`, and the rows go up under RLS the way the
+   * console writes everything else.
+   */
+  const importTranslation = useCallback<StudioValue['importTranslation']>(
+    async (files, into) => {
+      if (!allows(initial.plan, 'translations', translations.length)) refuse('translations');
+
+      setImporting({ done: 0, total: 0, label: '', from: 0, of: 1 });
+
+      try {
+        const bible = await parseBibleFiles(files);
+
+        if (!bible || bible.books.length === 0) {
+          throw new Error('No Bible was found in that. Zefania, OpenSong, USX, OSIS and Beblia files are read.');
+        }
+
+        await storeTranslation(bible, into);
+      } finally {
+        setImporting(null);
+      }
+    },
+    [initial.plan, refuse, storeTranslation, translations.length],
+  );
+
+  /**
+   * The same, for files picked out of a public archive.
+   *
+   * Downloaded by this browser straight from the archive — both of them serve
+   * every origin — so nothing of ours stands in the middle and no file is ever
+   * uploaded anywhere. Reaching the network at all is what the *import* does;
+   * the reading afterwards is our own rows, exactly as it is for a translation
+   * we mirrored ourselves.
+   *
+   * One entry at a time rather than all at once: the ceiling is counted as
+   * each lands, so a free account ticking three is told after the first rather
+   * than after three downloads of five megabytes each.
+   */
+  const importFromArchive = useCallback<StudioValue['importFromArchive']>(
+    async (entries, into) => {
+      setImporting({ done: 0, total: 0, label: entries[0]?.name ?? '', from: 0, of: entries.length });
+
+      try {
+        for (const [index, entry] of entries.entries()) {
+          if (!allows(initial.plan, 'translations', translations.length + index)) refuse('translations');
+
+          setImporting({ done: 0, total: 0, label: entry.name, from: index, of: entries.length });
+
+          const bible = await fetchArchiveEntry(entry);
+
+          if (!bible || bible.books.length === 0) throw new Error(`Nothing readable came back for ${entry.name}.`);
+
+          await storeTranslation(bible, { ...into, label: into.label || entry.name }, index, entries.length);
+        }
+      } finally {
+        setImporting(null);
+      }
+    },
+    [initial.plan, refuse, storeTranslation, translations.length],
+  );
+
+  /**
+   * Take one away.
+   *
+   * Any language reading it is put back on its own default here rather than
+   * left to `asVersion` on the next reload — the console is open, and a
+   * translation whose rows have just gone would 404 every verse until then.
+   */
+  const removeTranslation = useCallback<StudioValue['removeTranslation']>(
+    async id => {
+      const { error } = await db.from('bible_translations').delete().eq('id', id);
+
+      if (error) throw failed(error);
+
+      const gone = versionValueOf({ id });
+
+      setTranslations(current => current.filter(translation => translation.id !== id));
+      setSettings(current => ({
+        ...current,
+        adminVersion:
+          current.adminVersion === gone ? defaultVersionOf(current.adminLang) : current.adminVersion,
+        versions: Object.fromEntries(
+          Object.entries(current.versions).map(([lang, version]) => [
+            lang,
+            version === gone ? defaultVersionOf(lang as Lang) : version,
+          ]),
+        ),
+      }));
+    },
+    [db, failed],
+  );
+
   const setLocalBackground = useCallback((file: LocalFileMeta | null) => {
     setSettings(current =>
       file
@@ -1029,11 +1279,19 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     const langs = new Set<Lang>(settings.langOrder.filter(lang => settings.enabled[lang]));
     langs.add(settings.adminLang);
 
-    return [...langs].map(lang => ({
-      lang,
-      version: settings.enabled[lang] ? settings.versions[lang] : settings.adminVersion,
-    }));
-  }, [settings.adminVersion, settings.enabled, settings.langOrder, settings.versions, settings.adminLang]);
+    return [...langs].map(lang => {
+      const version = settings.enabled[lang] ? settings.versions[lang] : settings.adminVersion;
+
+      return { lang, version, psalms: psalmSchemeOf(lang, version, translations) };
+    });
+  }, [
+    settings.adminVersion,
+    settings.enabled,
+    settings.langOrder,
+    settings.versions,
+    settings.adminLang,
+    translations,
+  ]);
 
   const addPassage = useCallback<StudioValue['addPassage']>(
     async ({ book, chapter, from = null, to = null }) => {
@@ -1984,8 +2242,9 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       languages: settings.langOrder.length,
       custom_fonts: settings.customFonts.length,
       custom_templates: settings.customTemplates.length,
+      translations: translations.length,
     }),
-    [blocks.length, cards.length, libraries.length, playlists, settings, songs.length],
+    [blocks.length, cards.length, libraries.length, playlists, settings, songs.length, translations.length],
   );
 
   const room = useCallback<StudioValue['room']>(
@@ -2011,6 +2270,11 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       setAdminLang,
       addLang,
       removeLang,
+      translations,
+      importTranslation,
+      importFromArchive,
+      removeTranslation,
+      importing,
       setLocalBackground,
       blocks,
       live,
@@ -2133,6 +2397,11 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       showCard,
       addLang,
       removeLang,
+      translations,
+      importTranslation,
+      importFromArchive,
+      removeTranslation,
+      importing,
       removeSongs,
       saveSong,
       reorderSlides,

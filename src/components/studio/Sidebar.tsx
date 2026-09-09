@@ -12,7 +12,8 @@ import { THEMES } from '@/lib/projector/themes';
 import { MAX_TRANSITION_MS, MIN_TRANSITION_MS } from '@/lib/projector/transition';
 import { stageLangOf, streamLangOf } from '@/lib/studio/settings';
 import { useStudio } from '@/lib/studio/StudioProvider';
-import { LANG_LABELS, LANGS, MAX_LANGS, REQUIRED_LANG, versionsOf, type Lang } from '@/lib/types';
+import { customLangsOf, versionOptions } from '@/lib/bible/custom';
+import { labelOf, LANGS, MAX_LANGS, REQUIRED_LANG, type Lang } from '@/lib/types';
 
 import { DESTS, LangDestHeader, LangDestRadio } from './LangDests';
 import { SongLangs } from './SongLangs';
@@ -84,6 +85,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
     setAdminLang,
     addLang,
     removeLang,
+    translations,
     room,
     tab,
     songs,
@@ -114,7 +116,11 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
   // The chips and the grip all say something about a choice, so with a
   // single row there is nothing for them to say.
   const many = settings.langOrder.length > 1;
-  const spare = LANGS.filter(lang => !settings.langOrder.includes(lang));
+  // The six, plus every language the operator added a Bible in — a Spanish
+  // translation is no use until Spanish can be armed on the rail.
+  const spare = [...LANGS, ...customLangsOf(translations).map(entry => entry.code)].filter(
+    lang => !settings.langOrder.includes(lang),
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-studio-bg">
@@ -143,7 +149,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                 <Select
                   value={settings.adminLang}
                   onChange={value => setAdminLang(value as Lang)}
-                  options={settings.langOrder.map(lang => ({ value: lang, label: LANG_LABELS[lang] }))}
+                  options={settings.langOrder.map(lang => ({ value: lang, label: labelOf(lang) }))}
                   className="w-full"
                 />
 
@@ -163,7 +169,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                         : { adminVersion: value },
                     )
                   }
-                  options={versionsOf(settings.adminLang)}
+                  options={versionOptions(settings.adminLang, translations)}
                   className="w-full"
                 />
               </div>
@@ -202,7 +208,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                           settings.enabled[lang] ? 'text-studio-text' : 'text-studio-faint',
                         )}
                       >
-                        {LANG_LABELS[lang]}
+                        {labelOf(lang)}
                       </span>
 
                       {many
@@ -211,7 +217,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                               key={dest.key}
                               dest={dest}
                               name={dest.group}
-                              label={LANG_LABELS[lang]}
+                              label={labelOf(lang)}
                               armed={Boolean(settings.enabled[lang])}
                               chosen={(dest.key === 'stage' ? stageLangOf(settings) : streamLangOf(settings)) === lang}
                               onPick={() =>
@@ -224,7 +230,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                       <Toggle
                         checked={Boolean(settings.enabled[lang])}
                         onChange={checked => update({ enabled: { ...settings.enabled, [lang]: checked } })}
-                        label={`Show ${LANG_LABELS[lang]} on the projector`}
+                        label={`Show ${labelOf(lang)} on the projector`}
                       />
 
                       {/* English stays: it is what every output falls back to when
@@ -234,7 +240,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                       ) : (
                         <button
                           type="button"
-                          title={`Take ${LANG_LABELS[lang]} off the projector`}
+                          title={`Take ${labelOf(lang)} off the projector`}
                           onClick={() => removeLang(lang)}
                           className="flex w-5 justify-center rounded-studio py-0.5 text-studio-faint transition-colors
                             duration-150 hover:bg-studio-surface hover:text-studio-text focus:outline-none
@@ -248,7 +254,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                     <Select
                       value={settings.versions[lang] ?? ''}
                       onChange={value => update({ versions: { ...settings.versions, [lang]: value } })}
-                      options={versionsOf(lang)}
+                      options={versionOptions(lang, translations)}
                       className="mt-1.5 w-full"
                     />
                   </li>
@@ -264,7 +270,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                   onChange={value => addLang(value as Lang)}
                   options={[
                     { value: '', label: 'Add a language…' },
-                    ...spare.map(lang => ({ value: lang, label: LANG_LABELS[lang] })),
+                    ...spare.map(lang => ({ value: lang, label: labelOf(lang) })),
                   ]}
                   className="mt-3 w-full"
                 />
@@ -329,7 +335,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
         <SummaryRow
           icon={<Video className="size-4" />}
           label="Stream"
-          value={settings.obsHidden ? 'Blanked' : `${LANG_LABELS[streamLangOf(settings)]} · ${settings.lowerThirdPosition}`}
+          value={settings.obsHidden ? 'Blanked' : `${labelOf(streamLangOf(settings))} · ${settings.lowerThirdPosition}`}
           onClick={() => onSettings('stream')}
         />
       </div>

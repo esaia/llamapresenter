@@ -115,8 +115,8 @@ describe('versification', () => {
   // Georgian and Russian follow the Septuagint split; Greek, Latin and Arabic
   // do not, despite Greek being the language the Septuagint is named for.
   it('splits the psalms the way each language numbers them', () => {
-    expect(fromCanonicalRef(22, 'ru', 10, 1)).toEqual({ chapter: 10, verse: 1 });
-    expect(fromCanonicalRef(22, 'gr', 10, 1)).toEqual({ chapter: 11, verse: 1 });
+    expect(fromCanonicalRef(22, specOf('ru').psalms, 10, 1)).toEqual({ chapter: 10, verse: 1 });
+    expect(fromCanonicalRef(22, specOf('gr').psalms, 10, 1)).toEqual({ chapter: 11, verse: 1 });
     expect(verseCount(22, 9, 'ru')).toBe(verseCount(22, 9, 'gr') + verseCount(22, 10, 'gr'));
   });
 });

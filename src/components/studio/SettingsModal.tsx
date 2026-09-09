@@ -6,18 +6,20 @@ import { AccountSection } from '@/components/studio/AccountSection';
 import { DevicesSection } from '@/components/studio/DevicesSection';
 import { FontsSection } from '@/components/studio/FontsSection';
 import { StreamSection } from '@/components/studio/StreamSection';
+import { TranslationsSection } from '@/components/studio/TranslationsSection';
 import { StyleSection } from '@/components/studio/StyleSection';
 import { IconButton } from '@/components/ui/IconButton';
 import { cn } from '@/lib/cn';
 import { HiOutlineX } from 'react-icons/hi';
 
-const TABS = ['projector', 'stream', 'fonts', 'devices', 'account'] as const;
+const TABS = ['projector', 'stream', 'fonts', 'bibles', 'devices', 'account'] as const;
 type SettingsTab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<SettingsTab, string> = {
   projector: 'Projector look',
   stream: 'Stream',
   fonts: 'Fonts',
+  bibles: 'Translations',
   devices: 'Devices',
   account: 'Account',
 };
@@ -80,6 +82,7 @@ export const SettingsModal = ({ tab: opened, onClose }: { tab: string; onClose: 
             {tab === 'projector' ? <StyleSection /> : null}
             {tab === 'stream' ? <StreamSection /> : null}
             {tab === 'fonts' ? <FontsSection /> : null}
+            {tab === 'bibles' ? <TranslationsSection /> : null}
             {tab === 'devices' ? <DevicesSection /> : null}
             {tab === 'account' ? <AccountSection /> : null}
           </div>

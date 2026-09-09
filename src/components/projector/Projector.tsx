@@ -25,6 +25,7 @@ import { OutputChrome } from './OutputChrome';
 import { Slide } from './Slide';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
+import { useCustomLangs } from './useCustomLangs';
 import { useLocalBackground, useLocalFiles } from './useLocalBackground';
 
 const MIN_FONT_SIZE = 12;
@@ -52,6 +53,7 @@ const defaultStyle: ProjectorStyle = {
   enabled: { [REQUIRED_LANG]: true },
   transitionMs: 320,
   fonts: [],
+  langs: [],
 };
 
 export interface ProjectorInitial {
@@ -131,6 +133,7 @@ export const Projector = ({ outputKey, initial }: { outputKey: string; initial: 
   // it: a font is a link, which is why it needs none of the peer machinery a
   // background does.
   useCustomFonts(style.fonts ?? []);
+  useCustomLangs(style.langs);
 
   const background = useMemo(() => {
     if (style.theme === LOCAL_THEME) return localUrl;

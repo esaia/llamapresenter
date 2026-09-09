@@ -1,4 +1,5 @@
-import { defaultVersionOf, isLang, MAX_LANGS, REQUIRED_LANG, specOf, type Lang } from '@/lib/bible/languages';
+import { isKnownVersion, langSpecsOf, versionLabel, type CustomTranslation } from '@/lib/bible/custom';
+import { defaultVersionOf, isCustomLang, isLang, MAX_LANGS, REQUIRED_LANG, type Lang } from '@/lib/bible/languages';
 import { asStreamColors, migrated, type StreamColors } from '@/lib/lower3rd/colors';
 import { asCustomFonts, DEFAULT_FONT, fontsUsedBy, type CustomFont } from '@/lib/projector/fonts';
 import {
@@ -22,7 +23,7 @@ import {
 import { DEFAULT_THEME } from '@/lib/projector/themes';
 import { clampTransition, DEFAULT_TRANSITION_MS } from '@/lib/projector/transition';
 import type { Database } from '@/lib/supabase/types';
-import type { Align, LocalFileMeta, ProjectorStyle, StreamStyle } from '@/lib/types';
+import type { Align, CustomLangSpec, LocalFileMeta, ProjectorStyle, StreamStyle } from '@/lib/types';
 
 export type SettingsRow = Database['public']['Tables']['settings']['Row'];
 
@@ -182,8 +183,12 @@ export interface Settings {
  * Three is the ceiling: a fourth language on a slide is a fourth block of text
  * on a projector nobody at the back can read.
  */
-export const asOrder = (value: unknown): Lang[] => {
-  const listed: Lang[] = Array.isArray(value) ? value.filter(isLang) : [];
+export const asOrder = (value: unknown, known: Lang[] = []): Lang[] => {
+  // A custom code is only a language while a translation of it survives.
+  // Deleting the last Spanish Bible has to take Spanish off the rail too, or
+  // the operator is left with a row that can never show a verse.
+  const exists = (lang: Lang) => !isCustomLang(lang) || known.includes(lang);
+  const listed: Lang[] = Array.isArray(value) ? value.filter(isLang).filter(exists) : [];
   const chosen = listed.filter((lang, index, all) => all.indexOf(lang) === index);
   const order = chosen.includes(REQUIRED_LANG) ? chosen : [REQUIRED_LANG, ...chosen];
 
@@ -203,18 +208,24 @@ const asFlags = (value: unknown, order: Lang[]): Partial<Record<Lang, boolean>> 
 };
 
 /**
- * A translation the library actually holds, or the language's default.
+ * A translation the operator can actually be served, or the language's default.
  *
  * A settings row outlives the catalogue that was current when it was written.
- * A translation dropped since — a licence not held, a language not mirrored —
- * would otherwise sit in the row looking perfectly valid and 404 every verse
- * the operator asked for, which is a blank screen with no explanation rather
- * than a translation quietly reverting.
+ * A translation dropped since — a licence not held, a language not mirrored,
+ * or an upload of their own they have since deleted — would otherwise sit in
+ * the row looking perfectly valid and 404 every verse the operator asked for,
+ * which is a blank screen with no explanation rather than a translation
+ * quietly reverting.
  */
-const asVersion = (lang: Lang, value: unknown): string =>
-  typeof value === 'string' && specOf(lang).versions.includes(value) ? value : defaultVersionOf(lang);
+const asVersion = (lang: Lang, value: unknown, customs: CustomTranslation[]): string =>
+  typeof value === 'string' && isKnownVersion(lang, value, customs) ? value : defaultVersionOf(lang);
 
-export const fromRow = (row: SettingsRow): Settings => {
+/**
+ * The operator's own translations are rows of their own rather than a settings
+ * column, so they arrive beside the row. Defaulted, because the pickers that
+ * build a sample slide have none and do not need any.
+ */
+export const fromRow = (row: SettingsRow, customs: CustomTranslation[] = []): Settings => {
   const versions = (row.versions ?? {}) as Partial<Record<Lang, string>>;
   // Read before the looks are, because a look naming a template that has since
   // been deleted has to fall back to a shipped one rather than sit there
@@ -226,14 +237,14 @@ export const fromRow = (row: SettingsRow): Settings => {
   const stored = asStreamColors(row.stream_colors);
   const verses = migrated(row.lower_third_variant || 'scrim', stored.verses);
   const lyrics = migrated(row.lyrics_variant || 'scrim', stored.lyrics);
-  const langOrder = asOrder(row.lang_order);
+  const langOrder = asOrder(row.lang_order, Object.keys(langSpecsOf(customs)) as Lang[]);
   const adminLang = isLang(row.admin_lang) && langOrder.includes(row.admin_lang) ? row.admin_lang : langOrder[0];
 
   return {
     adminLang,
-    adminVersion: asVersion(adminLang, row.admin_version),
+    adminVersion: asVersion(adminLang, row.admin_version, customs),
     enabled: asFlags(row.enabled, langOrder),
-    versions: Object.fromEntries(langOrder.map(lang => [lang, asVersion(lang, versions[lang])])),
+    versions: Object.fromEntries(langOrder.map(lang => [lang, asVersion(lang, versions[lang], customs)])),
     theme: row.theme || DEFAULT_THEME,
     dynamicImage: row.dynamic_image || '',
     localImage: (row.local_image as LocalFileMeta | null) ?? null,
@@ -323,7 +334,39 @@ export const toRow = (settings: Settings) => ({
  * one of the eight shipped looks sends nothing extra, and an output handed no
  * template falls back to the look it was given.
  */
-export const projectorStyle = (settings: Settings): ProjectorStyle => {
+/**
+ * What each language is being read in, in words rather than in ids.
+ *
+ * `settings.versions` holds `custom:<id>` for a translation the operator
+ * uploaded, and this is what a custom template printing `{translation}` shows
+ * on the wall. The outputs have no account and cannot look an id up, so the
+ * name has to travel with the slide like everything else about the style.
+ */
+/**
+ * The operator's own languages that a slide actually carries.
+ *
+ * Only the ones in the order, exactly as only the typefaces in use travel: an
+ * output has no account and cannot look a language up, and a shelf of every
+ * language the operator ever added is not a slide's business.
+ */
+const langsUsedBy = (order: Lang[], customs: CustomTranslation[]): CustomLangSpec[] => {
+  const specs = langSpecsOf(customs);
+
+  return order
+    .filter(isCustomLang)
+    .map(code => ({ code, label: specs[code]?.label ?? 'Added language', names: specs[code]?.names ?? [] }))
+    .filter(spec => spec.names.length > 0);
+};
+
+const labelled = (settings: Settings, customs: CustomTranslation[]): Partial<Record<Lang, string>> =>
+  Object.fromEntries(
+    Object.entries(settings.versions).map(([lang, version]) => [
+      lang,
+      versionLabel(lang as Lang, version, customs),
+    ]),
+  );
+
+export const projectorStyle = (settings: Settings, customs: CustomTranslation[] = []): ProjectorStyle => {
   const template = templateOf(settings, 'verses', settings.projectorLook);
   const lyricsTemplate = templateOf(settings, 'lyrics', settings.projectorLyricsLook);
 
@@ -339,7 +382,7 @@ export const projectorStyle = (settings: Settings): ProjectorStyle => {
     lyricsLook: settings.projectorLyricsLook,
     template,
     lyricsTemplate,
-    versions: settings.versions,
+    versions: labelled(settings, customs),
     verseScale: settings.verseScale,
     verseSize: settings.verseSize,
     lyricsScale: settings.lyricsScale,
@@ -347,6 +390,7 @@ export const projectorStyle = (settings: Settings): ProjectorStyle => {
     order: settings.langOrder,
     enabled: settings.enabled,
     transitionMs: settings.transitionMs,
+    langs: langsUsedBy(settings.langOrder, customs),
     // A face named only inside the template still has to reach the output, or
     // the words come up in the fallback on the wall and nowhere else.
     fonts: fontsUsedBy(
@@ -385,7 +429,7 @@ export const stageLangOf = (settings: Settings): Lang => {
  * back to the first armed one rather than blanking the overlay, and the stored
  * preference is kept so re-arming restores it.
  */
-export const streamStyle = (settings: Settings): StreamStyle => {
+export const streamStyle = (settings: Settings, customs: CustomTranslation[] = []): StreamStyle => {
   const chosen = streamLangOf(settings);
   const template = templateOf(settings, 'stream', settings.lowerThirdVariant);
   const lyricsTemplate = templateOf(settings, 'streamLyrics', settings.lyricsVariant);
@@ -403,10 +447,11 @@ export const streamStyle = (settings: Settings): StreamStyle => {
     lyricsVariant: settings.lyricsVariant,
     template,
     lyricsTemplate,
-    versions: settings.versions,
+    versions: labelled(settings, customs),
     colors: settings.streamColors.verses,
     lyricsColors: settings.streamColors.lyrics,
     hidden: settings.obsHidden,
+    langs: langsUsedBy(settings.langOrder, customs),
     fonts: fontsUsedBy(
       [
         settings.streamFont,

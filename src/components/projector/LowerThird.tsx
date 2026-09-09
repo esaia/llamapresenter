@@ -21,6 +21,7 @@ import { CustomSlide } from './CustomSlide';
 import { OutputChrome } from './OutputChrome';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
+import { useCustomLangs } from './useCustomLangs';
 import { useLocalFiles } from './useLocalBackground';
 
 const ALIGN_CLASS: Record<Align, string> = { left: 'text-left', center: 'text-center', right: 'text-right' };
@@ -67,6 +68,7 @@ const defaultStyle: StreamStyle = {
   lyricsTemplate: null,
   versions: {},
   fonts: [],
+  langs: [],
 };
 
 /** Is there anything on this slide worth putting on screen? */
@@ -242,6 +244,7 @@ export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial:
   // Fetched from the incoming slide rather than the one on screen, so the face
   // is in the document before the crossfade hands it any text to draw.
   useCustomFonts(slide.style.fonts ?? []);
+  useCustomLangs(slide.style.langs);
 
   const shown = !blanked && hasContent(slide.showData, slide.style.enabled);
 

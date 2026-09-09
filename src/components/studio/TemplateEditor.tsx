@@ -81,7 +81,7 @@ import { limitMessage } from '@/lib/billing/limits';
 
 import { FontPicker } from './FontPicker';
 import { useStudio } from '@/lib/studio/StudioProvider';
-import { LANG_LABELS, type Align, type Lang, type ProjectorStyle } from '@/lib/types';
+import { labelOf, type Align, type Lang, type ProjectorStyle } from '@/lib/types';
 
 import { ColorField } from './ColorField';
 import { LIFTED_SLOT, useSortable } from './sortable';
@@ -1359,7 +1359,7 @@ export const TemplateEditor = ({
   // The stream carries one language — the one the rail points at it, and the
   // one the song points at it — so nothing there stacks, shares a box, or can
   // be named by a numbered token.
-  const armed: string[] = stream || lyrics ? [] : bibleLangs.map(lang => LANG_LABELS[lang]);
+  const armed: string[] = stream || lyrics ? [] : bibleLangs.map(lang => labelOf(lang));
   const holds = stream ? 1 : lyrics ? 2 : armed.length;
 
   /** The languages the canvas draws: every armed one, or the stream's single. */

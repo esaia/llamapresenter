@@ -41,6 +41,7 @@ const STYLE: ProjectorStyle = {
   enabled: { eng: true, geo: true },
   transitionMs: 320,
   fonts: [],
+  langs: [],
 };
 
 /**

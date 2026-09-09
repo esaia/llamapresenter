@@ -53,6 +53,14 @@ const FAQ = [
     a: 'Yes. You can display multiple languages at the same time and choose which languages appear on the screen. Turn languages on or off whenever you need.',
   },
   {
+    q: 'My language is not one of the ones you carry. Can I still use it?',
+    a: 'Yes. LlamaPresenter carries Georgian, English, Russian, Greek, Arabic and Latin, and you can add a Bible in any other language yourself. Open Translations in the settings, pick your language, and choose a translation from the public archives the console browses for you — over a thousand Bibles in hundreds of languages, fetched with nothing to download and nothing to upload. A Bible you add sits beside ours: put Spanish and English on the same slide, or Korean on the projector and English on the stream.',
+  },
+  {
+    q: 'Can I upload a Bible file of my own?',
+    a: 'Yes. If your church was given a file, or you found one the archives do not list, LlamaPresenter reads Zefania XML, OpenSong, USX, OSIS and Beblia files. Free covers one Bible you add yourself and Pro makes it unlimited.',
+  },
+  {
     q: 'Can I control the projector, stage, and livestream separately?',
     a: 'Yes. LlamaPresenter gives you three views: Projector, Stage, and Lower Third. Each screen can show different content while everything stays connected to the same presentation.',
   },
@@ -122,7 +130,8 @@ export default async function HomePage() {
 
             <p className="mt-7 max-w-[54ch] text-lg leading-relaxed text-site-muted">
               Present scripture, lyrics, announcements, and media from one browser-based tool. Display verses in
-              multiple languages side by side so everyone can follow along, ideal for multilingual congregations.
+              multiple languages side by side so everyone can follow along — in any language, including Bibles you add
+              yourself. Ideal for multilingual congregations.
             </p>
 
             <Link
@@ -190,6 +199,11 @@ export default async function HomePage() {
         <p>
           Choose which languages appear on the projector, stage display, or livestream and turn them on or off whenever
           you need.
+        </p>
+        <p>
+          Not only ours. Georgian, English, Russian, Greek, Arabic and Latin come with it, and any other language is a
+          Bible you add yourself — pick it from the archives the console browses and it sits on the rail beside the
+          rest, ready to go side by side on the same slide.
         </p>
       </Feature>
 
