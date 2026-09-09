@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { LinkCard } from '@/components/marketing/LinkCard';
 import { Marker } from '@/components/marketing/Marker';
+import { Monitor } from '@/components/marketing/Monitor';
 import { SOLUTIONS } from '@/lib/marketing/solutions';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
@@ -36,22 +37,33 @@ export default function SolutionsPage() {
       <section className="mx-auto max-w-7xl px-6 pt-10 pb-8 sm:pt-14">
         <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Solutions</p>
 
-        <h1 className={`${DISPLAY} mt-5 max-w-3xl text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-          Church presentation software for{' '}
-          <Marker>every church</Marker>
-        </h1>
+        <div className="mt-5 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:gap-14">
+          <div>
+            <h1 className={`${DISPLAY} text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
+              Church presentation software for{' '}
+              <Marker>every church</Marker>
+            </h1>
 
-        <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
+            <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
-        <div className="mt-7 grid max-w-5xl gap-6 text-[17px] leading-relaxed text-site-muted lg:grid-cols-2">
-          <p>
-            Every church runs a different Sunday. A church of forty in a school hall needs something different from
-            a church with three rooms and a livestream.
-          </p>
-          <p>
-            Pick the one that sounds like yours. Each page covers what you get, how a service runs, and the
-            questions churches ask before they start.
-          </p>
+            <div className="mt-7 max-w-[54ch] space-y-4 text-[17px] leading-relaxed text-site-muted">
+              <p>
+                Every church runs a different Sunday. A church of forty in a school hall needs something different
+                from a church with three rooms and a livestream.
+              </p>
+              <p>
+                Pick the one that sounds like yours. Each page covers what you get, how a service runs, and the
+                questions churches ask before they start.
+              </p>
+            </div>
+          </div>
+
+          <Monitor
+            src="/images/console-stage.webp"
+            alt="The console on a desk monitor: the stage timer with its countdown, agenda and messages, and the
+              live projector preview carrying the same verse in English and Georgian"
+            sizes="(min-width: 1024px) 40rem, 100vw"
+          />
         </div>
       </section>
 
