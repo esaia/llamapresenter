@@ -45,13 +45,12 @@ export default function UseCasesPage() {
 
         <div className="mt-7 grid max-w-5xl gap-6 text-[17px] leading-relaxed text-site-muted lg:grid-cols-2">
           <p>
-            It is one console and four screens, and churches point it at different problems. Some came for a second
-            language on the wall, some for a stream that needed lyrics, some because the laptop in the booth
-            belongs to whoever turned up.
+            Bible verses, song lyrics, a stage display, a livestream overlay, a countdown, a phone remote. Most
+            churches arrive needing one of them and stay for the rest.
           </p>
           <p>
-            Each page below is one of those jobs: what it looks like, how a Sunday runs with it, and the questions
-            churches ask before they try it.
+            Pick the one you came for. Each page covers what you get, how a service runs, and the questions
+            churches ask before they start.
           </p>
         </div>
       </section>

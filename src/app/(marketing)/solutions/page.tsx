@@ -37,20 +37,20 @@ export default function SolutionsPage() {
         <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Solutions</p>
 
         <h1 className={`${DISPLAY} mt-5 max-w-3xl text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-          Built for{' '}
-          <Marker>your kind of church</Marker>
+          Church presentation software for{' '}
+          <Marker>every church</Marker>
         </h1>
 
         <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
         <div className="mt-7 grid max-w-5xl gap-6 text-[17px] leading-relaxed text-site-muted lg:grid-cols-2">
           <p>
-            A church of forty in a school hall and a church with three rooms and a livestream are running the same
-            Sunday on very different ground. What goes wrong is different too, and so is what fixes it.
+            Every church runs a different Sunday. A church of forty in a school hall needs something different from
+            a church with three rooms and a livestream.
           </p>
           <p>
-            These pages are by congregation rather than by feature: what your room already has, who is on the desk,
-            and the part of this that answers it.
+            Pick the one that sounds like yours. Each page covers what you get, how a service runs, and the
+            questions churches ask before they start.
           </p>
         </div>
       </section>
