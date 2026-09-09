@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
     { source: '/use-cases/church-plants', destination: '/solutions/church-plants', permanent: true },
     { source: '/use-cases/volunteer-tech-teams', destination: '/solutions/volunteer-teams', permanent: true },
   ],
+  images: {
+    /* Next's default is 'attachment' — every optimized image on the site
+       (Art, Frame, Monitor) came back Content-Disposition: attachment and
+       downloaded instead of rendering. All of it is our own artwork under
+       public/, never an upload, so there is nothing to defend against here. */
+    contentDispositionType: 'inline',
+  },
 };
 
 export default nextConfig;
