@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { Projector, type ProjectorInitial } from '@/components/projector/Projector';
 import { asBlackout } from '@/lib/live/blackout';
+import { watermarkFor } from '@/lib/billing/watermark';
 import { admin } from '@/lib/supabase/admin';
 import { asTimerState } from '@/lib/timer/model';
 import { emptyShowData, type ProjectorStyle, type ShowData } from '@/lib/types';
@@ -19,7 +20,7 @@ export default async function ShowPage({ params }: PageProps<'/show/[key]'>) {
   const { key } = await params;
 
   const db = admin();
-  const { data: session } = await db.from('sessions').select('id').eq('output_key', key).maybeSingle();
+  const { data: session } = await db.from('sessions').select('id, user_id').eq('output_key', key).maybeSingle();
 
   if (!session) notFound();
 
@@ -37,5 +38,5 @@ export default async function ShowPage({ params }: PageProps<'/show/[key]'>) {
     black: asBlackout(state?.blackout).audience,
   };
 
-  return <Projector outputKey={key} initial={initial} />;
+  return <Projector outputKey={key} initial={initial} watermark={await watermarkFor(session.user_id)} />;
 }

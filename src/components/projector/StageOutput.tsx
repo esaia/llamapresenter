@@ -9,6 +9,7 @@ import { asTimerState, timerIsLive, withSkew, type TimerState } from '@/lib/time
 import { emptyShowData, type Lang, type ProjectorStyle, type ShowData } from '@/lib/types';
 
 import { OutputChrome } from './OutputChrome';
+import { Watermark } from './Watermark';
 import { StageScreen } from './StageScreen';
 import { TimerScreen } from './TimerScreen';
 import { useCustomLangs } from './useCustomLangs';
@@ -40,7 +41,16 @@ export interface StageInitial {
  * page counts the seconds itself, which is what keeps a screen on a slow
  * connection from drifting.
  */
-export const StageOutput = ({ outputKey, initial }: { outputKey: string; initial: StageInitial }) => {
+export const StageOutput = ({
+  outputKey,
+  initial,
+  watermark,
+}: {
+  outputKey: string;
+  initial: StageInitial;
+  /** Settled on the server from whose session this is; see `lib/billing/watermark.ts`. */
+  watermark?: boolean;
+}) => {
   const [state, setState] = useState<StageInitial>(initial);
 
   // The stage prints a reference under every verse, so it needs to know the
@@ -86,6 +96,8 @@ export const StageOutput = ({ outputKey, initial }: { outputKey: string; initial
             timer={state.timer}
           />
         )}
+
+        {watermark ? <Watermark /> : null}
       </div>
     </OutputChrome>
   );

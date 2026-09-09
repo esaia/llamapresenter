@@ -87,7 +87,12 @@ domain vocabulary. This file is the working agreement on top of it.
   `@font-face`.
 - **A plan limit is a number, and it lives twice.** Free is not a trial: the
   Bible, both outputs and the stage are never gated. What Pro buys is volume —
-  the ceilings in `lib/billing/limits.json`. The console writes to Supabase
+  the ceilings in `lib/billing/limits.json` — and the one thing that is not a
+  number, the watermark. A Free church's screens carry our mark; `lib/billing/
+  watermark.ts` is the whole rule, it is resolved on the server from the
+  session's owner and passed to the output as a prop rather than riding in the
+  payload — the plan is the one thing on an output page the operator does not
+  get to say — and it respects the same gates switch. The console writes to Supabase
   directly under RLS, so the console's check is a courtesy and `free_limit()`
   in the migration is the rule; `limits.test.ts` reads both and fails when they
   drift. Triggers raise `plan_limit:<key>` and `planErrorMessage` turns that

@@ -22,6 +22,7 @@ import { asTimerState, withSkew, type TimerState } from '@/lib/timer/model';
 import { emptyShowData, REQUIRED_LANG, type ProjectorStyle, type ShowData } from '@/lib/types';
 
 import { OutputChrome } from './OutputChrome';
+import { Watermark } from './Watermark';
 import { Slide } from './Slide';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
@@ -71,7 +72,16 @@ export interface ProjectorInitial {
  * no account, no settings of its own. The look arrives with the slide because
  * this page cannot read the operator's settings row.
  */
-export const Projector = ({ outputKey, initial }: { outputKey: string; initial: ProjectorInitial }) => {
+export const Projector = ({
+  outputKey,
+  initial,
+  watermark,
+}: {
+  outputKey: string;
+  initial: ProjectorInitial;
+  /** Settled on the server from whose session this is; see `lib/billing/watermark.ts`. */
+  watermark?: boolean;
+}) => {
   const [showData, setShowData] = useState<ShowData>(initial.showData ?? emptyShowData());
   const [style, setStyle] = useState<ProjectorStyle>({ ...defaultStyle, ...initial.projector });
 
@@ -249,6 +259,8 @@ export const Projector = ({ outputKey, initial }: { outputKey: string; initial: 
           >
             <Slide ref={textRef} showData={onScreen} style={style} assets={assets} className="max-w-[2000px]" />
           </div>
+
+          {watermark ? <Watermark /> : null}
         </div>
       </div>
     </OutputChrome>

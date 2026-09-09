@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { LowerThird, type LowerThirdInitial } from '@/components/projector/LowerThird';
+import { watermarkFor } from '@/lib/billing/watermark';
 import { admin } from '@/lib/supabase/admin';
 import { asTimerState } from '@/lib/timer/model';
 import { emptyShowData, type ShowData, type StreamStyle } from '@/lib/types';
@@ -12,7 +13,7 @@ export default async function LowerThirdPage({ params }: PageProps<'/lower3rd/[k
   const { key } = await params;
 
   const db = admin();
-  const { data: session } = await db.from('sessions').select('id').eq('output_key', key).maybeSingle();
+  const { data: session } = await db.from('sessions').select('id, user_id').eq('output_key', key).maybeSingle();
 
   if (!session) notFound();
 
@@ -33,5 +34,5 @@ export default async function LowerThirdPage({ params }: PageProps<'/lower3rd/[k
     timer: asTimerState(state?.timer),
   };
 
-  return <LowerThird outputKey={key} initial={initial} />;
+  return <LowerThird outputKey={key} initial={initial} watermark={await watermarkFor(session.user_id)} />;
 }

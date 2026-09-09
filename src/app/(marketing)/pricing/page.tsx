@@ -131,13 +131,15 @@ const foundingQuestion = (claimed: number) =>
 const QUESTIONS = [
   {
     q: 'Is Free really free?',
-    a: 'Yes. There is no card required and no trial period. A church that only puts verses on the screen can run '
-      + 'every service on Free and never pay us anything.',
+    a: 'Yes. There is no card required and no trial period, and nothing stops working after a while. A church that '
+      + 'only puts verses on the screen can run every service on Free and never pay us anything — the screens carry '
+      + 'a small LlamaPresenter mark in the corner, which is the one thing paying takes away.',
   },
   {
     q: 'What actually changes when I pay?',
-    a: 'The numbers, and nothing else. There is no feature Pro can do that Free cannot — Pro lifts the ceilings on '
-      + 'how many songs, tracks, running orders, name cards and looks of your own you can keep.',
+    a: 'The watermark comes off your screens, and the ceilings lift. Beyond those two there is no feature Pro can '
+      + 'do that Free cannot — Pro raises how many songs, tracks, running orders, name cards, translations and '
+      + 'looks of your own you can keep.',
   },
   {
     q: 'What happens to my work if I stop paying?',

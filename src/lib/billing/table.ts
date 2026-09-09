@@ -183,6 +183,13 @@ export const COMPARISON: ComparisonGroup[] = [
       { label: 'Countdown timer on any screen', free: true, pro: true },
       { label: 'As many screens as you need, each with its own link', free: true, pro: true },
       { label: 'No account needed on the projector machine', free: true, pro: true },
+      {
+        label: 'Your screens without our watermark',
+        note: 'Free shows a small LlamaPresenter mark in the corner of the projector, the stage display and '
+          + 'the stream. Pro takes it off.',
+        free: false,
+        pro: true,
+      },
     ],
   },
   {

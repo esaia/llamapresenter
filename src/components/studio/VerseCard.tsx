@@ -132,7 +132,11 @@ export const VerseCard = ({
         style={type.style ? { fontFamily: type.style } : undefined}
       >
         <span ref={bodyRef} className="flex flex-1 items-center justify-center overflow-hidden">
-          <span ref={textRef} className={cn('w-full leading-snug font-semibold text-white', ALIGN_CLASS[align])}>
+          {/* The weight the wall uses, which is none: `.show-text` sets a colour
+              and a line height and no font-weight at all. Semibold here was the
+              card's own idea, and at nine pixels of Georgian on black it filled
+              the counters in and read as a blur rather than as bold. */}
+          <span ref={textRef} className={cn('w-full leading-snug text-white', ALIGN_CLASS[align])}>
             {text}
           </span>
         </span>

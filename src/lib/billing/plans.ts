@@ -7,11 +7,15 @@ import { FREE_LIMITS } from './limits';
 /**
  * The two plans, and what the pricing page and the console both say about them.
  *
- * Every gate in the app is a number rather than a capability — see `./limits`.
- * There is no feature Pro can do that Free cannot; there is more of it. That
- * keeps the promise on the marketing page and the check in Postgres the same
- * sentence, and it means a church that outgrows Free discovers it by filling
+ * Almost every gate in the app is a number rather than a capability — see
+ * `./limits` — so a church that outgrows Free discovers it by filling
  * something up rather than by hitting a wall in the middle of a service.
+ *
+ * The watermark is the one exception, and it is written down here so nobody
+ * has to find it out from the code: a Free church's screens carry our mark in
+ * the corner, and Pro takes it off. It is not a ceiling and it is not in
+ * `limits.json`; it lives in `./watermark`, is settled on the server, and is
+ * said plainly on the pricing page rather than discovered on a Sunday.
  *
  * What Pro costs is not written here. While the founding spots last it depends
  * on how many are gone — see `./founding` — so anything that prints a price
@@ -66,6 +70,7 @@ export const plansFor = (claimed: number): Record<PlanId, Plan> => {
     blurb: 'For churches that need more songs, more languages, custom templates, and more control.',
     highlights: [
       'Everything in Free, without the limits',
+      'Your screens without our watermark',
       'Unlimited songs, playlists, and music libraries',
       `${MAX_LANGS} languages on a slide`,
       'Use your own music, fonts and Bible translations',
