@@ -331,19 +331,8 @@ a face is the four steps above in reverse.
 Free is not a trial. A church can put scripture on a screen, run the projector,
 the stage and the lower third, and never pay us. What Pro buys is *volume
 and polish* — a song catalogue, a music library, more than one running order,
-and a look of their own — plus the one thing that is not a number: a Free
-church's screens carry a small LlamaPresenter mark in the corner, and Pro takes
-it off. Beyond the mark there is no feature Pro can do that Free cannot; there
+and a look of their own. There is no feature Pro can do that Free cannot; there
 is more of it.
-
-**The mark is settled on the server, not published by the console.** The style
-travels with the slide because an output has no account, but the plan is the
-one thing on an output page that is not the operator's to say — a mark the
-console published is a mark the console could decline to publish. Each output
-page resolves it from the session's owner and renders it as a prop, once, for
-the life of that page. `lib/billing/watermark.ts` is the whole rule, and it
-follows `NEXT_PUBLIC_ENFORCE_GATES` like every other ceiling, so an install
-with the gates off — or a self-hosted copy — marks nothing.
 
 The ceilings live in `lib/billing/limits.json`:
 

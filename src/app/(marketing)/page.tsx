@@ -73,10 +73,6 @@ const FAQ = [
     a: 'Yes. You can start with our built-in templates or create your own. Design custom templates for Bible verses and lyrics on your projector or livestream.',
   },
   {
-    q: 'Is there a watermark on the free plan?',
-    a: 'Yes — a small LlamaPresenter mark in the corner of the projector, the stage display and the livestream. Nothing else about Free is limited by it: the whole Bible, every output and the stage are yours on the free plan, and Pro takes the mark off.',
-  },
-  {
     q: 'Does it work on Mac and Windows?',
     a: 'Yes. Because LlamaPresenter runs in a web browser, you can use it on both Mac and Windows.',
   },
@@ -282,8 +278,8 @@ export default async function HomePage() {
             <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Pay only when you outgrow it.</h2>
             <p className="mt-5 max-w-prose text-[17px] leading-relaxed text-site-muted">
               Putting scripture on the screen costs nothing — the whole Bible, the projector, the stage display and
-              the lower third, with no trial and no time limit. Free screens carry a small mark in the corner; Pro
-              takes it off, and is for teams that also run songs, music and their own templates every week.
+              the lower third, with no trial and no time limit. Pro is for teams that also run songs, music and their
+              own templates every week.
             </p>
             {/* One line, and only while it is true. The row of marks that makes
                 the offer legible lives on /pricing; here it is a fact and a

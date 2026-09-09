@@ -19,7 +19,6 @@ import { emptyShowData, LANGS, REQUIRED_LANG, type Align, type Lang, type ShowDa
 
 import { CustomSlide } from './CustomSlide';
 import { OutputChrome } from './OutputChrome';
-import { Watermark } from './Watermark';
 import { TimerScreen } from './TimerScreen';
 import { useCustomFonts } from './useCustomFonts';
 import { useCustomLangs } from './useCustomLangs';
@@ -152,16 +151,7 @@ const NameCard = ({ run, visible }: { run: CardRun; visible: boolean }) => (
  * The style still travels with the content: this page has no account and
  * cannot read the operator's settings.
  */
-export const LowerThird = ({
-  outputKey,
-  initial,
-  watermark,
-}: {
-  outputKey: string;
-  initial: LowerThirdInitial;
-  /** Settled on the server from whose session this is; see `lib/billing/watermark.ts`. */
-  watermark?: boolean;
-}) => {
+export const LowerThird = ({ outputKey, initial }: { outputKey: string; initial: LowerThirdInitial }) => {
   const [slide, setSlide] = useState({
     showData: initial.showData ?? emptyShowData(),
     style: { ...defaultStyle, ...initial.style },
@@ -410,10 +400,6 @@ export const LowerThird = ({
   return (
     <OutputChrome kind="lower3rd" hiddenAtRest>
       <div className={`lower3rd-stage ${type.className}`} style={type.style ? { fontFamily: type.style } : undefined}>
-        {/* Over the camera rather than over a plate of ours: `.lower3rd-stage`
-            is genuinely transparent, which is the whole point of this output. */}
-        {watermark ? <Watermark /> : null}
-
         {card ? <NameCard run={card} visible={cardShowing} /> : null}
 
         {timerShowing ? (

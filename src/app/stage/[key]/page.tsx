@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 
 import { StageOutput, type StageInitial } from '@/components/projector/StageOutput';
 import { asBlackout } from '@/lib/live/blackout';
-import { watermarkFor } from '@/lib/billing/watermark';
 import { admin } from '@/lib/supabase/admin';
 import { asTimerState } from '@/lib/timer/model';
 import { emptyShowData, isLang, type ProjectorStyle, type ShowData } from '@/lib/types';
@@ -20,7 +19,7 @@ export default async function StagePage({ params }: PageProps<'/stage/[key]'>) {
   const { key } = await params;
 
   const db = admin();
-  const { data: session } = await db.from('sessions').select('id, user_id').eq('output_key', key).maybeSingle();
+  const { data: session } = await db.from('sessions').select('id').eq('output_key', key).maybeSingle();
 
   if (!session) notFound();
 
@@ -40,5 +39,5 @@ export default async function StagePage({ params }: PageProps<'/stage/[key]'>) {
     black: asBlackout(state?.blackout).stage,
   };
 
-  return <StageOutput outputKey={key} initial={initial} watermark={await watermarkFor(session.user_id)} />;
+  return <StageOutput outputKey={key} initial={initial} />;
 }

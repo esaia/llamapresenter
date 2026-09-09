@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { HiOutlinePencil } from 'react-icons/hi';
 
-import { effectivePlan } from '@/lib/billing/entitlements';
 import { cn } from '@/lib/cn';
 import { SCREEN_LABELS } from '@/lib/live/blackout';
 import { fitText, refitOnFontLoad } from '@/lib/projector/fitText';
@@ -22,7 +21,6 @@ import {
 } from '@/lib/studio/previewMode';
 import { timerIsLive } from '@/lib/timer/model';
 import { Slide } from '@/components/projector/Slide';
-import { Watermark } from '@/components/projector/Watermark';
 import { useLocalFiles } from '@/components/projector/useLocalBackground';
 import { StageScreen } from '@/components/projector/StageScreen';
 import { TimerScreen } from '@/components/projector/TimerScreen';
@@ -107,12 +105,7 @@ const modeStore = {
  * the operator judges here cannot disagree with what the room sees.
  */
 export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void }) => {
-  const { settings, showData, nextShowData, session, timer, blackout, plan } = useStudio();
-
-  // The console knows its own plan, so the panel says so without asking anyone.
-  // The outputs settle it on the server; this is a courtesy, like every other
-  // check the console makes on its own side of the glass.
-  const watermark = effectivePlan(plan) === 'free';
+  const { settings, showData, nextShowData, session, timer, blackout } = useStudio();
 
   // Which outputs are blanked, so the tabs can mark the ones the operator is
   // not looking at. The switches themselves are in the strip below.
@@ -429,11 +422,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
               <Slide ref={textRef} showData={onScreen} style={projector} assets={assets} />
             )}
           </div>
-
-          {/* What the room is actually seeing. The panel is the operator's only
-              view of the wall, and a mark that appears there and not here is a
-              mark they find out about from a photograph after the service. */}
-          {watermark ? <Watermark /> : null}
         </div>
       </div>
 
