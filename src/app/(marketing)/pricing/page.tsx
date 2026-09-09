@@ -1,16 +1,28 @@
 import Link from 'next/link';
 import { Fragment } from 'react';
 
+import { FoundingSpots } from '@/components/marketing/FoundingSpots';
+import { soldOut, tierNow } from '@/lib/billing/founding';
 import { LIMIT_LABELS } from '@/lib/billing/limits';
-import { PLANS } from '@/lib/billing/plans';
+import { plansFor } from '@/lib/billing/plans';
+import { claimedSpots } from '@/lib/billing/seats';
 import { freeLimitValue, INCLUDED, LIMIT_GROUPS, LIMIT_NOTES, proLimitValue } from '@/lib/billing/table';
 
 export const metadata = {
   title: 'Pricing',
   description:
-    'Start for free and use LlamaPresenter for your projector, stage display, and livestream. Pro is $9 a month '
-    + 'for more songs, more languages and custom templates.',
+    'Free covers the Bible, the projector, the stage and your stream. Pro costs less the earlier you join, and '
+    + 'the rate you join on is yours for as long as you stay.',
 };
+
+/**
+ * How stale the spot count may be.
+ *
+ * A minute, because this page is a shop window and not the till: the seat a
+ * church is actually charged for is taken in `/api/billing/checkout`, in one
+ * statement, so two visitors reading the same "3 left" cannot both be sold it.
+ */
+export const revalidate = 60;
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -28,6 +40,19 @@ const Tick = () => (
     />
   </svg>
 );
+
+/** The questions, plus the one the founding rate raises. */
+const foundingQuestion = (claimed: number) =>
+  soldOut(claimed)
+    ? {
+        q: 'Why do some subscribers pay less?',
+        a: 'The first fifteen signed up early, at $9 or $14, and they keep that rate. Those spots are gone.',
+      }
+    : {
+        q: `Is the ${tierNow(claimed).price} really forever?`,
+        a: 'Yes, for as long as you keep your Pro plan. Join at $9 and you pay $9 every month after that. The same '
+          + 'goes for $14. What changes is the price for the next subscriber, never yours.',
+      };
 
 const QUESTIONS = [
   {
@@ -62,16 +87,28 @@ const QUESTIONS = [
   },
 ];
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const claimed = await claimedSpots();
+  const PLANS = plansFor(claimed);
+  const gone = soldOut(claimed);
+
   return (
     <main className="mx-auto max-w-7xl px-6 py-20 sm:py-24">
       <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Pricing</p>
 
-      <h1 className={`${DISPLAY} mt-5 text-4xl sm:text-5xl`}>Simple pricing for your church</h1>
-      <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-        Start for free and use LlamaPresenter for your projector, stage display, and livestream. Upgrade to Pro when
-        you need more songs, more languages, custom templates, and more room for your service.
+      <h1 className={`${DISPLAY} mt-5 text-4xl sm:text-5xl`}>
+        {gone ? 'Simple pricing for your church' : 'Start early. Keep your price.'}
+      </h1>
+
+      <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-site-muted">
+        {gone
+          ? 'Free covers the Bible, the projector, the stage and your stream. Pro lifts the ceilings.'
+          : 'LlamaPresenter is $9/month for the first 10 subscribers. After those spots are gone, the price moves to '
+            + '$14 for the next 5, then $19/month after that. The price you join at stays yours as long as you keep '
+            + 'your Pro plan.'}
       </p>
+
+      <FoundingSpots claimed={claimed} />
 
       {/* ------------------------------------------------------- the two cards */}
       <div className="mt-12 grid gap-6 sm:grid-cols-2">
@@ -110,7 +147,7 @@ export default function PricingPage() {
                   : 'mt-8 block rounded-studio border border-site-rule px-4 py-2.5 text-center text-sm text-site-ink transition-colors duration-150 hover:bg-site-band'
               }
             >
-              {plan.id === 'pro' ? `${plan.cta.label} for ${plan.price} ${plan.cadence}` : plan.cta.label}
+              {plan.id === 'pro' ? `${plan.cta.label} for ${plan.price}/month` : plan.cta.label}
             </Link>
           </div>
         ))}
@@ -221,7 +258,7 @@ export default function PricingPage() {
         <h2 className={`${DISPLAY} text-2xl sm:text-3xl`}>Questions about pricing</h2>
 
         <div className="mt-10 gap-x-12 sm:columns-2 lg:columns-3">
-          {QUESTIONS.map(item => (
+          {[foundingQuestion(claimed), ...QUESTIONS].map(item => (
             <div key={item.q} className="mb-8 break-inside-avoid">
               <h3 className="text-[17px] leading-snug font-medium text-site-ink">{item.q}</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-site-muted">{item.a}</p>

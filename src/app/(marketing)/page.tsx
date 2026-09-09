@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { Art } from '@/components/marketing/Art';
 import { Frame } from '@/components/marketing/Frame';
 import { HeroScene } from '@/components/marketing/HeroScene';
+import { FoundingSpots } from '@/components/marketing/FoundingSpots';
 import { ScrollZoom } from '@/components/marketing/ScrollZoom';
-import { PLANS } from '@/lib/billing/plans';
+import { plansFor } from '@/lib/billing/plans';
+import { claimedSpots } from '@/lib/billing/seats';
 
 /* The two type roles for the page: the rounded display face the brand is drawn
    in, and the interface stack for everything read as a sentence. */
@@ -88,7 +90,12 @@ const FAQ = [
   },
 ];
 
-export default function HomePage() {
+export const revalidate = 60;
+
+export default async function HomePage() {
+  const claimed = await claimedSpots();
+  const PLANS = plansFor(claimed);
+
   return (
     <main>
       {/* ------------------------------------------------------------- hero */}
@@ -260,6 +267,11 @@ export default function HomePage() {
               the lower third, with no trial and no time limit. Pro is for teams that also run songs, music and their
               own templates every week.
             </p>
+            {/* One line, and only while it is true. The row of marks that makes
+                the offer legible lives on /pricing; here it is a fact and a
+                door, not a second scarcity display. */}
+            <FoundingSpots claimed={claimed} className="mt-8" />
+
             <Link href="/pricing" className="mt-6 inline-block text-[17px] text-site-ink underline underline-offset-4">
               See what each plan includes
             </Link>

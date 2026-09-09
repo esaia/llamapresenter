@@ -36,6 +36,10 @@ export interface Database {
         cancel_at_period_end: boolean;
         /** The timestamp on the webhook event that last wrote this row. */
         event_at: string | null;
+        /** Which founding spot this church took, once and for good. */
+        founding_seat: number | null;
+        /** When that spot was taken at checkout; null once it is paid for. */
+        founding_reserved_at: string | null;
         updated_at: string;
       }>;
       /** One row, one switch: whether the plan ceilings are being enforced. */
@@ -200,6 +204,10 @@ export interface Database {
         Args: { p_lang: string; p_version: string; p_query: string; p_book?: number | null; p_limit?: number };
         Returns: { book: number; wigni: number; chapter: number; verse: number; text: string }[];
       };
+      /** How many of the fifteen founding spots are gone, live reservations included. */
+      founding_claimed: { Args: Record<string, never>; Returns: number };
+      /** Take the next founding spot for a user, and return its number. Service role only. */
+      claim_founding_seat: { Args: { uid: string }; Returns: number };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

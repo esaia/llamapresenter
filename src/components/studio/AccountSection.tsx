@@ -2,9 +2,10 @@
 
 import { Fragment, useState } from 'react';
 
+import { FoundingSpots } from '@/components/studio/FoundingSpots';
 import { gatesEnforced, planOf } from '@/lib/billing/entitlements';
 import { FREE_LIMITS, LIMIT_LABELS, type LimitKey } from '@/lib/billing/limits';
-import { PLANS } from '@/lib/billing/plans';
+import { plansFor } from '@/lib/billing/plans';
 import { LIMIT_GROUPS, proLimitValue } from '@/lib/billing/table';
 import { useAudio } from '@/lib/studio/AudioProvider';
 import { useStudio } from '@/lib/studio/StudioProvider';
@@ -39,14 +40,18 @@ const STATES: Record<string, { tone: string; says: string }> = {
 
 /** Plan, what it costs the operator in practice, and the way out of the account. */
 export const AccountSection = () => {
-  const { email, plan, billing, usage } = useStudio();
+  const { email, plan, billing, usage, claimedSpots } = useStudio();
   const { tracks, categories } = useAudio();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const current = PLANS[planOf(plan)];
+  // Pro costs what the next church to sign up would pay — while the founding
+  // spots last that depends on how many are gone, so the button says the price
+  // the checkout route is actually about to charge.
+  const plans = plansFor(claimedSpots);
+  const current = plans[planOf(plan)];
   const free = current.id === 'free';
-  const pro = PLANS.pro;
+  const pro = plans.pro;
 
   // The music library lives in its own provider, so those two counts are the
   // ones the studio does not already hold.
@@ -203,6 +208,10 @@ export const AccountSection = () => {
         <div className="border-t border-studio-divider px-4 py-4">
           {free ? (
             <>
+              {/* The offer, above the button that takes it. Free accounts only:
+                  a church already paying cannot act on a countdown. */}
+              <FoundingSpots claimed={claimedSpots} />
+
               <button
                 type="button"
                 onClick={() => void go('/api/billing/checkout')}
@@ -210,7 +219,7 @@ export const AccountSection = () => {
                 className="w-full rounded-studio bg-studio-accent px-3 py-2 text-sm font-medium text-studio-onaccent
                   transition-colors duration-150 hover:bg-studio-accent/85 disabled:opacity-60"
               >
-                Upgrade to Pro — {pro.price} {pro.cadence}
+                Upgrade to Pro for {pro.price}/month
               </button>
 
               <p className="mt-2 text-center text-[11px] leading-relaxed text-studio-faint">

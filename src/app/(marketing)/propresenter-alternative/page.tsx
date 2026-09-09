@@ -3,7 +3,8 @@ import { Fragment } from 'react';
 
 import { Art } from '@/components/marketing/Art';
 import { CompareScene } from '@/components/marketing/CompareScene';
-import { PLANS } from '@/lib/billing/plans';
+import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
+import { claimedSpots } from '@/lib/billing/seats';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -48,7 +49,7 @@ const Tick = ({ className }: { className?: string }) => (
  * documentation describes; where a number would date badly — what a licence
  * costs this year — the cell sends the reader to look rather than guessing.
  */
-const COMPARISON: { group: string; rows: { label: string; theirs: string; ours: string }[] }[] = [
+const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label: string; theirs: string; ours: string }[] }[] => [
   {
     group: 'Getting it running',
     rows: [
@@ -220,7 +221,12 @@ const QUESTIONS = [
   },
 ];
 
-export default function ProPresenterAlternativePage() {
+export const revalidate = 60;
+
+export default async function ProPresenterAlternativePage() {
+  const PLANS = plansFor(await claimedSpots());
+  const COMPARISON = comparison(PLANS);
+
   return (
     <main>
       {/* ------------------------------------------------------------- hero */}

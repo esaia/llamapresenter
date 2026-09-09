@@ -243,7 +243,7 @@ a face is the four steps above in reverse.
 ## Plans
 
 Free is not a trial. A church can put scripture on a screen, run the projector,
-the stage and the lower third, and never pay us. What $9/month buys is *volume
+the stage and the lower third, and never pay us. What Pro buys is *volume
 and polish* — a song catalogue, a music library, more than one running order,
 and a look of their own. There is no feature Pro can do that Free cannot; there
 is more of it.
@@ -316,10 +316,40 @@ Pro. `event_at` holds the timestamp of the event that last wrote the row, so a
 retry that lands behind an event that overtook it cannot put a paying church
 back on Free.
 
+### The founding price
+
+The first fifteen churches to take Pro pay less, and keep it: ten at $9 a month,
+five at $14, and $19 from there. `lib/billing/founding.ts` is the whole ladder —
+what a seat number costs, how many spots are left, and the row of marks the
+pricing page draws — and it is pure and tested, because an off-by-one quotes a
+price we then do not charge.
+
+**A spot is a number stamped on a row, not a running total.** `founding_seat` is
+taken once in `claim_founding_seat()` and never moves, so the count can only go
+up; a church that cancels has spent its spot. Deriving the rung from a live
+count of paying churches instead would walk the number backwards on every
+cancellation, which reads as broken and is worth gaming.
+
+**The page is the shop window and the checkout route is the till.** `/pricing`
+renders a count that may be a minute old. The seat is taken inside
+`/api/billing/checkout`, in one statement, right before the Dodo session opens
+— so two visitors reading the same "3 spots left" cannot both be sold the same
+one. A seat carries `founding_reserved_at` while checkout is open and is handed
+back after thirty minutes if nothing came of it; the webhook clears it when a
+subscription starts paying, and never on cancellation.
+
+**One product per rung, not one product and a coupon.** A Dodo subscription is
+bound to the product it was created on, so the $9 is held by the processor for
+the life of the subscription — which is what makes "yours for as long as you
+stay" true without us having to remember it. A coupon is a line on an invoice
+that can be removed.
+
 ### Setting it up in the Dodo dashboard
 
-1. **Product** — one subscription product, $9.00, billing period *1 month*, no
-   trial. Copy its `pdt_…` id into `DODO_PAYMENTS_PRODUCT_PRO`.
+1. **Products** — one subscription product per rung of the founding ladder, at
+   $9.00, $14.00 and $19.00, billing period *1 month*, no trial. Copy the
+   `pdt_…` ids into `DODO_PAYMENTS_PRODUCT_PRO_FOUNDING`, `…_EARLY` and
+   `…_STANDARD`.
 2. **API key** — Developer → API Keys. Test and live are different keys against
    different hosts; `DODO_PAYMENTS_ENVIRONMENT` has to name the one you used.
 3. **Webhook** — Developer → Webhooks → add

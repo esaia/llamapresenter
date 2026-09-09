@@ -1,6 +1,7 @@
 import { MAX_LANGS } from '../bible/languages';
 import { THEMES } from '../projector/themes';
 
+import { FOUNDING_SPOTS, tierNow } from './founding';
 import { FREE_LIMITS } from './limits';
 
 /**
@@ -11,6 +12,10 @@ import { FREE_LIMITS } from './limits';
  * keeps the promise on the marketing page and the check in Postgres the same
  * sentence, and it means a church that outgrows Free discovers it by filling
  * something up rather than by hitting a wall in the middle of a service.
+ *
+ * What Pro costs is not written here. While the founding spots last it depends
+ * on how many are gone — see `./founding` — so anything that prints a price
+ * calls `plansFor(claimed)` with a count read on the server.
  */
 export type PlanId = 'free' | 'pro';
 
@@ -25,13 +30,23 @@ export interface Plan {
   cta: { label: string; href: string };
 }
 
-export const PLANS: Record<PlanId, Plan> = {
+/**
+ * The two plans, with Pro priced at whatever the next church would pay.
+ *
+ * `claimed` comes from `claimedSpots()` on the server. Every caller has it,
+ * because every page that prints a price is already server-rendered — the
+ * console is handed it as an `initial` prop rather than fetching after paint.
+ */
+export const plansFor = (claimed: number): Record<PlanId, Plan> => {
+  const tier = tierNow(claimed);
+
+  return {
   free: {
     id: 'free',
     name: 'Free',
     price: '$0',
     cadence: 'forever',
-    blurb: 'Everything you need to get your church service on screen.',
+    blurb: 'Everything you need to run your church service on screen.',
     highlights: [
       'The whole Bible, in every translation we hold',
       'Projector, stage, and lower third for your stream',
@@ -45,20 +60,30 @@ export const PLANS: Record<PlanId, Plan> = {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: '$9',
-    cadence: 'per month',
-    blurb: 'For churches that need more songs, more languages, and more control over their presentation.',
+    price: tier.price,
+    cadence: tier.cadence,
+    blurb: 'For churches that need more songs, more languages, custom templates, and more control.',
     highlights: [
       'Everything in Free, without the limits',
-      'Unlimited songs, libraries, and running orders',
+      'Unlimited songs, playlists, and music libraries',
       `${MAX_LANGS} languages on a slide`,
-      'Use your own music and typefaces',
+      'Use your own music and fonts',
       'Create your own templates',
-      'More than one session',
+      'Run more than one session',
     ],
     // Buying needs an account, so the button goes to `/upgrade` rather than to
     // the provider: that page signs the visitor in if it has to and opens the
     // checkout session we created for them.
     cta: { label: 'Get Pro', href: '/upgrade' },
   },
+  };
 };
+
+/**
+ * The plans at the standard price, for anywhere a live count is not to hand.
+ *
+ * Deliberately the *top* of the ladder: a page that forgot to read the count
+ * shows $19 and disappoints nobody, where a stale $9 would be a price we then
+ * do not charge.
+ */
+export const PLANS: Record<PlanId, Plan> = plansFor(FOUNDING_SPOTS);

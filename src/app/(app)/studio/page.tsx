@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { QueryProvider } from '@/components/QueryProvider';
 import { Console } from '@/components/studio/Console';
 import { AudioProvider, type AudioInitial } from '@/lib/studio/AudioProvider';
+import { claimedSpots } from '@/lib/billing/seats';
 import { cardFromRow } from '@/lib/lower3rd/card';
 import { songFromRow } from '@/lib/lyrics/langs';
 import { StudioProvider, type StudioInitial, type Tab } from '@/lib/studio/StudioProvider';
@@ -34,7 +35,7 @@ export default async function StudioPage() {
 
   if (!user) redirect('/login?next=/studio');
 
-  const [settings, session, subscription, songs, libraries, playlists, nameCards] = await Promise.all([
+  const [settings, session, subscription, songs, libraries, playlists, nameCards, claimed] = await Promise.all([
     supabase.from('settings').select('*').eq('user_id', user.id).single(),
     supabase.from('sessions').select('id, name, output_key').eq('user_id', user.id).order('created_at').limit(1).single(),
     supabase
@@ -57,6 +58,9 @@ export default async function StudioPage() {
       .eq('user_id', user.id)
       .order('position')
       .order('created_at'),
+    // What Pro costs today, so the account panel's upgrade button names the
+    // price the checkout route is about to charge rather than a stale one.
+    claimedSpots(),
   ]);
 
   // The signup trigger creates all of these; a missing row means the account
@@ -146,6 +150,7 @@ export default async function StudioPage() {
       songs: (row.songs as string[]) ?? [],
     })),
     plan: subscription.data?.plan ?? 'free',
+    claimedSpots: claimed,
     // What the account panel needs to say more than "Pro": whether the last
     // payment went through, and when the next one is.
     billing: {

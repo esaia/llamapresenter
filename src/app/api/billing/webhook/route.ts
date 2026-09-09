@@ -72,6 +72,8 @@ export const POST = async (request: NextRequest) => {
 
   if (!userId) return NextResponse.json({ received: true });
 
+  const plan = planFromStatus(subscription.status);
+
   // Dodo retries, and a retry can land behind an event that overtook it. A
   // stale delivery must not put a paying church back on Free, so the event's
   // own timestamp decides whether it still has anything to say.
@@ -81,11 +83,18 @@ export const POST = async (request: NextRequest) => {
       provider: 'dodo',
       provider_subscription_id: subscription.subscription_id,
       provider_customer_id: subscription.customer.customer_id,
-      plan: planFromStatus(subscription.status),
+      plan,
       status: subscription.status,
       current_period_end: subscription.next_billing_date ?? null,
       cancel_at_period_end: subscription.cancel_at_next_billing_date,
       event_at: event.timestamp,
+      // The founding spot stops being a checkout reservation and becomes the
+      // church's outright, once there is a subscription paying for it. Note
+      // what is *not* here: a cancellation does not hand the spot back. The
+      // ladder is the order churches arrived in, and it only ever moves
+      // forward — a count that walked backwards on every cancellation would
+      // read as broken on the pricing page and be worth gaming.
+      ...(plan === 'pro' ? { founding_reserved_at: null } : {}),
     })
     .eq('user_id', userId)
     .or(`event_at.is.null,event_at.lte.${event.timestamp}`);

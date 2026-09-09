@@ -143,6 +143,12 @@ export interface StudioInitial {
   timer: TimerState;
   plan: string;
   billing: Billing;
+  /**
+   * How many founding spots are gone, so the account panel can name the price
+   * the checkout route is actually about to charge. Handed in rather than
+   * fetched, like everything else the console opens with.
+   */
+  claimedSpots: number;
 }
 
 
@@ -151,6 +157,8 @@ interface StudioValue {
   email: string;
   plan: string;
   billing: Billing;
+  /** How many founding spots are gone; what Pro costs follows from it. */
+  claimedSpots: number;
   /**
    * Whether `adding` more of something still fits under the operator's plan.
    *
@@ -1991,6 +1999,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       email: initial.email,
       plan: initial.plan,
       billing: initial.billing,
+      claimedSpots: initial.claimedSpots,
       room,
       usage: counts,
       limitNotice,
@@ -2089,6 +2098,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       importSongs,
       initial.email,
       initial.billing,
+      initial.claimedSpots,
       initial.plan,
       initial.session,
       live,

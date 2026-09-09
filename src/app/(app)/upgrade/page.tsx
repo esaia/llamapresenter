@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 
 import { planOf } from '@/lib/billing/entitlements';
-import { PLANS } from '@/lib/billing/plans';
+import { plansFor } from '@/lib/billing/plans';
+import { claimedSpots } from '@/lib/billing/seats';
 import { configured, createClient } from '@/lib/supabase/server';
 
 import { StartCheckout } from './start-checkout';
@@ -36,5 +37,10 @@ export default async function UpgradePage() {
 
   if (planOf(subscription?.plan) === 'pro') redirect('/studio');
 
-  return <StartCheckout price={PLANS.pro.price} cadence={PLANS.pro.cadence} />;
+  // What the checkout route is about to charge. Read here rather than baked in
+  // because while the founding spots last it depends on how many are gone —
+  // and the route takes the seat itself, so the two agree.
+  const pro = plansFor(await claimedSpots()).pro;
+
+  return <StartCheckout price={pro.price} cadence={pro.cadence} />;
 }

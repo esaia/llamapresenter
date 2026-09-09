@@ -2110,3 +2110,49 @@ body:has(.site) {
   --nc-bar: 0.9cqi;
   --nc-inset: 1.3cqh;
 }
+
+/* ----------------------------------------------------------- founding spots */
+
+/* The fifteen marks on the pricing page, one per founding subscription.
+   The row is dealt out left to right on first paint — the one piece of
+   unprompted motion on that page — and then a halo goes out once around the
+   spot the reader would take. Nothing repeats: a scarcity counter that pulses
+   forever is a nag, and this only has to be noticed once. */
+@keyframes site-spot-in {
+  from {
+    opacity: 0;
+    transform: scale(0.35);
+  }
+}
+
+@utility site-spot-in {
+  /* `backwards` so a mark waiting its turn is not drawn before its delay. */
+  animation: site-spot-in 280ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes site-spot-halo {
+  from {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@utility site-spot-halo {
+  animation: site-spot-halo 900ms ease-out backwards;
+
+  /* The halo is decoration on top of a mark that is already yellow, so for
+     someone who has asked for less motion it simply does not appear. */
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0;
+  }
+}

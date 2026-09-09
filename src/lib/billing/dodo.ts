@@ -1,5 +1,7 @@
 import DodoPayments from 'dodopayments';
 
+import type { FoundingTier } from './founding';
+
 /**
  * The payment provider, made lazily.
  *
@@ -44,3 +46,24 @@ const PRO_STATUSES = new Set(['active', 'past_due', 'on_hold']);
 
 export const planFromStatus = (status: string | null | undefined): 'free' | 'pro' =>
   status && PRO_STATUSES.has(status) ? 'pro' : 'free';
+
+/**
+ * The Dodo product a rung of the founding ladder is sold on.
+ *
+ * One product per rung rather than one product and a discount code, because a
+ * Dodo subscription is bound to the product it was created on: the $9 is then
+ * held by the processor for the life of the subscription, which is what makes
+ * "yours for as long as you stay" true without us having to remember it. A
+ * coupon is a line on an invoice that can be removed.
+ *
+ * A rung with no product id configured is not sellable — better a 503 than a
+ * checkout that quietly charges the standard price for a founding spot.
+ */
+export const productForTier = (tier: FoundingTier): string | undefined =>
+  ({
+    founding: process.env.DODO_PAYMENTS_PRODUCT_PRO_FOUNDING,
+    early: process.env.DODO_PAYMENTS_PRODUCT_PRO_EARLY,
+    // The old single-product variable is the standard rung, so an install that
+    // predates the ladder keeps working with the id it already has.
+    standard: process.env.DODO_PAYMENTS_PRODUCT_PRO_STANDARD || process.env.DODO_PAYMENTS_PRODUCT_PRO,
+  })[tier.id];
