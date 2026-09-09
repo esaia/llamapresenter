@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { CompareMatrix, type CompareColumn, type CompareGroup } from '@/components/marketing/CompareMatrix';
 import { Marker } from '@/components/marketing/Marker';
+import { Monitor } from '@/components/marketing/Monitor';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 
@@ -180,18 +181,30 @@ export default async function ComparePage() {
       <section className="mx-auto max-w-7xl px-6 pt-10 pb-8 sm:pt-14">
         <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Comparison</p>
 
-        <h1 className={`${DISPLAY} mt-5 max-w-4xl text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-          Church presentation software,{' '}
-          <Marker>side by side</Marker>
-        </h1>
+        <div className="mt-5 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:gap-14">
+          <div>
+            <h1 className={`${DISPLAY} text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
+              Church presentation software,{' '}
+              <Marker>side by side</Marker>
+            </h1>
 
-        <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
+            <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
-        <p className="mt-7 max-w-[62ch] text-lg leading-relaxed text-site-muted">
-          ProPresenter, EasyWorship, FreeShow, Proclaim and {OURS}, on one grid: what each one runs on, what it
-          costs to start, what it does with a second language in a verse and in a song, and which screens it can
-          drive.
-        </p>
+            <p className="mt-7 max-w-[54ch] text-lg leading-relaxed text-site-muted">
+              ProPresenter, EasyWorship, FreeShow, Proclaim and {OURS}, on one grid: what each one runs on, what it
+              costs to start, what it does with a second language in a verse and in a song, and which screens it
+              can drive.
+            </p>
+          </div>
+
+          <Monitor
+            src="/images/console-audio.webp"
+            alt="The console on a desk monitor: the audio libraries and their tracks in the middle, and the stream
+              output previewing a lower-third verse over a transparent background"
+            aspect="2000/1062"
+            sizes="(min-width: 1024px) 40rem, 100vw"
+          />
+        </div>
       </section>
 
       {/* ------------------------------------------------------------ matrix */}
