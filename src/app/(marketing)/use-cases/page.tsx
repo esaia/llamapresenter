@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { Marker } from '@/components/marketing/Marker';
+import { Monitor } from '@/components/marketing/Monitor';
 import { LinkCard } from '@/components/marketing/LinkCard';
 import { USE_CASES } from '@/lib/marketing/useCases';
 
@@ -36,22 +37,34 @@ export default function UseCasesPage() {
       <section className="mx-auto max-w-7xl px-6 pt-10 pb-8 sm:pt-14">
         <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Use cases</p>
 
-        <h1 className={`${DISPLAY} mt-5 max-w-3xl text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-          What {OURS} is{' '}
-          <Marker>used for</Marker>
-        </h1>
+        <div className="mt-5 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:gap-14">
+          <div>
+            <h1 className={`${DISPLAY} text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
+              What {OURS} is{' '}
+              <Marker>used for</Marker>
+            </h1>
 
-        <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
+            <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
-        <div className="mt-7 grid max-w-5xl gap-6 text-[17px] leading-relaxed text-site-muted lg:grid-cols-2">
-          <p>
-            Bible verses, song lyrics, a stage display, a livestream overlay, a countdown, a phone remote. Most
-            churches arrive needing one of them and stay for the rest.
-          </p>
-          <p>
-            Pick the one you came for. Each page covers what you get, how a service runs, and the questions
-            churches ask before they start.
-          </p>
+            <div className="mt-7 max-w-[54ch] space-y-4 text-[17px] leading-relaxed text-site-muted">
+              <p>
+                Bible verses, song lyrics, a stage display, a livestream overlay, a countdown, a phone remote. Most
+                churches arrive needing one of them and stay for the rest.
+              </p>
+              <p>
+                Pick the one you came for. Each page covers what you get, how a service runs, and the questions
+                churches ask before they start.
+              </p>
+            </div>
+          </div>
+
+          <Monitor
+            src="/images/console-bible.webp"
+            alt="The console on a desk monitor: a service of ten passages in the middle, the language panel on the
+              left, and the live projector carrying Luke 6:36 in English and Georgian"
+            aspect="2000/1061"
+            sizes="(min-width: 1024px) 40rem, 100vw"
+          />
         </div>
       </section>
 

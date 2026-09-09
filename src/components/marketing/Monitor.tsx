@@ -16,11 +16,14 @@ import Image from 'next/image';
 export const Monitor = ({
   src,
   alt,
+  /** The screenshot's own shape, so the screen crops none of it. */
+  aspect = '2000/1066',
   className,
   sizes,
 }: {
   src: string;
   alt: string;
+  aspect?: string;
   className?: string;
   sizes?: string;
 }) => (
@@ -29,7 +32,10 @@ export const Monitor = ({
       className="rounded-[1.4rem] bg-studio-bar p-[0.6rem] pb-[1.6rem] shadow-site-frame ring-1
         ring-site-ink/10 sm:rounded-[1.8rem] sm:p-3 sm:pb-7"
     >
-      <div className="relative aspect-[2000/1066] overflow-hidden rounded-[0.7rem] bg-studio-slide sm:rounded-[0.9rem]">
+      <div
+        className="relative overflow-hidden rounded-[0.7rem] bg-studio-slide sm:rounded-[0.9rem]"
+        style={{ aspectRatio: aspect }}
+      >
         <Image src={src} alt={alt} fill className="object-cover" sizes={sizes ?? '(min-width: 1024px) 40rem, 100vw'} />
       </div>
     </div>
