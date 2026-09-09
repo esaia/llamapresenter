@@ -10,8 +10,9 @@ import Image from 'next/image';
  *
  * Drawn rather than composited into the image so it stays sharp at any density
  * and the screenshot behind it can be replaced on its own. The proportions are
- * a 16:10 desktop display: a thin bezel, a chin a little deeper than the sides,
- * a short neck and a base that is wider than it is tall.
+ * a 16:10 desktop display, modelled on a modern flat-panel: an even, slim
+ * bezel rather than a deep chin, a thin neck and a foot that reads as a plate
+ * rather than a pill.
  */
 export const Monitor = ({
   src,
@@ -29,11 +30,11 @@ export const Monitor = ({
 }) => (
   <figure className={className}>
     <div
-      className="rounded-[1.4rem] bg-studio-bar p-[0.6rem] pb-[1.6rem] shadow-site-frame ring-1
-        ring-site-ink/10 sm:rounded-[1.8rem] sm:p-3 sm:pb-7"
+      className="rounded-[1rem] bg-studio-bar p-[0.45rem] shadow-site-frame ring-1 ring-site-ink/[0.06]
+        sm:rounded-[1.2rem] sm:p-[0.6rem]"
     >
       <div
-        className="relative overflow-hidden rounded-[0.7rem] bg-studio-slide sm:rounded-[0.9rem]"
+        className="relative overflow-hidden rounded-[0.55rem] bg-studio-slide sm:rounded-[0.7rem]"
         style={{ aspectRatio: aspect }}
       >
         <Image src={src} alt={alt} fill className="object-cover" sizes={sizes ?? '(min-width: 1024px) 40rem, 100vw'} />
@@ -41,8 +42,10 @@ export const Monitor = ({
     </div>
 
     {/* The neck and the foot. Aria-hidden: they are furniture, and the picture
-        is already described by the screenshot's own alt text. */}
-    <div aria-hidden className="mx-auto h-5 w-[14%] bg-studio-bar/80 sm:h-7" />
-    <div aria-hidden className="mx-auto h-2 w-[30%] rounded-full bg-studio-bar sm:h-2.5" />
+        is already described by the screenshot's own alt text. A slim neck and
+        a wide, shallow plate, the way a modern display stands rather than the
+        deep chin and pill-foot of an old CRT-era monitor. */}
+    <div aria-hidden className="mx-auto h-3 w-[8%] bg-studio-bar/70 sm:h-4" />
+    <div aria-hidden className="mx-auto h-1.5 w-[24%] rounded-full bg-studio-bar/90 sm:h-[7px]" />
   </figure>
 );
