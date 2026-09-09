@@ -8,8 +8,11 @@ import { CadenceProvider } from '@/components/marketing/cadence';
 import { HomePlanCards } from '@/components/marketing/HomePlanCards';
 import { Marker } from '@/components/marketing/Marker';
 import { ScrollZoom } from '@/components/marketing/ScrollZoom';
+import { Vignette } from '@/components/marketing/Vignette';
+import { Vimeo } from '@/components/marketing/Vimeo';
 import { bothPlansFor } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
+import { FAQ } from '@/lib/marketing/faq';
 
 /* The home page is the one most likely to be met by somebody searching the
    category, so it carries its own title rather than inheriting the brand's. */
@@ -38,17 +41,33 @@ export const metadata = {
    in, and the interface stack for everything read as a sentence. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
 
+/** One concrete thing a feature covers, named rather than described. */
+const Tag = ({ children }: { children: React.ReactNode }) => (
+  <span className="inline-block rounded-full bg-site-accent/35 px-2.5 py-1 text-[13px] font-medium text-site-ink">
+    {children}
+  </span>
+);
+
+/** A page elsewhere on the site that says more about this feature. */
+type FeatureLink = { label: string; href: string };
+
 /** A feature: a paragraph on one side, a screen on the other. */
 const Feature = ({
   id,
   title,
   children,
+  tags,
+  links,
   visual,
   flip,
 }: {
   id?: string;
   title: string;
   children: React.ReactNode;
+  /** What the paragraph just said, named one at a time. */
+  tags?: string[];
+  /** Where to read more — its own use-case page, most often. */
+  links?: FeatureLink[];
   visual: React.ReactNode;
   flip?: boolean;
 }) => (
@@ -59,70 +78,35 @@ const Feature = ({
       <div className={flip ? 'lg:order-last' : undefined}>
         <h2 className={`${DISPLAY} max-w-md text-3xl leading-[1.1] sm:text-4xl`}>{title}</h2>
         <div className="mt-5 max-w-prose space-y-4 text-[17px] leading-relaxed text-site-muted">{children}</div>
+
+        {tags?.length ? (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {tags.map(tag => (
+              <Tag key={tag}>{tag}</Tag>
+            ))}
+          </div>
+        ) : null}
+
+        {links?.length ? (
+          <ul className="mt-5 space-y-1.5">
+            {links.map(link => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="text-[15px] text-[#065985] underline decoration-dotted decoration-[#065985]/60
+                    underline-offset-4 transition-opacity hover:opacity-75"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
       <div>{visual}</div>
     </div>
   </section>
 );
-
-const FAQ = [
-  {
-    q: 'What is LlamaPresenter?',
-    a: 'LlamaPresenter is a web-based presentation tool made for churches. Use it to show Bible verses, song lyrics, announcements, and media on your projector, stage display, and livestream.',
-  },
-  {
-    q: 'Do I need to install anything?',
-    a: 'No. LlamaPresenter runs in your web browser, so there is nothing to install. Open it on your computer and start presenting.',
-  },
-  {
-    q: 'Can I show Bible verses in multiple languages?',
-    a: 'Yes. You can display multiple languages at the same time and choose which languages appear on the screen. Turn languages on or off whenever you need.',
-  },
-  {
-    q: 'My language is not one of the ones you carry. Can I still use it?',
-    a: 'Yes. LlamaPresenter carries Georgian, English, Russian, Greek, Arabic and Latin, and you can add a Bible in any other language yourself. Open Translations in the settings, pick your language, and choose a translation from the public archives the console browses for you — over a thousand Bibles in hundreds of languages, fetched with nothing to download and nothing to upload. A Bible you add sits beside ours: put Spanish and English on the same slide, or Korean on the projector and English on the stream.',
-  },
-  {
-    q: 'Can I upload a Bible file of my own?',
-    a: 'Yes. If your church was given a file, or you found one the archives do not list, LlamaPresenter reads Zefania XML, OpenSong, USX, OSIS and Beblia files. Free covers one Bible you add yourself and Pro makes it unlimited.',
-  },
-  {
-    q: 'Can I control the projector, stage, and livestream separately?',
-    a: 'Yes. LlamaPresenter gives you three views: Projector, Stage, and Lower Third. Each screen can show different content while everything stays connected to the same presentation.',
-  },
-  {
-    q: 'Can I use my phone as a remote?',
-    a: 'Yes. You can control your presentation from your phone. Move between slides and change what is being shown without staying next to the main computer.',
-  },
-  {
-    q: 'Can I create my own templates?',
-    a: 'Yes. You can start with our built-in templates or create your own. Design custom templates for Bible verses and lyrics on your projector or livestream.',
-  },
-  {
-    q: 'Does it work on Mac and Windows?',
-    a: 'Yes. Because LlamaPresenter runs in a web browser, you can use it on both Mac and Windows.',
-  },
-  {
-    q: 'Is LlamaPresenter only for large churches?',
-    a: 'No. LlamaPresenter works for churches of any size. Whether you have one screen or a full setup with projector, stage display, and livestream, you can use the features you need.',
-  },
-  {
-    q: 'Can I use LlamaPresenter for livestreams?',
-    a: 'Yes. The stream output is an ordinary web page with a transparent background, so it works with OBS, vMix, Wirecast, Streamlabs, Ecamm Live or any other tool that can take a browser source. Add a browser source, paste your LlamaPresenter stream link, and your Bible verses, lyrics and name cards appear over the camera in your livestream.',
-  },
-  {
-    q: 'Can I use it for song lyrics?',
-    a: 'Yes. You can add your songs and display lyrics on your projector, stage display, or livestream. You can also import song lyrics from a file exported from ProPresenter, so you do not have to add all your songs again.',
-  },
-  {
-    q: 'How does the projector know which session it belongs to?',
-    a: 'Each session has its own unguessable link. Whoever opens it sees that session and nothing else — which is why the projector needs no account and no password. Treat the link the way you would a meeting link.',
-  },
-  {
-    q: 'Can two people run it at once?',
-    a: 'Yes. The console is a browser tab, so a second operator can open the same session on their own laptop and both see the same live slide.',
-  },
-];
 
 export const revalidate = 60;
 
@@ -169,45 +153,45 @@ export default async function HomePage() {
       </section>
 
       {/* ------------------------------------------------- what they see */}
-      <section id="room" className="mt-16 scroll-mt-20 border-y border-site-rule bg-site-band">
-        {/* The console gets the whole width. It is one picture of the whole
-            product, and a column of prose beside it only made it smaller —
-            what a volunteer sees for an hour on a Sunday is the argument. */}
-        <div className="py-16 sm:py-24">
-          {/* The words go inside the zoom rather than above it: they are pinned
-              with the frame as one group, and the frame grows over them. */}
-          <ScrollZoom
-            intro={
-              <div className="mx-auto max-w-3xl px-6 text-center">
-                <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
-                  Everything you need for your next service
-                </h2>
-                <p className="mt-5 text-[17px] leading-relaxed text-site-muted">
-                  Show Bible verses, lyrics, announcements, and media across your projector, stage display, and
-                  livestream. Switch languages, control your service from your phone, and create your own look with
-                  flexible templates.
-                </p>
-              </div>
-            }
-          >
-            <Frame
-              url="llamapresenter.com/studio"
-              src="/images/console-studio.webp"
-              alt="The console: the language panel on the left, Philippians and Luke broken into verse cards in the
-                middle, and the live projector preview, outputs and audio playlist on the right"
-              // The screenshot's own shape, so the pane crops none of it.
-              paneClassName="aspect-[900/481]"
-              sizes="100vw"
-              className="shadow-site-frame"
-            />
-          </ScrollZoom>
-        </div>
-      </section>
+      {/* The room going black behind the console as it grows, lifting again
+          past the video's own middle — see `Vignette`. */}
+      <Vignette>
+        <section id="room" className="mt-16 scroll-mt-20 border-y border-site-rule bg-site-band">
+          {/* The console gets the whole width. It is one picture of the whole
+              product, and a column of prose beside it only made it smaller —
+              what a volunteer sees for an hour on a Sunday is the argument. */}
+          <div className="py-16 sm:py-24">
+            {/* The words go inside the zoom rather than above it: they are
+                pinned with the frame as one group, and the frame grows over
+                them. */}
+            <ScrollZoom
+              intro={
+                <div className="mx-auto max-w-3xl px-6 text-center">
+                  <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
+                    Everything you need for your next service
+                  </h2>
+                  <p className="mt-5 text-[17px] leading-relaxed text-site-muted">
+                    Show Bible verses, lyrics, announcements, and media across your projector, stage display, and
+                    livestream. Switch languages, control your service from your phone, and create your own look with
+                    flexible templates.
+                  </p>
+                </div>
+              }
+            >
+              <Frame url="llamapresenter.com/studio" paneClassName="aspect-[10000/5622]" className="shadow-site-frame">
+                <Vimeo id="1225360285" title="LlamaPresenter" />
+              </Frame>
+            </ScrollZoom>
+          </div>
+        </section>
+      </Vignette>
 
       {/* --------------------------------------------------------- features */}
       <Feature
         id="languages"
         title="One service. Every language."
+        tags={['Georgian', 'English', 'Russian', 'Greek', 'Add your own']}
+        links={[{ label: 'Multilingual church services', href: '/use-cases/multilingual-church-services' }]}
         visual={
           <Art
             src="/images/features/languages.png"
@@ -219,16 +203,16 @@ export default async function HomePage() {
           Choose which languages appear on the projector, stage display, or livestream and turn them on or off whenever
           you need.
         </p>
-        <p>
-          Not only ours. Georgian, English, Russian, Greek, Arabic and Latin come with it, and any other language is a
-          Bible you add yourself — pick it from the archives the console browses and it sits on the rail beside the
-          rest, ready to go side by side on the same slide.
-        </p>
       </Feature>
 
       <Feature
         flip
         title="Give your team the view they need"
+        tags={['Current slide', 'Next slide', 'Clock', 'Agenda', 'Timer']}
+        links={[
+          { label: 'Stage display', href: '/use-cases/stage-display' },
+          { label: 'Service timing', href: '/use-cases/service-timing' },
+        ]}
         visual={
           <Art
             src="/images/features/stage-timer.png"
@@ -244,6 +228,8 @@ export default async function HomePage() {
 
       <Feature
         title="Your content. Your style."
+        tags={['Size', 'Case', 'Colour', 'Outline', 'Plate']}
+        links={[{ label: 'Slide templates', href: '/use-cases/church-slide-templates' }]}
         visual={
           <Art
             src="/images/features/template-editor.png"
@@ -260,6 +246,11 @@ export default async function HomePage() {
       <Feature
         flip
         title="Three screens. One service."
+        tags={['Projector', 'Stage display', 'Livestream']}
+        links={[
+          { label: 'Livestream graphics', href: '/use-cases/church-livestream-graphics' },
+          { label: 'Lower thirds', href: '/use-cases/lower-thirds' },
+        ]}
         visual={
           <Art
             src="/images/features/outputs.png"
@@ -275,6 +266,8 @@ export default async function HomePage() {
 
       <Feature
         title="Control your service from your phone"
+        tags={['Remote control', 'QR code', 'No app to install']}
+        links={[{ label: 'Phone remote control', href: '/use-cases/phone-remote-control' }]}
         visual={
           <Art
             src="/images/features/remote-phone.webp"
@@ -323,7 +316,13 @@ export default async function HomePage() {
           disclosure triangles is a dozen clicks to find out whether the thing
           runs on Windows — the answers are short enough to simply print. */}
       <section id="faq" className="mx-auto max-w-7xl scroll-mt-20 px-6 py-16 sm:py-24">
-        <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Frequently asked questions</h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
+          <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Frequently asked questions</h2>
+
+          <Link href="/faq" className="text-[15px] text-site-ink underline underline-offset-4">
+            Open the full FAQ
+          </Link>
+        </div>
 
         {/* Columns rather than a grid: the questions run down one column and
             continue in the next, and the browser balances the two whatever
@@ -331,7 +330,7 @@ export default async function HomePage() {
         <div className="mt-12 gap-x-14 sm:columns-2">
           {FAQ.map(item => (
             <div key={item.q} className="mb-9 break-inside-avoid">
-              <h3 className="text-[19px] leading-snug font-medium text-site-ink">{item.q}</h3>
+              <h3 className="text-[19px] leading-snug font-semibold text-site-ink">{item.q}</h3>
               <p className="mt-2.5 text-[16px] leading-relaxed text-site-muted">{item.a}</p>
             </div>
           ))}
@@ -343,11 +342,11 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-8 px-6 py-20 sm:py-24 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h2 className="font-valera text-3xl leading-[1.1] tracking-tight text-studio-text sm:text-4xl">
-              Sunday is in six days.
+              Free for every church, forever.
             </h2>
             <p className="mt-4 max-w-md text-[17px] leading-relaxed text-studio-muted">
-              Set it up in the time it takes to make coffee. Open the console, send the projector its link, and put a
-              verse on the wall.
+              No credit card, no install. Open the console, send the projector its link, and put scripture on the
+              wall in minutes.
             </p>
           </div>
 

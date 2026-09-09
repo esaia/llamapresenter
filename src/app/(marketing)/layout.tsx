@@ -10,7 +10,7 @@ const NAV = [
   { href: '/use-cases', label: 'Use cases' },
   { href: '/compare', label: 'Compare' },
   { href: '/pricing', label: 'Pricing' },
-  { href: '/#faq', label: 'Questions' },
+  { href: '/faq', label: 'Questions' },
 ];
 
 /**
@@ -27,7 +27,7 @@ const FOOTER = [
     title: 'Product',
     links: [
               { href: '/pricing', label: 'Pricing' },
-      { href: '/#faq', label: 'Questions' },
+      { href: '/faq', label: 'Questions' },
     ],
   },
   {

@@ -140,6 +140,12 @@ const Stage = ({ intro, children }: { intro: React.ReactNode; children: React.Re
   const scale = useTransform(t, [0.06, 0.78], [1, fit.scale]);
   const y = useTransform(t, [0.06, 0.78], [0, fit.lift]);
 
+  // The words fade out ahead of the frame growing over them, rather than
+  // sitting at full opacity under whatever the frame or the room's own
+  // darkening haven't yet covered. Gone well before the hold — the reader
+  // should never watch the frame's edge cut across live text.
+  const introOpacity = useTransform(t, [0, 0.22], [1, 0]);
+
   return (
     <div ref={track} className="relative h-[200vh]">
       {/* The stage is the size of the window and mostly empty, so it lets
@@ -147,10 +153,13 @@ const Stage = ({ intro, children }: { intro: React.ReactNode; children: React.Re
           would swallow whatever it is sitting over.
 
           `overflow-x-clip` rather than `overflow-hidden`: a clipped stage would
-          also cut the frame's shadow off at the top and bottom. */}
+          also cut the frame's shadow off at the top and bottom. The room going
+          black behind the frame is `Vignette`, wrapped around this section and
+          the video after it — one fade spanning both rather than one that
+          snaps back to light between them. */}
       <div className="pointer-events-none sticky top-0 z-20 flex h-dvh items-center overflow-x-clip">
         <div ref={group} className="relative w-full">
-          {intro}
+          <motion.div style={{ opacity: introOpacity }}>{intro}</motion.div>
 
           <div className="mx-auto mt-12 w-full max-w-7xl px-6">
             <motion.div ref={box} className="pointer-events-auto" style={{ scale, y, willChange: 'transform' }}>
