@@ -1,9 +1,9 @@
 import Link from 'next/link';
 
+import { AuthLink } from '@/components/marketing/AuthLink';
 import { Wordmark } from '@/components/brand/Wordmark';
 import { SOLUTIONS } from '@/lib/marketing/solutions';
 import { USE_CASES } from '@/lib/marketing/useCases';
-import { getUser } from '@/lib/supabase/server';
 
 const NAV = [
   { href: '/solutions', label: 'Solutions' },
@@ -70,10 +70,13 @@ const FOOTER = [
  * Light, unlike everything else in this app: `.site` is the whole of that
  * decision — see the `--color-site-*` block in globals.css for why the console
  * goes the other way.
+ *
+ * A plain server component with nothing dynamic of its own — no cookies, no
+ * `getUser()` — so every page it wraps can still be prerendered and cached.
+ * The one thing on the page that depends on whether someone is signed in is
+ * `AuthLink`, decided client-side for exactly that reason.
  */
-export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
-  const user = await getUser();
-
+export default function MarketingLayout({ children }: LayoutProps<'/'>) {
   return (
     <div className="site flex min-h-dvh flex-col">
       {/* Not sticky, and no bar of its own: the wash behind the hero runs up
@@ -97,13 +100,10 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
             ))}
           </div>
 
-          <Link
-            href={user ? '/studio' : '/login'}
+          <AuthLink
             className="ml-auto rounded-studio bg-site-ink px-3.5 py-2 text-sm font-medium whitespace-nowrap text-white
               transition-colors duration-150 hover:bg-site-ink/85 sm:px-4 md:ml-0"
-          >
-            {user ? 'Open console' : 'Sign in'}
-          </Link>
+          />
         </nav>
       </header>
 
@@ -146,9 +146,7 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
               <a href="mailto:hello@llamapresenter.com" className="transition-colors hover:text-site-ink">
                 hello@llamapresenter.com
               </a>
-              <Link href={user ? '/studio' : '/login'} className="transition-colors hover:text-site-ink">
-                {user ? 'Open console' : 'Sign in'}
-              </Link>
+              <AuthLink className="transition-colors hover:text-site-ink" />
             </div>
           </div>
         </div>
