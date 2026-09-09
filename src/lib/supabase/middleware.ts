@@ -63,9 +63,16 @@ export const updateSession = async (request: NextRequest) => {
   } = await supabase.auth.getUser();
 
   if (!user && !isPublic(request.nextUrl.pathname)) {
+    // Query and all: `/upgrade?billing=annual` is a visitor who picked a year
+    // on the pricing page, and coming back to a bare `/upgrade` would quietly
+    // sell them a month.
+    const back = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     const login = request.nextUrl.clone();
+
     login.pathname = '/login';
-    login.searchParams.set('next', request.nextUrl.pathname);
+    login.search = '';
+    login.searchParams.set('next', back);
+
     return NextResponse.redirect(login);
   }
 

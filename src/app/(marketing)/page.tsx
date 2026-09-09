@@ -4,9 +4,11 @@ import { Art } from '@/components/marketing/Art';
 import { Frame } from '@/components/marketing/Frame';
 import { HeroScene } from '@/components/marketing/HeroScene';
 import { FoundingSpots } from '@/components/marketing/FoundingSpots';
+import { CadenceProvider } from '@/components/marketing/cadence';
+import { HomePlanCards } from '@/components/marketing/HomePlanCards';
 import { Marker } from '@/components/marketing/Marker';
 import { ScrollZoom } from '@/components/marketing/ScrollZoom';
-import { plansFor } from '@/lib/billing/plans';
+import { bothPlansFor } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 
 /* The home page is the one most likely to be met by somebody searching the
@@ -126,7 +128,7 @@ export const revalidate = 60;
 
 export default async function HomePage() {
   const claimed = await claimedSpots();
-  const PLANS = plansFor(claimed);
+  const plans = bothPlansFor(claimed);
 
   return (
     <main>
@@ -289,67 +291,32 @@ export default async function HomePage() {
       {/* ------------------------------------------------------------ price */}
       {/* The band the "what they see" section uses, so price reads as its own
           stop on the page rather than more of the paper the features sit on. */}
-      <section className="border-y border-site-rule bg-site-band">
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:py-24 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
-          <div>
-            <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Pay only when you outgrow it.</h2>
-            <p className="mt-5 max-w-prose text-[17px] leading-relaxed text-site-muted">
-              Putting scripture on the screen costs nothing — the whole Bible, the projector, the stage display and
-              the lower third, with no trial and no time limit. Pro is for teams that also run songs, music and their
-              own templates every week.
-            </p>
-            {/* One line, and only while it is true. The row of marks that makes
-                the offer legible lives on /pricing; here it is a fact and a
-                door, not a second scarcity display. */}
-            <FoundingSpots claimed={claimed} className="mt-8" />
+      {/* The band is one provider: the switch above the cards also moves the
+          ladder in the column beside them. */}
+      <CadenceProvider>
+        <section className="border-y border-site-rule bg-site-band">
+          <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 sm:py-24 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+            <div>
+              <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Pay only when you outgrow it.</h2>
+              <p className="mt-5 max-w-prose text-[17px] leading-relaxed text-site-muted">
+                Putting scripture on the screen costs nothing — the whole Bible, the projector, the stage display and
+                the lower third, with no trial and no time limit. Pro is for teams that also run songs, music and their
+                own templates every week.
+              </p>
+              {/* One line, and only while it is true. The row of marks that makes
+                  the offer legible lives on /pricing; here it is a fact and a
+                  door, not a second scarcity display. */}
+              <FoundingSpots claimed={claimed} className="mt-8" />
 
-            <Link href="/pricing" className="mt-6 inline-block text-[17px] text-site-ink underline underline-offset-4">
-              See what each plan includes
-            </Link>
+              <Link href="/pricing" className="mt-6 inline-block text-[17px] text-site-ink underline underline-offset-4">
+                See what each plan includes
+              </Link>
+            </div>
+
+            <HomePlanCards plans={plans} />
           </div>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            {Object.values(PLANS).map(plan => (
-              <div
-                key={plan.id}
-                // Both cards take a ground of their own now that the section
-                // has one: on the band, a transparent card is not a card. They
-                // are columns because the two lists are different lengths and
-                // the buttons still have to sit on one line at the foot.
-                className={
-                  plan.id === 'pro'
-                    ? 'flex flex-col rounded-studio-lg border border-site-ink bg-site-surface p-6 shadow-sm'
-                    : 'flex flex-col rounded-studio-lg border border-site-rule bg-site-bg p-6'
-                }
-              >
-                <h3 className="text-sm text-site-muted">{plan.name}</h3>
-                <p className="mt-3 flex items-baseline gap-2">
-                  <span className={`${DISPLAY} text-4xl`}>{plan.price}</span>
-                  <span className="text-sm text-site-faint">{plan.cadence}</span>
-                </p>
-                <ul className="mt-5 flex-1 space-y-2 text-[15px] text-site-muted">
-                  {plan.highlights.map(item => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-
-                <Link
-                  href={plan.cta.href}
-                  className={
-                    plan.id === 'pro'
-                      ? `mt-8 block rounded-studio bg-site-accent px-4 py-2.5 text-center text-[15px] font-medium
-                         text-site-onaccent transition-colors duration-150 hover:bg-site-accent/85`
-                      : `mt-8 block rounded-studio border border-site-rule px-4 py-2.5 text-center text-[15px]
-                         text-site-ink transition-colors duration-150 hover:bg-site-band`
-                  }
-                >
-                  {plan.id === 'pro' ? `${plan.cta.label} — ${plan.price} ${plan.cadence}` : plan.cta.label}
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      </CadenceProvider>
 
       {/* -------------------------------------------------------------- faq */}
       {/* Every answer open, in two columns. A dozen questions behind

@@ -1,7 +1,14 @@
 import { MAX_LANGS } from '../bible/languages';
 import { THEMES } from '../projector/themes';
 
-import { FOUNDING_SPOTS, tierNow } from './founding';
+import {
+  FOUNDING_SPOTS,
+  monthlyEquivalent,
+  priceOf,
+  savingOf,
+  tierNow,
+  type Cadence,
+} from './founding';
 import { FREE_LIMITS } from './limits';
 
 /**
@@ -15,7 +22,10 @@ import { FREE_LIMITS } from './limits';
  *
  * What Pro costs is not written here. While the founding spots last it depends
  * on how many are gone — see `./founding` — so anything that prints a price
- * calls `plansFor(claimed)` with a count read on the server.
+ * calls `plansFor(claimed)` with a count read on the server. It also depends on
+ * whether the church is paying by the month or by the year, which is the
+ * reader's to choose: a page that offers both asks for both and hands the pair
+ * to the switch, rather than fetching a second time when it is flipped.
  */
 export type PlanId = 'free' | 'pro';
 
@@ -24,6 +34,10 @@ export interface Plan {
   name: string;
   price: string;
   cadence: string;
+  /** What paying this way saves, on the plans and cadences where it saves. */
+  saving?: string;
+  /** What a year works out at by the month. Only on the annual Pro plan. */
+  permonth?: string;
   blurb: string;
   highlights: string[];
   /** What the button under the card says, and where it goes. */
@@ -37,8 +51,9 @@ export interface Plan {
  * because every page that prints a price is already server-rendered — the
  * console is handed it as an `initial` prop rather than fetching after paint.
  */
-export const plansFor = (claimed: number): Record<PlanId, Plan> => {
+export const plansFor = (claimed: number, cadence: Cadence = 'monthly'): Record<PlanId, Plan> => {
   const tier = tierNow(claimed);
+  const rate = priceOf(tier, cadence);
 
   return {
   free: {
@@ -61,8 +76,10 @@ export const plansFor = (claimed: number): Record<PlanId, Plan> => {
   pro: {
     id: 'pro',
     name: 'Pro',
-    price: tier.price,
-    cadence: tier.cadence,
+    price: rate.price,
+    cadence: rate.cadence,
+    saving: cadence === 'annual' ? savingOf(tier) : undefined,
+    permonth: cadence === 'annual' ? monthlyEquivalent(tier) : undefined,
     blurb: 'For churches that need more songs, more languages, custom templates, and more control.',
     highlights: [
       'Everything in Free, without the limits',
@@ -74,8 +91,11 @@ export const plansFor = (claimed: number): Record<PlanId, Plan> => {
     ],
     // Buying needs an account, so the button goes to `/upgrade` rather than to
     // the provider: that page signs the visitor in if it has to and opens the
-    // checkout session we created for them.
-    cta: { label: 'Get Pro', href: '/upgrade' },
+    // checkout session we created for them. The cadence rides in the query
+    // because the sign-in in the middle loses everything else — `/upgrade` is
+    // not public, so a visitor coming from here is bounced through `/login`
+    // and returned by its `next`, query string and all.
+    cta: { label: 'Get Pro', href: cadence === 'annual' ? '/upgrade?billing=annual' : '/upgrade' },
   },
   };
 };
@@ -88,3 +108,9 @@ export const plansFor = (claimed: number): Record<PlanId, Plan> => {
  * do not charge.
  */
 export const PLANS: Record<PlanId, Plan> = plansFor(FOUNDING_SPOTS);
+
+/** Both ways of paying, for a page that offers the reader the choice. */
+export const bothPlansFor = (claimed: number): Record<Cadence, Record<PlanId, Plan>> => ({
+  monthly: plansFor(claimed, 'monthly'),
+  annual: plansFor(claimed, 'annual'),
+});

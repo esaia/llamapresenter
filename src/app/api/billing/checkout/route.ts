@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 
-import { dodo, productForTier, siteUrl } from '@/lib/billing/dodo';
+import { dodo, productFor, siteUrl } from '@/lib/billing/dodo';
+import { cadenceOf } from '@/lib/billing/founding';
 import { claimSeat } from '@/lib/billing/seats';
 import { admin } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
@@ -19,7 +20,17 @@ import { createClient } from '@/lib/supabase/server';
  * taken here, in one statement, right before the checkout session opens — so
  * two churches that both read "3 left" cannot both be sold the same spot.
  */
-export const POST = async () => {
+export const POST = async (request: NextRequest) => {
+  // Monthly unless the caller asked for a year. Read off the body rather than
+  // trusted from the browser as a price: what a year *costs* is decided here,
+  // from the rung the seat lands on, exactly as the monthly rate is.
+  const cadence = cadenceOf(
+    await request
+      .json()
+      .then((body: { cadence?: string }) => body?.cadence)
+      .catch(() => null),
+  );
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -53,11 +64,12 @@ export const POST = async () => {
   }
 
   // The founding spot, and with it the product this subscription is created
-  // on — which is what holds the price for as long as the church stays. An
-  // operator who already has a seat gets the same one back, so opening
-  // checkout twice cannot move them up the ladder or spend a second spot.
+  // on — which is what holds the price and the cadence for as long as the
+  // church stays. An operator who already has a seat gets the same one back,
+  // so opening checkout twice cannot move them up the ladder or spend a
+  // second spot.
   const { tier } = await claimSeat(user.id);
-  const product = productForTier(tier);
+  const product = productFor(tier, cadence);
 
   if (!product) {
     return NextResponse.json({ error: 'billing is not configured yet' }, { status: 503 });

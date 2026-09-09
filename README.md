@@ -431,12 +431,26 @@ the life of the subscription — which is what makes "yours for as long as you
 stay" true without us having to remember it. A coupon is a line on an invoice
 that can be removed.
 
+**Every rung is sold by the month and by the year.** A year costs ten months —
+$89, $139 and $189 — so the two cadences are two prices on the same rung rather
+than two ladders: seat 7 is a founding seat whichever way the church pays. That
+makes six products, and the cadence is held by the product the subscription was
+created on for the same reason the rate is. The reader picks with the switch
+above the cards on `/` and `/pricing`; the choice rides to `/upgrade` in the
+query — which is why the middleware's `next` carries the search string — and on
+to `/api/billing/checkout` in the request body. What a year *costs* is never
+sent from the browser: the route reads the cadence and prices it off the rung
+the seat lands on, exactly as it does the monthly rate.
+
 ### Setting it up in the Dodo dashboard
 
 1. **Products** — one subscription product per rung of the founding ladder, at
    $9.00, $14.00 and $19.00, billing period *1 month*, no trial. Copy the
    `pdt_…` ids into `DODO_PAYMENTS_PRODUCT_PRO_FOUNDING`, `…_EARLY` and
-   `…_STANDARD`.
+   `…_STANDARD`. Then the same three by the year, at $89.00, $139.00 and
+   $189.00, billing period *1 year*, into `…_FOUNDING_ANNUAL`, `…_EARLY_ANNUAL`
+   and `…_STANDARD_ANNUAL`. Six in all; a rung with no id for the cadence asked
+   for is not sellable and the route says so rather than charging the other one.
 2. **API key** — Developer → API Keys. Test and live are different keys against
    different hosts; `DODO_PAYMENTS_ENVIRONMENT` has to name the one you used.
 3. **Webhook** — Developer → Webhooks → add

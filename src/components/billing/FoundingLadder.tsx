@@ -1,10 +1,15 @@
+import { CountingPrice } from './CountingPrice';
+
 import {
   FOUNDING_TIERS,
   MARK_GROUPS,
   marks,
+  PER,
+  priceOf,
   soldOut,
   spotsInTier,
   tierNow,
+  type Cadence,
   type FoundingTierId,
 } from '@/lib/billing/founding';
 
@@ -12,7 +17,9 @@ import {
  * Early pricing, drawn the same way everywhere it is offered.
  *
  * Each rung is its price, the word `forever`, who it is for, and one mark per
- * spot. The last rung has no marks, because it is the one that never fills,
+ * spot — one number per rung, in whichever way the reader has said they would
+ * pay. A ladder still showing $9 while the card under it says $89 is two
+ * offers on one page, so the switch moves both. The last rung has no marks, because it is the one that never fills,
  * and that absence is the point of the whole row. Underneath, the one line
  * that says what the offer is.
  *
@@ -122,31 +129,42 @@ const GROUP_COPY: Record<FoundingTierId, string> = {
 const STRONG = 'text-[color:var(--ladder-strong)]';
 const FAINT = 'text-[color:var(--ladder-faint)]';
 
-/** A price, whether it lasts, and who it is for. */
+/** A price, the period it buys, whether it lasts, and who it is for. */
 const Rung = ({
   price,
+  per,
   copy,
   forever,
   gone,
   size,
 }: {
   price: string;
+  /** `/month` or `/year`, tight against the number. */
+  per: string;
   copy: string;
   forever: boolean;
   gone: boolean;
   size: number;
 }) => (
   <p className={gone || !forever ? FAINT : STRONG}>
-    <span
-      className={`font-valera tracking-tight ${gone ? 'line-through' : ''}`}
+    {/* Counted rather than swapped: the switch moves $9 to $89, and a number
+        that changes without moving leaves the reader checking whether it
+        did. */}
+    <CountingPrice
+      value={price}
+      className={`inline-block font-valera tracking-tight ${gone ? 'line-through' : ''}`}
       style={{ fontSize: size, lineHeight: 1.1 }}
-    >
-      {price}
-    </span>
+    />
 
-    {/* The question every early-pricing page gets asked, answered beside the
+    {/* The period is stuck to the number, because "$89 forever" on its own
+        reads as one payment and never again — which is not what is on offer.
+        `forever` is about the rate, and only says so after the year it buys:
+        the question every early-pricing page gets asked, answered beside the
         price rather than three sections down in the questions. */}
-    {forever ? <span className={`ml-1.5 text-sm ${FAINT}`}>forever</span> : null}
+    <span className={`text-sm ${FAINT}`}>
+      {per}
+      {forever ? ' forever' : ''}
+    </span>
 
     <span className={`mt-1 block text-[13px] leading-snug ${FAINT}`}>{copy}</span>
   </p>
@@ -154,10 +172,13 @@ const Rung = ({
 
 export const FoundingLadder = ({
   claimed,
+  cadence = 'monthly',
   compact = false,
   className = '',
 }: {
   claimed: number;
+  /** Which way the reader has said they would pay. Monthly where none is offered. */
+  cadence?: Cadence;
   /** Smaller type and marks, for the account panel beside a running service. */
   compact?: boolean;
   className?: string;
@@ -170,7 +191,8 @@ export const FoundingLadder = ({
   if (soldOut(claimed)) {
     return (
       <p className={`max-w-prose leading-relaxed ${FAINT} ${compact ? 'text-xs' : 'text-[17px]'} ${className}`}>
-        All 15 early spots are taken. Pro is {standard.price} a month from here.
+        All 15 early spots are taken. Pro is {priceOf(standard, cadence).price} {priceOf(standard, cadence).per}
+        from here.
       </p>
     );
   }
@@ -183,7 +205,14 @@ export const FoundingLadder = ({
       <div className={`flex flex-wrap items-start ${compact ? 'gap-x-10 gap-y-5' : 'gap-x-14 gap-y-8'}`}>
         {GROUPS.map(({ tier, from, to }) => (
           <div key={tier.id}>
-            <Rung price={tier.price} copy={GROUP_COPY[tier.id]} forever gone={claimed >= to} size={price} />
+            <Rung
+              price={priceOf(tier, cadence).price}
+              per={PER[cadence]}
+              copy={GROUP_COPY[tier.id]}
+              forever
+              gone={claimed >= to}
+              size={price}
+            />
 
             {/* Each rung draws its own slice, so a label stays over the marks
                 it describes when the row wraps on a phone. */}
@@ -191,11 +220,19 @@ export const FoundingLadder = ({
           </div>
         ))}
 
-        <Rung price={standard.price} copy={GROUP_COPY[standard.id]} forever={false} gone={false} size={price} />
+        <Rung
+          price={priceOf(standard, cadence).price}
+          per={PER[cadence]}
+          copy={GROUP_COPY[standard.id]}
+          forever={false}
+          gone={false}
+          size={price}
+        />
       </div>
 
       <p className={`${STRONG} ${compact ? 'mt-4 text-sm' : 'mt-7 text-[17px]'}`}>
-        Only {spotsInTier(claimed)} subscribers can get Pro for {tierNow(claimed).price}/month.
+        Only {spotsInTier(claimed)} subscribers can get Pro for{' '}
+        <CountingPrice value={`${priceOf(tierNow(claimed), cadence).price}${PER[cadence]}`} />.
       </p>
     </div>
   );

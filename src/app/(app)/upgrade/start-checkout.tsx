@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import type { Cadence } from '@/lib/billing/founding';
+
 /**
  * The step between "Get Pro" on the marketing page and Dodo's checkout.
  *
@@ -15,7 +17,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * A visitor who is not signed in never gets this far: `/upgrade` is not public,
  * so the middleware sends them to sign in and back again.
  */
-export const StartCheckout = ({ price, cadence }: { price: string; cadence: string }) => {
+export const StartCheckout = ({
+  billing,
+  price,
+  cadence,
+}: {
+  billing: Cadence;
+  price: string;
+  cadence: string;
+}) => {
   const [error, setError] = useState<string | null>(null);
   // Two effects in development would be two checkout sessions, and the second
   // is the one the operator would pay on while the first sits open.
@@ -25,7 +35,11 @@ export const StartCheckout = ({ price, cadence }: { price: string; cadence: stri
     setError(null);
 
     try {
-      const res = await fetch('/api/billing/checkout', { method: 'POST' });
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ cadence: billing }),
+      });
       const body = (await res.json()) as { url?: string; error?: string };
 
       if (res.ok && body.url) {
@@ -37,7 +51,7 @@ export const StartCheckout = ({ price, cadence }: { price: string; cadence: stri
     } catch {
       setError('Checkout would not open.');
     }
-  }, []);
+  }, [billing]);
 
   useEffect(() => {
     if (asked.current) return;
