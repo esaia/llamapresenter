@@ -3,18 +3,34 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 
 import { Art } from '@/components/marketing/Art';
+import { BothCover } from '@/components/marketing/BothCover';
+import { Marker } from '@/components/marketing/Marker';
+import { Tick } from '@/components/marketing/Tick';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
 
+const TITLE = 'ProPresenter Alternative for Churches | LlamaPresenter';
+
+const DESCRIPTION =
+  'Looking for a ProPresenter alternative? LlamaPresenter is a browser-based church presentation tool for Bible '
+  + 'verses, lyrics, multiple languages, projector, stage, livestream, templates, and remote control. No install '
+  + 'required.';
+
 export const metadata = {
-  title: 'LlamaPresenter vs ProPresenter',
-  description:
-    'Modern church presentation software with no install required. Bible verses in any language, side by side, song lyrics, '
-    + 'stage timers and lower thirds from any web browser. A ProPresenter alternative that is free to start.',
+  title: TITLE,
+  description: DESCRIPTION,
   alternates: { canonical: '/propresenter-alternative' },
+  openGraph: {
+    type: 'website',
+    siteName: 'LlamaPresenter',
+    url: '/propresenter-alternative',
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
 };
 
 /**
@@ -25,43 +41,31 @@ export const metadata = {
 const OURS = 'LlamaPresenter';
 const THEIRS = 'ProPresenter';
 
-/** A tick, for a row where the answer really is yes. Drawn, not a font glyph. */
-const Tick = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 16 16" aria-hidden focusable="false" className={className ?? 'size-3.5 shrink-0'}>
-    <path
-      d="M3 8.5 6.2 12 13 4.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
 /**
  * The table, row by row.
  *
- * Written as sentences rather than ticks in both columns, because a tick in one
- * column and a blank in the other is an argument, and most of these rows are
- * genuinely a difference in shape rather than a thing one of us cannot do. The
- * ProPresenter column describes a native desktop app of the kind their own
- * documentation describes; where a number would date badly — what a licence
- * costs this year — the cell sends the reader to look rather than guessing.
+ * Short on both sides. A cell is a phrase, not a paragraph: a reader scanning
+ * two columns is comparing, not reading, and the pages below the table are
+ * where the argument gets made at length.
  */
-const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label: string; theirs: string; ours: string }[] }[] => [
+const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label: string; ours: string; theirs: string }[] }[] => [
   {
     group: 'Getting it running',
     rows: [
       {
         label: 'Installation',
-        theirs: 'A heavy desktop app, downloaded and installed on every machine that runs it, and licensed there.',
-        ours: '100% web based. It runs in any modern browser, with nothing to download and no admin rights.',
+        theirs: 'Installed and licensed on every machine.',
+        ours: 'None. It runs in any browser.',
+      },
+      {
+        label: 'A volunteer covering on Sunday',
+        theirs: 'Needs the machine with the licence.',
+        ours: 'Signs in on whatever computer is there.',
       },
       {
         label: 'Remote control',
-        theirs: 'Its own remote app, installed on the phone and on the same network as the presenting machine.',
-        ours: 'Control it from any phone browser, on the same web link. Nothing to install and nothing to pair.',
+        theirs: 'Their app, on the same network.',
+        ours: 'Any phone browser, from anywhere.',
       },
     ],
   },
@@ -70,18 +74,23 @@ const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label
     rows: [
       {
         label: 'Display outputs',
-        theirs: 'Limited by the physical video outputs of the presenting machine, or a video feed over the network.',
-        ours: 'Unlimited web outputs, each at its own URL — projector, stage display and lower third.',
+        theirs: 'The video outputs of that machine.',
+        ours: 'A link each — projector, stage, lower third.',
+      },
+      {
+        label: 'Adding the fourth screen',
+        theirs: 'Another seat, at $29 a month.',
+        ours: 'Another link, at no cost.',
       },
       {
         label: 'Stage timer and clocks',
-        theirs: 'Built-in countdowns and clocks, carried on the stage display.',
-        ours: 'Advanced timer controls of the kind a dedicated timer app gives you, on a display feed of their own.',
+        theirs: 'Countdowns on the stage display.',
+        ours: 'In Stage View, and on a link of its own.',
       },
       {
         label: 'Livestream overlay',
-        theirs: 'An alpha-keyed video output or a network video feed, taken by your switcher or streaming software.',
-        ours: 'A transparent browser source you paste straight into OBS or vMix. No capture hardware in between.',
+        theirs: 'An alpha-keyed or network video feed.',
+        ours: 'A browser source, straight into OBS.',
       },
     ],
   },
@@ -90,19 +99,28 @@ const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label
     rows: [
       {
         label: 'Multi-language scripture',
-        theirs: 'Set up by hand, slide by slide.',
-        ours: 'Built in. Arm your languages and every verse comes out side by side on one slide.',
+        theirs: 'A theme per translation, verse by verse.',
+        ours: 'Arm the languages. Every verse comes out in all of them.',
+      },
+      {
+        label: 'Different languages per screen',
+        theirs: 'One slide, every screen.',
+        ours: 'Each screen shows the languages you give it.',
+      },
+      {
+        label: 'Two languages in a song',
+        theirs: 'Both typed into the slide.',
+        ours: 'The same as a verse, out of the box.',
       },
       {
         label: 'A Bible in your own language',
-        theirs: 'Buy the module, or find a file and hope it imports.',
-        ours: 'Pick it from a public archive inside the console. Over a thousand Bibles, hundreds of languages, '
-          + 'nothing to download.',
+        theirs: 'Buy a module, or import a file.',
+        ours: 'Over a thousand, from public archives.',
       },
       {
         label: 'Template customization',
-        theirs: 'Themes and templates built in the app, on that machine.',
-        ours: 'A drag-and-drop template editor for scripture and lyrics, in the browser.',
+        theirs: 'Themes built in the app, on that machine.',
+        ours: 'A drag-and-drop editor, in the browser.',
       },
     ],
   },
@@ -111,13 +129,25 @@ const comparison = (PLANS: Record<PlanId, Plan>): { group: string; rows: { label
     rows: [
       {
         label: 'Pricing model',
-        theirs: '$29 a month for one seat, and a seat is a computer that puts something on a screen. A campus '
-          + 'licence is $59 a month, and four seats or more come down to $19 each.',
-        ours: `A generous free plan, and one flexible subscription at ${PLANS.pro.price} ${PLANS.pro.cadence} when `
-          + 'your church outgrows it.',
+        theirs: '$29 a month a seat, and a seat is a computer.',
+        ours: `Free, with no time limit. Pro is ${PLANS.pro.price} ${PLANS.pro.cadence}.`,
       },
     ],
   },
+];
+
+/** The rows where a tick on both sides is the honest answer. */
+const SHARED = [
+  'Bible search and verse slides',
+  'Song lyrics and a song library',
+  'Projector output',
+  'A stage display',
+  'Livestream graphics',
+  'Custom templates and slide design',
+  'A countdown timer',
+  'Remote control from a phone',
+  'Your own backgrounds and music',
+  'Lower thirds over the stream',
 ];
 
 /** The three things a reader wants before they scroll. */
@@ -144,8 +174,8 @@ const HEADLINES = [
 
 /** Where the honest answer is "use theirs". */
 const THEIRS_IS_BETTER = [
-  'Your service runs without reliable internet. A native app on a machine in the booth does not care about the '
-    + 'building’s wifi; a browser tab does.',
+  'Your service runs without reliable internet, today. A native app on a machine in the booth does not care '
+    + 'about the building’s wifi; a browser tab does. Our own Mac and Windows apps are on the way for that room.',
   'You build heavy productions — layered media, motion backgrounds cued to the second, props and masks, a video '
     + 'pipeline that other gear on the network subscribes to.',
   'You drive presentation from a lighting or playback desk over MIDI, timecode or the show-control gear that lives '
@@ -154,6 +184,17 @@ const THEIRS_IS_BETTER = [
 ];
 
 const QUESTIONS = [
+  {
+    q: 'Is LlamaPresenter a good ProPresenter alternative for churches?',
+    a: 'Yes, for churches that want a browser-based system instead of installed software. LlamaPresenter covers the '
+      + 'core church presentation workflow — Bible verses in multiple languages, song lyrics, projector output, a '
+      + 'stage display, livestream graphics and remote control — without anything to download or license.',
+  },
+  {
+    q: 'Is there a free ProPresenter alternative?',
+    a: 'LlamaPresenter has a free plan that runs your Bible, both outputs and the stage with no gate on any of them. '
+      + 'Pro raises the limits — more languages, more songs, custom templates — for churches that outgrow Free.',
+  },
   {
     q: 'Can I bring my songs over?',
     a: 'Yes. Drop a ProPresenter 7 document or bundle on the console and we read the lyrics out of it, slide by '
@@ -169,8 +210,9 @@ const QUESTIONS = [
   {
     q: 'What happens if the internet drops mid-service?',
     a: 'The screens keep showing whatever slide they are on — they do not go blank. What you lose until it comes '
-      + 'back is the ability to change it. If your building’s connection is genuinely unreliable, this is the honest '
-      + 'reason to stay on a native app.',
+      + 'back is the ability to change it. If your building’s connection is genuinely unreliable, that is the honest '
+      + 'reason to stay on a native app for now — and the reason we are building Mac and Windows apps of our own, '
+      + 'which will run a service with no connection.',
   },
   {
     q: 'Does the projector machine need an account?',
@@ -199,9 +241,7 @@ export default async function ProPresenterAlternativePage() {
     <main>
       {/* ------------------------------------------------------------- hero */}
       <section className="mx-auto max-w-7xl px-6 pt-10 pb-8 sm:pt-14">
-        <p className="text-sm font-medium tracking-wide text-site-faint uppercase">
-          {OURS} vs {THEIRS}
-        </p>
+        <p className="text-sm font-medium tracking-wide text-site-faint uppercase">{THEIRS} alternative</p>
 
         {/* Headline on the left, the two machines on the right. The banner
             used to run the full width under the text, which left the fold as a
@@ -212,22 +252,15 @@ export default async function ProPresenterAlternativePage() {
         <div className="mt-5 grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-12">
           <div>
             <h1 className={`${DISPLAY} text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
-              Modern church presentation software —{' '}
-              <span className="relative inline-block">
-                <span
-                  aria-hidden
-                  className="absolute inset-x-[-0.08em] bottom-[0.06em] h-[0.38em] -rotate-[0.7deg]
-                    rounded-[2px] bg-site-accent/60"
-                />
-                <span className="relative">no install required</span>
-              </span>
+              A {THEIRS} alternative that runs in <Marker>your browser</Marker>
             </h1>
 
             <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
 
             <p className="mt-7 max-w-[56ch] text-lg leading-relaxed text-site-muted">
-              Present dual-language Bible verses, song lyrics, stage timers and lower thirds straight from any web
-              browser.
+              {THEIRS} is a capable desktop presenter used by churches everywhere. {OURS} takes a different approach:
+              no install, no license to activate, and Bible verses in any language, side by side, song lyrics, stage
+              timers and lower thirds all in one browser tab.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
@@ -259,7 +292,7 @@ export default async function ProPresenterAlternativePage() {
               alt={`The ${OURS} console open in a browser on one laptop, with ${THEIRS} running on a second laptop `
                 + 'beside it'}
               width={1919}
-              height={690}
+              height={675}
               sizes="(min-width: 1024px) 52rem, 100vw"
               className="h-auto w-full"
               priority
@@ -286,38 +319,52 @@ export default async function ProPresenterAlternativePage() {
           difference is a shape rather than a shortfall. */}
       <section id="table" className="mx-auto max-w-7xl scroll-mt-20 px-6 py-16 sm:py-24">
         <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
-          {THEIRS} vs {OURS}
+          {OURS} vs {THEIRS}
         </h2>
         <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
-          Feature by feature, in the order a church tech team meets them: getting it running, getting it onto the
-          screens, what goes on those screens, and what it costs.
+          Only the rows where the two part company, in the order a church tech team meets them: getting it running,
+          getting it onto the screens, what goes on those screens, and what it costs. What both do is listed under
+          the table.
         </p>
 
-        {/* The whole table on one sheet of paper, rather than a band behind
-            our column: a white stripe running the height of the page reads as
-            something broken, and the column is already told apart by the tick
-            beside every line of it. */}
-        <div className="mt-10 overflow-x-auto rounded-studio-lg border border-site-rule bg-site-surface px-5 py-1 sm:px-8">
-          <table className="w-full min-w-3xl border-collapse text-left align-top">
+        {/* One sheet of paper, with our column tinted the brand yellow down
+            its whole height. The tick beside every line already told it apart,
+            but only once you were reading; the tint tells you before you
+            start which column the page is written from. */}
+        <div
+          className="mt-10 overflow-x-auto rounded-studio-lg border border-site-rule bg-site-surface lg:overflow-visible"
+        >
+          <table className="w-full min-w-3xl border-separate border-spacing-0 text-left align-top">
             <caption className="sr-only">
-              {THEIRS} compared with {OURS}, row by row
+              {OURS} compared with {THEIRS}, row by row
             </caption>
 
             <thead>
               <tr>
-                <th className="w-[22%] py-4 pr-6 text-left text-sm font-normal text-site-faint">
+                <th
+                  className="site-pinhead w-[22%] bg-site-surface py-4 pr-6 pl-5 sm:pl-8 text-left text-sm font-normal
+                    text-site-faint"
+                >
                   <span className="sr-only">What is being compared</span>
                 </th>
 
-                <th scope="col" className="w-[39%] px-6 py-4 text-left text-[15px] font-semibold text-site-muted">
-                  {THEIRS}
-                </th>
-
-                <th scope="col" className="w-[39%] px-6 py-4 text-left text-[15px] font-semibold text-site-ink">
+                <th
+                  scope="col"
+                  className="site-pinhead w-[39%] bg-[color-mix(in_oklab,var(--color-site-accent)_18%,var(--color-site-surface))] px-6 py-4 text-left
+                    text-[15px] font-semibold text-site-ink"
+                >
                   <span className="flex items-center gap-2">
                     <span className="size-2 rounded-full bg-site-accent" />
                     {OURS}
                   </span>
+                </th>
+
+                <th
+                  scope="col"
+                  className="site-pinhead w-[39%] bg-site-surface py-4 pr-5 pl-6 text-left
+                    text-[15px] font-semibold text-site-muted sm:pr-8"
+                >
+                  {THEIRS}
                 </th>
               </tr>
             </thead>
@@ -328,12 +375,12 @@ export default async function ProPresenterAlternativePage() {
                   <tr>
                     <th
                       scope="colgroup"
-                      className="border-t border-site-rule pt-8 pb-2 text-left text-[11px] font-semibold
+                      className="border-t border-site-rule pt-8 pb-2 pl-5 text-left text-[11px] font-semibold sm:pl-8
                         tracking-wider text-site-faint uppercase"
                     >
                       {section.group}
                     </th>
-                    <td className="border-t border-site-rule" />
+                    <td className="border-t border-site-rule bg-site-accent/18" />
                     <td className="border-t border-site-rule" />
                   </tr>
 
@@ -343,17 +390,23 @@ export default async function ProPresenterAlternativePage() {
                       of boxes to read past. */}
                   {section.rows.map(row => (
                     <tr key={row.label} className="align-top">
-                      <th scope="row" className="py-5 pr-6 text-left text-[15px] font-medium text-site-ink">
+                      <th
+                        scope="row"
+                        className="py-5 pr-6 pl-5 text-left text-[15px] font-medium text-site-ink sm:pl-8"
+                      >
                         {row.label}
                       </th>
 
-                      <td className="px-6 py-5 text-[15px] leading-relaxed text-site-muted">{row.theirs}</td>
-
-                      <td className="px-6 py-5 text-[15px] leading-relaxed text-site-ink">
+                      <td className="bg-site-accent/18 px-6 py-5 text-[15px] leading-relaxed font-semibold
+                        text-site-ink">
                         <span className="flex gap-2.5">
                           <Tick className="mt-[6px] size-3.5 shrink-0 text-site-ink" />
                           <span>{row.ours}</span>
                         </span>
+                      </td>
+
+                      <td className="py-5 pr-6 pl-6 text-[15px] leading-relaxed text-site-muted sm:pr-8">
+                        {row.theirs}
                       </td>
                     </tr>
                   ))}
@@ -363,6 +416,8 @@ export default async function ProPresenterAlternativePage() {
             </tbody>
           </table>
         </div>
+
+        <BothCover theirs={THEIRS} items={SHARED} />
       </section>
 
       {/* ---------------------------------------------------------- the detail */}
@@ -499,6 +554,26 @@ export default async function ProPresenterAlternativePage() {
             ))}
           </ul>
         </div>
+
+        <p className="mx-auto max-w-7xl px-6 pb-16 text-[15px] leading-relaxed text-site-muted sm:pb-24">
+          Comparing a specific piece of your setup rather than the whole app? See how the built-in{' '}
+          <Link href="/stagetimer-alternative" className="text-site-ink underline underline-offset-4">
+            stage timer
+          </Link>{' '}
+          stacks up against a dedicated timer, or how we read a library exported from a{' '}
+          <Link href="/freeshow-alternative" className="text-site-ink underline underline-offset-4">
+            free, open-source presenter
+          </Link>{' '}
+          or a subscription one such as{' '}
+          <Link href="/easyworship-alternative" className="text-site-ink underline underline-offset-4">
+            EasyWorship
+          </Link>{' '}
+          or{' '}
+          <Link href="/proclaim-alternative" className="text-site-ink underline underline-offset-4">
+            Proclaim
+          </Link>
+          .
+        </p>
       </section>
 
       {/* --------------------------------------------------------- questions */}

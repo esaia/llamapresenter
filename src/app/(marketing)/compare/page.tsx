@@ -1,0 +1,330 @@
+import Link from 'next/link';
+
+import { CompareMatrix, type CompareColumn, type CompareGroup } from '@/components/marketing/CompareMatrix';
+import { Marker } from '@/components/marketing/Marker';
+import { Tick } from '@/components/marketing/Tick';
+import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
+import { claimedSpots } from '@/lib/billing/seats';
+
+/* The rounded display face the brand is drawn in, as on the rest of the site. */
+const DISPLAY = 'font-valera tracking-tight text-site-ink';
+
+const OURS = 'LlamaPresenter';
+
+const TITLE = 'Church Presentation Software Compared | LlamaPresenter';
+
+const DESCRIPTION =
+  'ProPresenter, EasyWorship, FreeShow, Proclaim and LlamaPresenter side by side: platform, price, Bible '
+  + 'languages, projector, stage, livestream, templates and remote control in one table.';
+
+export const metadata = {
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: '/compare' },
+  openGraph: {
+    type: 'website',
+    siteName: 'LlamaPresenter',
+    url: '/compare',
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
+};
+
+/** When the other five columns were last read off their makers' own pages. */
+const CHECKED = 'September 2026';
+
+/**
+ * The columns, in the order the table reads them.
+ *
+ * Ours is first and tinted rather than hidden in the middle: a table written by
+ * one of the products in it is only worth reading if you can see which one.
+ */
+const COLUMNS: CompareColumn[] = [
+  { name: OURS, ours: true },
+  { name: 'ProPresenter', href: '/propresenter-alternative' },
+  { name: 'EasyWorship', href: '/easyworship-alternative' },
+  { name: 'FreeShow', href: '/freeshow-alternative' },
+  { name: 'Proclaim', href: '/proclaim-alternative' },
+];
+
+/**
+ * The grid.
+ *
+ * Every square is either what a maker publishes about their own product or
+ * what their own support pages say, read in {CHECKED}. Where we could not
+ * confirm one, it is a dash rather than a guess — the rows that would be easy
+ * to score against a competitor are exactly the rows worth being careful in.
+ */
+const groups = (PLANS: Record<PlanId, Plan>): CompareGroup[] => [
+  {
+    title: 'Where it runs',
+    rows: [
+      { label: 'Runs in a browser', cells: [true, false, false, false, false] },
+      {
+        label: 'Platforms',
+        cells: [
+          'Any browser, Mac and Windows soon', 'Mac, Windows', 'Mac, Windows', 'Windows, Mac, Linux', 'Mac, Windows',
+        ],
+      },
+      { label: 'Presents with no internet', cells: [{ soon: 'Soon' }, true, true, true, true] },
+      { label: 'Open source', cells: [false, false, false, true, false] },
+    ],
+  },
+  {
+    title: 'What it costs',
+    rows: [
+      {
+        label: 'Price to start',
+        cells: ['Freemium', '$29/mo a seat', 'From $17.50/mo', 'Free', 'From $24.99/mo'],
+      },
+      { label: 'Free plan with no time limit', cells: [true, false, false, true, false] },
+      {
+        label: 'One price covers the team',
+        cells: [true, 'Per seat', 'Campus licence', true, true],
+      },
+      {
+        label: 'Paid plan',
+        cells: [`${PLANS.pro.price} ${PLANS.pro.cadence}`, 'Subscription', 'Subscription', '—', 'Subscription'],
+      },
+    ],
+  },
+  {
+    title: 'Scripture',
+    rows: [
+      { label: 'Bible built in', cells: [true, true, true, true, true] },
+      {
+        label: 'Two languages on one verse',
+        cells: [true, 'Theme with two text boxes', 'By hand, per slide', null, 'By hand, per slide'],
+      },
+      {
+        label: 'Each screen picks its languages',
+        cells: [true, 'One slide, every screen', 'One slide, every screen', 'One slide, every screen',
+          'One slide, every screen'],
+      },
+      {
+        label: 'Add your own translation',
+        cells: [true, 'Import or buy a module', 'From the built-in library', 'Import an XML Bible',
+          'From the Logos library'],
+      },
+    ],
+  },
+  {
+    title: 'The screens',
+    rows: [
+      { label: 'Projector output', cells: [true, true, true, true, true] },
+      { label: 'Stage or confidence display', cells: [true, true, true, true, true] },
+      { label: 'Livestream graphics', cells: [true, true, true, true, true] },
+      { label: 'Stage timer', cells: [true, true, true, true, true] },
+      { label: 'Remote control', cells: ['Any browser', 'App', 'App', 'App', 'App'] },
+    ],
+  },
+  {
+    title: 'Songs and media',
+    rows: [
+      { label: 'Song lyrics', cells: [true, true, true, true, true] },
+      {
+        label: 'Two languages in a song',
+        cells: [true, 'Typed into the slide', 'Typed into the slide', 'Typed into the slide',
+          'Typed into the slide'],
+      },
+      { label: 'CCLI SongSelect built in', cells: [false, true, true, null, true] },
+      { label: 'Your own backgrounds and music', cells: [true, true, true, true, true] },
+      { label: 'Stock media included', cells: [false, false, 'On Premium', false, true] },
+    ],
+  },
+];
+
+/** The long version of each column, for a reader who wants the argument. */
+const PAGES = [
+  {
+    href: '/propresenter-alternative',
+    title: 'vs ProPresenter',
+    body: 'The large desktop presenter, licensed by the seat.',
+  },
+  {
+    href: '/easyworship-alternative',
+    title: 'vs EasyWorship',
+    body: 'Long-established, installed, and sold as a subscription.',
+  },
+  {
+    href: '/freeshow-alternative',
+    title: 'vs FreeShow',
+    body: 'Free and open source, and the other free column here.',
+  },
+  {
+    href: '/proclaim-alternative',
+    title: 'vs Proclaim',
+    body: "Logos's cloud plan, presented from an installed app.",
+  },
+  {
+    href: '/stagetimer-alternative',
+    title: 'vs StageTimer',
+    body: 'Not a presenter at all: the church stage timer on its own.',
+  },
+];
+
+export const revalidate = 60;
+
+export default async function ComparePage() {
+  const PLANS = plansFor(await claimedSpots());
+  const GROUPS = groups(PLANS);
+
+  return (
+    <main>
+      {/* ------------------------------------------------------------- hero */}
+      <section className="mx-auto max-w-7xl px-6 pt-10 pb-8 sm:pt-14">
+        <p className="text-sm font-medium tracking-wide text-site-faint uppercase">Comparison</p>
+
+        <h1 className={`${DISPLAY} mt-5 max-w-4xl text-[clamp(2.2rem,4.4vw,3.4rem)] leading-[1.05]`}>
+          Church presentation software,{' '}
+          <Marker>side by side</Marker>
+        </h1>
+
+        <div className="mt-7 h-1 w-16 rounded-full bg-site-accent" />
+
+        <p className="mt-7 max-w-[62ch] text-lg leading-relaxed text-site-muted">
+          ProPresenter, EasyWorship, FreeShow, Proclaim and {OURS}, on one grid: what each one runs on, what it
+          costs to start, what it does with a second language in a verse and in a song, and which screens it can
+          drive.
+        </p>
+      </section>
+
+      {/* ------------------------------------------------- how to read it */}
+      <section className="border-y border-site-rule bg-site-band">
+        <div className="mx-auto grid max-w-7xl gap-6 px-6 py-12 sm:py-14 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
+          <h2 className={`${DISPLAY} text-2xl leading-[1.1] sm:text-3xl`}>How to read this table</h2>
+
+          <div className="max-w-prose space-y-4 text-[17px] leading-relaxed text-site-muted">
+            <p>
+              We are one of the columns, so read it that way. Every square is either what a maker publishes about
+              their own product or what their own support pages say, read in {CHECKED}. Prices move; check theirs
+              before you decide on ours.
+            </p>
+            <p>
+              A dash is not a no. It is a square we could not confirm, and the rows that would be easiest to score
+              against a competitor are the rows worth being careful in. Where a product does something in a way that
+              a tick would flatter or flatten, the square says how instead.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------ matrix */}
+      <section className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
+        <CompareMatrix columns={COLUMNS} groups={GROUPS} />
+
+        <dl className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-[14px] text-site-muted">
+          <div className="flex items-center gap-2">
+            <Tick className="size-4 text-site-ink" />
+            <dt className="sr-only">Tick</dt>
+            <dd>Yes</dd>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span aria-hidden className="text-site-faint">—</span>
+            <dt className="sr-only">Dash</dt>
+            <dd>We could not confirm it</dd>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="rounded-full bg-site-accent/35 px-2 py-0.5 text-[12px] font-medium text-site-ink"
+            >
+              Soon
+            </span>
+            <dt className="sr-only">Soon</dt>
+            <dd>Not yet, and being built</dd>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <dt className="sr-only">Words</dt>
+            <dd>Words in a square mean it is a yes with a shape worth knowing</dd>
+          </div>
+        </dl>
+
+        <p className="mt-6 max-w-[62ch] text-[16px] leading-relaxed text-site-muted">
+          The one row where the browser costs you something is the last one in that first group, and it is being
+          fixed: native Mac and Windows apps are on the way, and they will run a service with the internet down.
+          Until they land, the screens keep showing the slide they are on if the connection drops — you just cannot
+          change it.
+        </p>
+
+        <p className="mt-8 max-w-[62ch] text-[16px] leading-relaxed text-site-muted">
+          The two free columns are free in different ways. FreeShow is free and open source with nothing withheld;
+          {' '}{OURS} is free up to a set of limits, and the{' '}
+          <Link href="/pricing" className="text-site-ink underline underline-offset-4">
+            pricing
+          </Link>{' '}
+          page has them. The Bible, both outputs and the stage display are never among them.
+        </p>
+      </section>
+
+      {/* ----------------------------------------------------- the long form */}
+      <section className="border-t border-site-rule bg-site-band">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
+          <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>One at a time</h2>
+          <p className="mt-5 max-w-2xl text-[17px] leading-relaxed text-site-muted">
+            A grid is a summary. Each of these pages makes the case in sentences, including where the other product
+            is the better choice.
+          </p>
+
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {PAGES.map(page => (
+              <Link
+                key={page.href}
+                href={page.href}
+                className="group rounded-studio-lg border border-site-rule bg-site-bg p-6 transition-colors
+                  duration-150 hover:border-site-ink/25"
+              >
+                <h3 className={`${DISPLAY} flex items-center gap-2 text-xl`}>
+                  {page.title}
+                  <span aria-hidden className="text-site-faint transition-transform group-hover:translate-x-0.5">
+                    →
+                  </span>
+                </h3>
+                <p className="mt-3 text-[15px] leading-relaxed text-site-muted">{page.body}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------- last word */}
+      <section className="bg-studio-bg">
+        <div className="mx-auto flex max-w-7xl flex-col items-start gap-8 px-6 py-20 sm:py-24 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="font-valera text-3xl leading-[1.1] tracking-tight text-studio-text sm:text-4xl">
+              Try the column on the left
+            </h2>
+            <p className="mt-4 max-w-md text-[17px] leading-relaxed text-studio-muted">
+              Bible verses, lyrics, screens, livestream and stage timer in one browser tab, on a free plan that is
+              not a countdown.
+            </p>
+          </div>
+
+          <div className="flex flex-col items-start gap-3">
+            <Link
+              href="/login"
+              className="rounded-studio bg-studio-accent px-6 py-3 font-medium text-studio-onaccent
+                transition-colors duration-150 hover:bg-studio-accent/85"
+            >
+              Start for free
+            </Link>
+
+            <p className="text-sm text-studio-muted">No credit card required</p>
+          </div>
+        </div>
+      </section>
+
+      {/* The one line of small print the page owes anybody: whose names those are. */}
+      <p className="mx-auto max-w-7xl px-6 pt-10 pb-12 text-sm leading-relaxed text-site-faint">
+        ProPresenter is a trademark of Renewed Vision, LLC. EasyWorship is a trademark of Softouch Development, Inc.
+        Proclaim and Logos are trademarks of Faithlife Corporation. FreeShow is an open-source project owned by its
+        authors. {OURS} is not affiliated with, endorsed by or sponsored by any of them, and their names are used
+        here only to say which products we are comparing ourselves with.
+      </p>
+    </main>
+  );
+}

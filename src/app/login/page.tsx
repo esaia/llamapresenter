@@ -38,8 +38,6 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
         <div className="mt-8">
           <GoogleButton next={typeof next === 'string' ? next : '/studio'} />
         </div>
-
-        <p className="text-studio-faint mt-6 text-xs">Google is the only way in for now. Email sign-in is coming.</p>
       </div>
     </main>
   );

@@ -4,6 +4,7 @@ import { Art } from '@/components/marketing/Art';
 import { Frame } from '@/components/marketing/Frame';
 import { HeroScene } from '@/components/marketing/HeroScene';
 import { FoundingSpots } from '@/components/marketing/FoundingSpots';
+import { Marker } from '@/components/marketing/Marker';
 import { ScrollZoom } from '@/components/marketing/ScrollZoom';
 import { plansFor } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
@@ -115,14 +116,7 @@ export default async function HomePage() {
           <div>
             <h1 className={`${DISPLAY} text-[clamp(2.4rem,4.6vw,3.6rem)] leading-[1.0]`}>
               Simple Church{' '}
-              <span className="relative inline-block">
-                <span
-                  aria-hidden
-                  className="absolute inset-x-[-0.08em] bottom-[0.06em] h-[0.38em] -rotate-[0.7deg]
-                    rounded-[2px] bg-site-accent/60"
-                />
-                <span className="relative">Presentation</span>
-              </span>{' '}
+              <Marker>Presentation</Marker>{' '}
               Software
             </h1>
 

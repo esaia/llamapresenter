@@ -2156,3 +2156,48 @@ body:has(.site) {
     opacity: 0;
   }
 }
+
+/* The hero's highlighter.
+ *
+ * Drawn as the text's own background rather than a box behind it: an absolute
+ * plate inside an `inline-block` is the width of the whole wrapped block, so
+ * a headline that breaks over two lines gets one stroke running far past the
+ * last word. `box-decoration-break: clone` gives every line its own stroke,
+ * ending where the words do. Sized in `em`, so it follows the clamped
+ * headline. */
+.site-marker {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding-inline: 0.08em;
+  background-image: linear-gradient(
+    to top,
+    transparent 0.06em,
+    color-mix(in oklab, var(--color-site-accent) 60%, transparent) 0.06em,
+    color-mix(in oklab, var(--color-site-accent) 60%, transparent) 0.44em,
+    transparent 0.44em
+  );
+}
+
+/* The pinned head of a comparison table.
+ *
+ * A class rather than a string of utilities repeated in six tables: the shadow
+ * is the kind of value that gets tuned once and has to change everywhere, and
+ * a cell that carries it also has to be sticky, so the two belong together.
+ * The hairline is part of the shadow rather than a border — a border would add
+ * a pixel of height and sit alongside the first row's own rule. It needs
+ * `border-separate` on the table: Chromium paints no box-shadow on a cell in
+ * the collapsed border model. */
+.site-pinhead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow:
+    0 1px 0 var(--color-site-rule),
+    0 6px 10px -8px rgba(25, 24, 24, 0.16);
+}
+
+/* The square where a pinned head meets a pinned first column. */
+.site-pinhead-corner {
+  left: 0;
+  z-index: 30;
+}
