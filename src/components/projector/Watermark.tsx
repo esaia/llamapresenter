@@ -3,16 +3,23 @@ import { LlamaMark } from '@/components/brand/Wordmark';
 /**
  * What a Free church's screens carry.
  *
- * The one thing Pro takes away rather than raises, which is why it is worth
- * being careful with. It sits in a corner and never moves: a mark that
- * animates, or that repositions with the words, pulls the eye off the verse,
- * and the verse is the entire point of the screen.
+ * The one thing Pro takes away rather than raises, so it is worth being careful
+ * with: it sits in a corner, it never moves, and it is as small as it can be
+ * and still be read. A mark that animates, repositions with the words or takes
+ * a plate of its own pulls the eye off the verse, and the verse is the entire
+ * point of the screen.
  *
- * Its own dark plate rather than a blend mode. `/lower3rd` is captured by OBS
- * over a genuinely transparent background, where `mix-blend-*` has nothing of
- * ours to blend with and behaves differently from the projector — one drawing
- * that reads the same on a white slide, a photograph and a camera feed is
- * worth more than a clever one that does not.
+ * **The llama keeps its own plate.** `bare` draws the coat in brand ink, which
+ * is a black llama — invisible on a projector's black and on any dark
+ * photograph, leaving its yellow shades floating on nothing. The plated mark is
+ * the drawing that was made to sit on anything, so that is the one used here.
+ *
+ * **The name is white with a shadow rather than a panel behind it.** A chip
+ * reads as part of the church's slide — a label somebody put there on purpose —
+ * where a shadowed wordmark reads as a mark on top of it. It also survives
+ * `/lower3rd`, which is captured over a genuinely transparent background: a
+ * plate there is a grey box on the broadcast, and a shadow is nothing at all
+ * until there is something behind it.
  *
  * Sized in `vh` so it is the same fraction of a 1080p wall, a stage monitor and
  * a stream, and drawn from `LlamaMark` because that file is the only drawing of
@@ -24,11 +31,11 @@ import { LlamaMark } from '@/components/brand/Wordmark';
 export const Watermark = () => (
   <div
     aria-hidden
-    className="pointer-events-none absolute right-[1.8vh] bottom-[1.8vh] z-30 flex items-center gap-[0.7vh]
-      rounded-full bg-black/35 px-[1.2vh] py-[0.6vh] text-[1.5vh] leading-none font-semibold tracking-tight
-      text-white/75 backdrop-blur-[2px]"
+    className="pointer-events-none absolute right-[2vh] bottom-[2vh] z-30 flex items-center gap-[0.55vh]
+      text-[1.35vh] leading-none font-medium tracking-tight text-white/60
+      [filter:drop-shadow(0_0.1vh_0.25vh_rgba(0,0,0,0.55))]"
   >
-    <LlamaMark bare className="size-[2vh] shrink-0 opacity-90" />
+    <LlamaMark className="size-[1.9vh] shrink-0 rounded-[0.5vh] opacity-75" />
     LlamaPresenter
   </div>
 );
