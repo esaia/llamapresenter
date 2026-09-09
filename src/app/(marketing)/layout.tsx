@@ -6,6 +6,7 @@ import { getUser } from '@/lib/supabase/server';
 const NAV = [
   { href: '/#room', label: 'How it works' },
   { href: '/#languages', label: 'Languages' },
+  { href: '/use-cases', label: 'Use cases' },
   { href: '/compare', label: 'Compare' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/#faq', label: 'Questions' },
@@ -68,6 +69,9 @@ export default async function MarketingLayout({ children }: LayoutProps<'/'>) {
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-site-muted">
             <Link href="/pricing" className="transition-colors hover:text-site-ink">
               Pricing
+            </Link>
+            <Link href="/use-cases" className="transition-colors hover:text-site-ink">
+              Use cases
             </Link>
             <Link href="/compare" className="transition-colors hover:text-site-ink">
               Compare

@@ -2,7 +2,6 @@ import Link from 'next/link';
 
 import { CompareMatrix, type CompareColumn, type CompareGroup } from '@/components/marketing/CompareMatrix';
 import { Marker } from '@/components/marketing/Marker';
-import { Tick } from '@/components/marketing/Tick';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 
@@ -190,74 +189,13 @@ export default async function ComparePage() {
         </p>
       </section>
 
-      {/* ------------------------------------------------- how to read it */}
-      <section className="border-y border-site-rule bg-site-band">
-        <div className="mx-auto grid max-w-7xl gap-6 px-6 py-12 sm:py-14 lg:grid-cols-[1fr_1.15fr] lg:gap-16">
-          <h2 className={`${DISPLAY} text-2xl leading-[1.1] sm:text-3xl`}>How to read this table</h2>
-
-          <div className="max-w-prose space-y-4 text-[17px] leading-relaxed text-site-muted">
-            <p>
-              We are one of the columns, so read it that way. Every square is either what a maker publishes about
-              their own product or what their own support pages say, read in {CHECKED}. Prices move; check theirs
-              before you decide on ours.
-            </p>
-            <p>
-              A dash is not a no. It is a square we could not confirm, and the rows that would be easiest to score
-              against a competitor are the rows worth being careful in. Where a product does something in a way that
-              a tick would flatter or flatten, the square says how instead.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* ------------------------------------------------------------ matrix */}
       <section className="mx-auto max-w-7xl px-6 py-12 sm:py-16">
         <CompareMatrix columns={COLUMNS} groups={GROUPS} />
 
-        <dl className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-[14px] text-site-muted">
-          <div className="flex items-center gap-2">
-            <Tick className="size-4 text-site-ink" />
-            <dt className="sr-only">Tick</dt>
-            <dd>Yes</dd>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span aria-hidden className="text-site-faint">—</span>
-            <dt className="sr-only">Dash</dt>
-            <dd>We could not confirm it</dd>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span
-              aria-hidden
-              className="rounded-full bg-site-accent/35 px-2 py-0.5 text-[12px] font-medium text-site-ink"
-            >
-              Soon
-            </span>
-            <dt className="sr-only">Soon</dt>
-            <dd>Not yet, and being built</dd>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <dt className="sr-only">Words</dt>
-            <dd>Words in a square mean it is a yes with a shape worth knowing</dd>
-          </div>
-        </dl>
-
-        <p className="mt-6 max-w-[62ch] text-[16px] leading-relaxed text-site-muted">
-          The one row where the browser costs you something is the last one in that first group, and it is being
-          fixed: native Mac and Windows apps are on the way, and they will run a service with the internet down.
-          Until they land, the screens keep showing the slide they are on if the connection drops — you just cannot
-          change it.
-        </p>
-
-        <p className="mt-8 max-w-[62ch] text-[16px] leading-relaxed text-site-muted">
-          The two free columns are free in different ways. FreeShow is free and open source with nothing withheld;
-          {' '}{OURS} is free up to a set of limits, and the{' '}
-          <Link href="/pricing" className="text-site-ink underline underline-offset-4">
-            pricing
-          </Link>{' '}
-          page has them. The Bible, both outputs and the stage display are never among them.
+        <p className="mt-6 text-[15px] leading-relaxed text-site-muted">
+          We are one of the columns. The others are what each maker published about their own product, read in
+          {' '}{CHECKED}, and a dash is a square we could not confirm rather than a no.
         </p>
       </section>
 
