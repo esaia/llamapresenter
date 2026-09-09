@@ -676,7 +676,7 @@ export default async function ProclaimAlternativePage() {
       </section>
 
       {/* --------------------------------------------------------- questions */}
-      <section className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
+      <section className="mx-auto max-w-7xl px-6 py-16 sm:py-24">
         <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>{THEIRS} alternative FAQ</h2>
 
         <div className="mt-12 gap-x-14 sm:columns-2">

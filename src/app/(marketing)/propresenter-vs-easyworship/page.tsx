@@ -270,7 +270,7 @@ export default async function ProPresenterVsEasyWorshipPage() {
 
       {/* --------------------------------------------------------- questions */}
       <section className="border-y border-site-rule bg-site-band">
-        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
           <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>
             {A} vs {B} questions
           </h2>

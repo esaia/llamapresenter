@@ -185,7 +185,7 @@ export default async function SolutionPage({ params }: PageProps<'/solutions/[sl
 
       {/* --------------------------------------------------------- questions */}
       <section className="border-y border-site-rule bg-site-band">
-        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+        <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
           <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Questions</h2>
 
           <div className="mt-10 gap-x-14 sm:columns-2">
