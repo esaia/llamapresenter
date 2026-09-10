@@ -1,3 +1,4 @@
+import type { Demo } from '@/components/marketing/ConsoleDemo';
 import type { CardIcon } from '@/components/marketing/LinkCard';
 
 import { LANGUAGES_ART, type MarketingArt, OUTPUTS_ART, REMOTE_ART, TEMPLATE_ART, TIMER_ART } from './art';
@@ -28,7 +29,7 @@ export type UseCase = {
   /** A short screen recording of the feature, shown beneath the "what you
       get" cards. Most use cases have none - this is for the ones a still
       drawing can't carry, like adding a translation live in the console. */
-  video?: { title: string; teaser: string; src: string; poster: string; alt: string };
+  video?: Demo;
   /** What the church gets, in three or four cards. */
   points: { title: string; body: string }[];
   /** The same thing again as a running order, because that is how it is used. */
@@ -36,6 +37,22 @@ export type UseCase = {
   faq: { q: string; a: string }[];
   /** Slugs of the two or three pages a reader of this one wants next. */
   related: string[];
+};
+
+/**
+ * The second console demo the comparison pages show, after the one on adding
+ * a translation. It has no use case of its own — searching a passage with
+ * several languages armed touches every scripture page equally, so it lives
+ * here rather than filed under one of them.
+ */
+export const LIVE_SEARCH_DEMO: Demo = {
+  title: 'Search once. Every language updates.',
+  teaser:
+    'Type a reference and it lands on the live projector at once, stacked in every language you have armed — '
+    + 'not a separate step per translation.',
+  src: '/videos/live-search-demo.mp4',
+  poster: '/videos/live-search-demo-poster.jpg',
+  alt: 'Searching 2 Corinthians 7 with English and Ukrainian armed, the verse appearing live on the projector output',
 };
 
 export const USE_CASES: UseCase[] = [
@@ -129,15 +146,6 @@ export const USE_CASES: UseCase[] = [
       'The reading is announced and the passage has to be up before the second sentence. That is the whole job, '
       + 'and everything here is built around doing it in one search box.',
     art: LANGUAGES_ART,
-    video: {
-      title: 'Add Bible translations in seconds',
-      teaser:
-        'Choose a Bible version, add it to your presentation, and show multiple translations side by side. '
-        + 'No downloads. No restarting. Just select the version you need and keep presenting.',
-      src: '/videos/custom-language-demo.mp4',
-      poster: '/videos/custom-language-demo-poster.jpg',
-      alt: 'Browsing the archive for a translation and adding it beside the ones already on the console',
-    },
     points: [
       {
         title: 'Find any Bible passage in seconds',

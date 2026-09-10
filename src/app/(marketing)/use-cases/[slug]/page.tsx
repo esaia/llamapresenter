@@ -2,12 +2,15 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { Art } from '@/components/marketing/Art';
-import { Frame } from '@/components/marketing/Frame';
+import { ConsoleDemo } from '@/components/marketing/ConsoleDemo';
 import { Marker } from '@/components/marketing/Marker';
-import { ProductVideo } from '@/components/marketing/ProductVideo';
 import { Tick } from '@/components/marketing/Tick';
 import { LinkCard } from '@/components/marketing/LinkCard';
 import { USE_CASES, findUseCase } from '@/lib/marketing/useCases';
+
+/* Every use case ends with the same proof, whatever it is about: two or more
+   translations, armed once, on the same slide. */
+const TRANSLATIONS_DEMO = findUseCase('multilingual-church-services')!.video!;
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -134,25 +137,7 @@ export default async function UseCasePage({ params }: PageProps<'/use-cases/[slu
       </section>
 
       {/* -------------------------------------------------------------- demo */}
-      {useCase.video ? (
-        <section className="border-y border-site-rule bg-site-band">
-          <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-            <div className="mx-auto max-w-2xl text-center">
-              <p className="text-sm font-medium tracking-wide text-site-faint uppercase">See it in the console</p>
-              <h2 className={`${DISPLAY} mt-3 text-3xl leading-[1.1] sm:text-4xl`}>{useCase.video.title}</h2>
-              <p className="mt-4 text-lg leading-relaxed text-site-muted">{useCase.video.teaser}</p>
-            </div>
-
-            <div className="mx-auto mt-10 max-w-5xl">
-              <Frame url="llamapresenter.com/studio" paneClassName="aspect-video">
-                <ProductVideo src={useCase.video.src} poster={useCase.video.poster} autoPlay={false} controls />
-              </Frame>
-
-              <p className="mt-4 text-center text-sm text-site-faint">{useCase.video.alt}</p>
-            </div>
-          </div>
-        </section>
-      ) : null}
+      <ConsoleDemo video={TRANSLATIONS_DEMO} />
 
       {/* ------------------------------------------------------------- steps */}
       <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">

@@ -191,7 +191,7 @@ export default async function HomePage() {
       <Feature
         id="languages"
         title="One service. Every language."
-        tags={['Georgian', 'English', 'Russian', 'Greek', 'Add your own']}
+        tags={['English', 'Georgian', 'Ukrainian', 'Greek', 'Add your own']}
         links={[{ label: 'Multilingual church services', href: '/use-cases/multilingual-church-services' }]}
         visual={
           <Art

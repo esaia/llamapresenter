@@ -126,3 +126,7 @@ domain vocabulary. This file is the working agreement on top of it.
 - The service-role client (`lib/supabase/admin.ts`) bypasses RLS. It is only for
   routes that have authorised the caller another way: a verified Dodo Payments
   webhook signature, or a session's `output_key`.
+- **Never use Claude in Chrome (or any browser-automation tool) in this
+  project.** Verify a change by curling the dev server and grepping the
+  markup, running `eslint`/`tsc`, reading the rendered HTML, or asking the
+  user to look — not by driving a browser.
