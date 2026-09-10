@@ -524,7 +524,7 @@ export default function FreeShowAlternativePage() {
           </div>
 
           <Art
-            src="/images/features/languages.png"
+            src="/images/features/languages.webp"
             alt="A slide carrying the same verse in Georgian and English, beside the panel that arms each language"
           />
         </div>
@@ -557,7 +557,7 @@ export default function FreeShowAlternativePage() {
           </div>
 
           <Art
-            src="/images/features/outputs.png"
+            src="/images/features/outputs.webp"
             alt="One session feeding a stage display, a projector slide and a transparent stream overlay, each at its own link"
           />
         </div>

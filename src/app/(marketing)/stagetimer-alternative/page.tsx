@@ -456,7 +456,7 @@ export default function StageTimerAlternativePage() {
           </div>
 
           <Art
-            src="/images/features/stage-timer.png"
+            src="/images/features/stage-timer.webp"
             alt="The stage display showing the current verse, the next one, the clock, the running order and a countdown"
           />
         </div>
@@ -504,7 +504,7 @@ export default function StageTimerAlternativePage() {
           </div>
 
           <Art
-            src="/images/features/languages.png"
+            src="/images/features/languages.webp"
             alt="A slide carrying the same verse in Georgian and English, beside the panel that arms each language"
           />
         </div>
