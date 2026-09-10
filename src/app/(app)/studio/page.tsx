@@ -54,7 +54,7 @@ export default async function StudioPage() {
       // Whether to show the Admin link. Read under the operator's own RLS —
       // this only ever decides whether a link is drawn, never whether /admin
       // itself lets them in, so there's nothing to gain by forging it.
-      supabase.from('profiles').select('is_admin').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('is_admin, avatar_url').eq('id', user.id).maybeSingle(),
       supabase
         .from('songs')
         .select('id, title, slides, langs, library_id, source')
@@ -132,7 +132,12 @@ export default async function StudioPage() {
   const initial: StudioInitial = {
     session: { id: session.data.id, name: session.data.name, outputKey: session.data.output_key },
     email: user.email ?? '',
+    avatarUrl: profile.data?.avatar_url ?? null,
     isAdmin: profile.data?.is_admin ?? false,
+    // Anonymous sign-in from the marketing site's "try for free" button: a
+    // real room from the same signup trigger, but with nothing behind it to
+    // let the Present links actually go anywhere.
+    isGuest: user.is_anonymous ?? false,
     settings: settings.data as SettingsRow,
     translations: asCustomTranslations(translations.data),
     workspace: {

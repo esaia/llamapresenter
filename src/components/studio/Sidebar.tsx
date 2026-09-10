@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronRight, MonitorPlay, Video, X } from 'lucide-react';
+import { ChevronRight, MonitorPlay, User, Video, X } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 
 import { Select } from '@/components/ui/Select';
@@ -91,6 +91,9 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
     songs,
     activeSongId,
     setSongLangs,
+    email,
+    avatarUrl,
+    isGuest,
   } = useStudio();
 
   // The rail sits outside the tabs, so on the Lyrics tab it was offering the
@@ -337,6 +340,14 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
           label="Stream"
           value={settings.obsHidden ? 'Blanked' : `${labelOf(streamLangOf(settings))} · ${settings.lowerThirdPosition}`}
           onClick={() => onSettings('stream')}
+        />
+
+        <SummaryRow
+          icon={<User className="size-4" />}
+          label={isGuest ? 'Guest' : 'Account'}
+          value={isGuest ? 'Trying it out — sign in to keep it' : email || 'Unknown'}
+          thumb={isGuest ? undefined : (avatarUrl ?? undefined)}
+          onClick={() => onSettings('account')}
         />
       </div>
     </div>

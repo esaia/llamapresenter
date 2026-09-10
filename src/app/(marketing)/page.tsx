@@ -8,6 +8,7 @@ import { CadenceProvider } from '@/components/marketing/cadence';
 import { HomePlanCards } from '@/components/marketing/HomePlanCards';
 import { Marker } from '@/components/marketing/Marker';
 import { ScrollZoom } from '@/components/marketing/ScrollZoom';
+import { TryFreeButton } from '@/components/marketing/TryFreeButton';
 import { Vignette } from '@/components/marketing/Vignette';
 import { DemoVideo } from '@/components/marketing/DemoVideo';
 import { bothPlansFor } from '@/lib/billing/plans';
@@ -137,13 +138,13 @@ export default async function HomePage() {
               you add yourself. Ideal for multilingual congregations.
             </p>
 
-            <Link
-              href="/login"
+            <TryFreeButton
               className="mt-9 flex w-full max-w-md items-center justify-center rounded-studio bg-site-accent px-6 py-4
-                text-lg font-medium text-site-onaccent shadow-sm transition-colors duration-150 hover:bg-site-accent/85"
+                text-lg font-medium text-site-onaccent shadow-sm transition-colors duration-150 hover:bg-site-accent/85
+                disabled:opacity-70"
             >
               Try for free in the browser
-            </Link>
+            </TryFreeButton>
 
             <p className="mt-4 text-sm text-site-faint">No credit card or signup required</p>
           </div>
@@ -194,7 +195,7 @@ export default async function HomePage() {
         links={[{ label: 'Multilingual church services', href: '/use-cases/multilingual-church-services' }]}
         visual={
           <Art
-            src="/images/features/languages.png"
+            src="/images/features/languages.webp"
             alt="A slide carrying the same verse in Georgian and English, beside the panel that arms each language and picks its translation"
           />
         }
@@ -215,7 +216,7 @@ export default async function HomePage() {
         ]}
         visual={
           <Art
-            src="/images/features/stage-timer.png"
+            src="/images/features/stage-timer.webp"
             alt="The stage display: the verse on screen now, the one coming next, the clock, the agenda and a countdown"
           />
         }
@@ -232,7 +233,7 @@ export default async function HomePage() {
         links={[{ label: 'Slide templates', href: '/use-cases/church-slide-templates' }]}
         visual={
           <Art
-            src="/images/features/template-editor.png"
+            src="/images/features/template-editor.webp"
             alt="The template editor: a text box selected on the canvas, with its size, case, colour, alignment, outline and plate in the panel beside it"
           />
         }
@@ -253,7 +254,7 @@ export default async function HomePage() {
         ]}
         visual={
           <Art
-            src="/images/features/outputs.png"
+            src="/images/features/outputs.webp"
             alt="One link feeding the stage display, the projector slide and a stream overlay on a transparent background"
           />
         }

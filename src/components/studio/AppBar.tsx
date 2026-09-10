@@ -45,11 +45,14 @@ const OutputRow = ({
   hint,
   href,
   connected,
+  disabled,
 }: {
   label: string;
   hint: string;
   href: string;
   connected: number;
+  /** A guest room: the link exists but signing up is what makes it usable. */
+  disabled?: boolean;
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -58,6 +61,10 @@ const OutputRow = ({
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  const actionClass =
+    'inline-flex size-7 shrink-0 items-center justify-center rounded-studio transition-colors duration-150 ' +
+    'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40';
 
   return (
     <div className="flex items-center gap-2 rounded-studio px-2 py-2 transition-colors duration-150 hover:bg-studio-surface">
@@ -69,41 +76,53 @@ const OutputRow = ({
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-medium text-studio-text">{label}</span>
         <span className="block truncate text-xs text-studio-faint">
-          {connected ? `${connected} connected` : hint}
+          {disabled ? 'Sign up to get this link' : connected ? `${connected} connected` : hint}
         </span>
       </span>
 
       <button
         type="button"
-        onClick={copy}
-        title={`Copy the ${label} link`}
+        onClick={disabled ? undefined : copy}
+        disabled={disabled}
+        title={disabled ? 'Sign up to get your output link' : `Copy the ${label} link`}
         aria-label={`Copy the ${label} link`}
-        className="inline-flex size-7 shrink-0 items-center justify-center rounded-studio text-studio-faint
-          transition-colors duration-150 hover:bg-studio-lift hover:text-studio-text focus:outline-none
-          focus-visible:ring-2 focus-visible:ring-studio-accent/40"
+        className={cn(
+          actionClass,
+          disabled
+            ? 'cursor-not-allowed text-studio-border'
+            : 'text-studio-faint hover:bg-studio-lift hover:text-studio-text',
+        )}
       >
         {copied ? <Check className="size-3.5 text-studio-go" /> : <Copy className="size-3.5" />}
       </button>
 
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        title={`Open ${label} in a new tab`}
-        aria-label={`Open ${label} in a new tab`}
-        className="inline-flex size-7 shrink-0 items-center justify-center rounded-studio text-studio-faint
-          transition-colors duration-150 hover:bg-studio-lift hover:text-studio-text focus:outline-none
-          focus-visible:ring-2 focus-visible:ring-studio-accent/40"
-      >
-        <ExternalLink className="size-3.5" />
-      </a>
+      {disabled ? (
+        <span
+          title="Sign up to get your output link"
+          aria-disabled="true"
+          className={cn(actionClass, 'cursor-not-allowed text-studio-border')}
+        >
+          <ExternalLink className="size-3.5" />
+        </span>
+      ) : (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          title={`Open ${label} in a new tab`}
+          aria-label={`Open ${label} in a new tab`}
+          className={cn(actionClass, 'text-studio-faint hover:bg-studio-lift hover:text-studio-text')}
+        >
+          <ExternalLink className="size-3.5" />
+        </a>
+      )}
     </div>
   );
 };
 
 /** The three outputs behind one button, so the bar keeps its room. */
 const PresentMenu = () => {
-  const { session, peers } = useStudio();
+  const { session, peers, isGuest } = useStudio();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -157,23 +176,30 @@ const PresentMenu = () => {
             Present to
           </p>
 
+          {isGuest ? (
+            <p className="px-2 pb-2 text-xs text-studio-faint">Sign up to get shareable output links.</p>
+          ) : null}
+
           <OutputRow
             label="Screen"
             hint="The projector in the room"
             href={`/show/${session.outputKey}`}
             connected={peers.show}
+            disabled={isGuest}
           />
           <OutputRow
             label="Stream"
             hint="Lower third for the broadcast"
             href={`/lower3rd/${session.outputKey}`}
             connected={peers.lower3rd}
+            disabled={isGuest}
           />
           <OutputRow
             label="Stage"
             hint="The monitor facing the platform"
             href={`/stage/${session.outputKey}`}
             connected={peers.stage}
+            disabled={isGuest}
           />
         </div>
       ) : null}

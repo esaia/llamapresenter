@@ -6,6 +6,7 @@ import { Art } from '@/components/marketing/Art';
 import { BothCover } from '@/components/marketing/BothCover';
 import { Marker } from '@/components/marketing/Marker';
 import { Tick } from '@/components/marketing/Tick';
+import { TryFreeButton } from '@/components/marketing/TryFreeButton';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
 
@@ -264,13 +265,12 @@ export default async function ProPresenterAlternativePage() {
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-4">
-              <Link
-                href="/login"
+              <TryFreeButton
                 className="rounded-studio bg-site-accent px-6 py-3.5 text-[17px] font-medium text-site-onaccent
-                  shadow-sm transition-colors duration-150 hover:bg-site-accent/85"
+                  shadow-sm transition-colors duration-150 hover:bg-site-accent/85 disabled:opacity-70"
               >
                 Start free in browser
-              </Link>
+              </TryFreeButton>
 
               <Link
                 href="#table"
@@ -425,7 +425,7 @@ export default async function ProPresenterAlternativePage() {
         title="Multi-screen output, without a video card"
         visual={
           <Art
-            src="/images/features/outputs.png"
+            src="/images/features/outputs.webp"
             alt="One session feeding a stage display, a projector slide and a transparent stream overlay, each at its own link"
           />
         }
@@ -446,7 +446,7 @@ export default async function ProPresenterAlternativePage() {
         title="A template builder for verses and lyrics"
         visual={
           <Art
-            src="/images/features/template-editor.png"
+            src="/images/features/template-editor.webp"
             alt="The template editor with a lyric text box selected and its size, case, colour and outline in the panel beside it"
           />
         }
@@ -469,7 +469,7 @@ export default async function ProPresenterAlternativePage() {
         title="Dual-language Bible verses, side by side"
         visual={
           <Art
-            src="/images/features/languages.png"
+            src="/images/features/languages.webp"
             alt="A slide carrying the same verse in Georgian and English, beside the panel that arms each language"
           />
         }
@@ -494,7 +494,7 @@ export default async function ProPresenterAlternativePage() {
         title="A stage display and timers built for the platform"
         visual={
           <Art
-            src="/images/features/stage-timer.png"
+            src="/images/features/stage-timer.webp"
             alt="The stage display showing the current verse, the next one, the clock, the running order and a countdown"
           />
         }

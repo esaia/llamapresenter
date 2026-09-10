@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Cadence } from '@/lib/billing/founding';
+import { supabase } from '@/lib/supabase/client';
 
 /**
  * The step between "Get Pro" on the marketing page and Dodo's checkout.
@@ -26,6 +28,7 @@ export const StartCheckout = ({
   price: string;
   cadence: string;
 }) => {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   // Two effects in development would be two checkout sessions, and the second
   // is the one the operator would pay on while the first sits open.
@@ -40,10 +43,19 @@ export const StartCheckout = ({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ cadence: billing }),
       });
-      const body = (await res.json()) as { url?: string; error?: string };
+      const body = (await res.json()) as { url?: string; error?: string; code?: string };
 
       if (res.ok && body.url) {
         window.location.replace(body.url);
+        return;
+      }
+
+      // A demo room, not a real account: there is nothing to explain, only
+      // somewhere real to sign in. Drop the guest session so the Google button
+      // opens a fresh one instead of quietly reusing it.
+      if (body.code === 'anonymous') {
+        await supabase().auth.signOut();
+        router.push('/login?next=/upgrade');
         return;
       }
 
@@ -51,7 +63,7 @@ export const StartCheckout = ({
     } catch {
       setError('Checkout would not open.');
     }
-  }, [billing]);
+  }, [billing, router]);
 
   useEffect(() => {
     if (asked.current) return;

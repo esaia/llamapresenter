@@ -38,6 +38,16 @@ export const POST = async (request: NextRequest) => {
 
   if (!user) return NextResponse.json({ error: 'sign in first' }, { status: 401 });
 
+  // A guest room's operator has no email for Dodo to bill or send receipts
+  // to, and no real account for the webhook to reconcile against — they must
+  // sign in for real before a subscription can exist for them at all.
+  if (user.is_anonymous) {
+    return NextResponse.json(
+      { error: 'Sign in with Google first — a demo room cannot hold a subscription.', code: 'anonymous' },
+      { status: 401 },
+    );
+  }
+
   if (!process.env.DODO_PAYMENTS_API_KEY) {
     return NextResponse.json({ error: 'billing is not configured yet' }, { status: 503 });
   }

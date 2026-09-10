@@ -1,8 +1,10 @@
 'use client';
 
 import { Fragment, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { FoundingSpots } from '@/components/studio/FoundingSpots';
+import { supabase } from '@/lib/supabase/client';
 import { gatesEnforced, planOf } from '@/lib/billing/entitlements';
 import { FREE_LIMITS, LIMIT_LABELS, type LimitKey } from '@/lib/billing/limits';
 import { plansFor } from '@/lib/billing/plans';
@@ -40,7 +42,8 @@ const STATES: Record<string, { tone: string; says: string }> = {
 
 /** Plan, what it costs the operator in practice, and the way out of the account. */
 export const AccountSection = () => {
-  const { email, plan, billing, usage, claimedSpots } = useStudio();
+  const { email, isGuest, plan, billing, usage, claimedSpots } = useStudio();
+  const router = useRouter();
   const { tracks, categories } = useAudio();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -93,8 +96,8 @@ export const AccountSection = () => {
   return (
     <div className="space-y-6 text-sm">
       <div className="rounded-studio border border-studio-divider p-4">
-        <p className="text-xs text-studio-muted">Signed in as</p>
-        <p className="mt-1 break-all">{email || 'Unknown'}</p>
+        <p className="text-xs text-studio-muted">{isGuest ? 'Trying it out as' : 'Signed in as'}</p>
+        <p className="mt-1 break-all">{isGuest ? 'a guest, no account yet' : email || 'Unknown'}</p>
       </div>
 
       <div className="overflow-hidden rounded-studio border border-studio-divider">
@@ -212,18 +215,29 @@ export const AccountSection = () => {
                   a church already paying cannot act on a countdown. */}
               <FoundingSpots claimed={claimedSpots} />
 
+              {/* A demo room has no email for Dodo to bill and no account for
+                  the webhook to reconcile against — checkout would 401. Send
+                  the guest to a real sign-in instead of a broken purchase. */}
               <button
                 type="button"
-                onClick={() => void go('/api/billing/checkout')}
+                onClick={() =>
+                  isGuest
+                    ? void supabase()
+                        .auth.signOut()
+                        .then(() => router.push('/login?next=/upgrade'))
+                    : void go('/api/billing/checkout')
+                }
                 disabled={busy}
                 className="w-full rounded-studio bg-studio-accent px-3 py-2 text-sm font-medium text-studio-onaccent
                   transition-colors duration-150 hover:bg-studio-accent/85 disabled:opacity-60"
               >
-                Upgrade to Pro for {pro.price}/month
+                {isGuest ? 'Sign in to go Pro' : `Upgrade to Pro for ${pro.price}/month`}
               </button>
 
               <p className="mt-2 text-center text-[11px] leading-relaxed text-studio-faint">
-                Cancel whenever you like. Everything you have made stays yours, and stays where it is.
+                {isGuest
+                  ? 'This demo room stays behind — signing in opens a real one.'
+                  : 'Cancel whenever you like. Everything you have made stays yours, and stays where it is.'}
               </p>
             </>
           ) : (

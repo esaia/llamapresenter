@@ -152,8 +152,12 @@ export interface StudioInitial {
   session: StudioSession;
   /** Who is signed in, so the console can say so. */
   email: string;
+  /** Their Google profile photo, if they have one. */
+  avatarUrl: string | null;
   /** Whether the signed-in operator can reach /admin. */
   isAdmin: boolean;
+  /** An anonymous "try for free" visitor rather than a real account. */
+  isGuest: boolean;
   settings: SettingsRow;
   /** The Bibles the operator uploaded. Rows of their own, so they arrive beside the settings. */
   translations: CustomTranslation[];
@@ -193,7 +197,9 @@ export interface StudioInitial {
 interface StudioValue {
   session: StudioSession;
   email: string;
+  avatarUrl: string | null;
   isAdmin: boolean;
+  isGuest: boolean;
   plan: string;
   billing: Billing;
   /** How many founding spots are gone; what Pro costs follows from it. */
@@ -2259,7 +2265,9 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     () => ({
       session: initial.session,
       email: initial.email,
+      avatarUrl: initial.avatarUrl,
       isAdmin: initial.isAdmin,
+      isGuest: initial.isGuest,
       plan: initial.plan,
       billing: initial.billing,
       claimedSpots: initial.claimedSpots,
@@ -2365,7 +2373,9 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       goLive,
       importSongs,
       initial.email,
+      initial.avatarUrl,
       initial.isAdmin,
+      initial.isGuest,
       initial.billing,
       initial.claimedSpots,
       initial.plan,
