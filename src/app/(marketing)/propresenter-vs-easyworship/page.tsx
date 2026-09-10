@@ -1,9 +1,12 @@
 import Link from 'next/link';
 
 import { CompareMatrix, type CompareColumn, type CompareGroup } from '@/components/marketing/CompareMatrix';
+import { Frame } from '@/components/marketing/Frame';
 import { Marker } from '@/components/marketing/Marker';
+import { ProductVideo } from '@/components/marketing/ProductVideo';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
+import { findUseCase } from '@/lib/marketing/useCases';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -66,6 +69,7 @@ const groups = (PLANS: Record<PlanId, Plan>): CompareGroup[] => [
       { label: 'Installed on each machine', cells: [true, true, false] },
       { label: 'Presents with no internet', cells: [true, true, { soon: 'Soon' }] },
       { label: 'Cost of another screen', cells: ['Another seat', 'Another install', 'Another link'] },
+      { label: 'Learning curve', cells: ['Complex', 'Moderate', 'Simple and intuitive'] },
     ],
   },
   {
@@ -177,6 +181,8 @@ export const revalidate = 60;
 export default async function ProPresenterVsEasyWorshipPage() {
   const PLANS = plansFor(await claimedSpots());
   const GROUPS = groups(PLANS);
+  /* The clip lives once, on the use case it was actually shot for. */
+  const video = findUseCase('multilingual-church-services')?.video;
 
   return (
     <main>
@@ -220,6 +226,25 @@ export default async function ProPresenterVsEasyWorshipPage() {
           you decide.
         </p>
       </section>
+
+      {/* -------------------------------------------------------------- demo */}
+      {video ? (
+        <section className="mx-auto max-w-7xl px-6 py-10 sm:py-14">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-medium tracking-wide text-site-faint uppercase">See it in the console</p>
+            <h2 className={`${DISPLAY} mt-3 text-3xl leading-[1.1] sm:text-4xl`}>{video.title}</h2>
+            <p className="mt-4 text-lg leading-relaxed text-site-muted">{video.teaser}</p>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-5xl">
+            <Frame url="llamapresenter.com/studio" paneClassName="aspect-video">
+              <ProductVideo src={video.src} poster={video.poster} autoPlay={false} controls />
+            </Frame>
+
+            <p className="mt-4 text-center text-sm text-site-faint">{video.alt}</p>
+          </div>
+        </section>
+      ) : null}
 
       {/* ---------------------------------------------------------- verdicts */}
       <section className="border-y border-site-rule bg-site-band">

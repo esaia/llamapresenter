@@ -6,8 +6,8 @@ import { LANGUAGES_ART, type MarketingArt, OUTPUTS_ART, REMOTE_ART, TEMPLATE_ART
  * The use cases, and everything each page is made of.
  *
  * One row per page: the card that links to it, the metadata, and the copy.
- * They are written rather than generated — a page that says nothing a church
- * could not have guessed is worth less than no page at all — but they share a
+ * They are written rather than generated - a page that says nothing a church
+ * could not have guessed is worth less than no page at all - but they share a
  * shape, so `use-cases/[slug]` renders every one of them.
  */
 
@@ -25,6 +25,10 @@ export type UseCase = {
   headline: [string, string];
   lede: string;
   art: MarketingArt;
+  /** A short screen recording of the feature, shown beneath the "what you
+      get" cards. Most use cases have none - this is for the ones a still
+      drawing can't carry, like adding a translation live in the console. */
+  video?: { title: string; teaser: string; src: string; poster: string; alt: string };
   /** What the church gets, in three or four cards. */
   points: { title: string; body: string }[];
   /** The same thing again as a running order, because that is how it is used. */
@@ -38,64 +42,73 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'multilingual-church-services',
     name: 'Multilingual services',
-    card: 'Two or more languages on the same slide, and each screen showing the ones it needs.',
+    card: 'Show multiple languages side by side and choose what each screen displays.',
     icon: 'languages',
     title: 'Dual Language Bible Verse Display Software | LlamaPresenter',
     description:
       'Dual language Bible verse display software for bilingual churches: two or more translations side by side '
       + 'on one slide, songs in every language they are sung in, and a different pair on each screen.',
-    headline: ['Dual language Bible verses,', 'on the same slide'],
+    headline: ['Multiple Bible languages,', 'on the same slide'],
     lede:
       'A bilingual church usually pays for it twice: once when somebody types the second language into every '
       + 'slide, and again on Sunday when the two sets drift apart. This is side by side scripture on the '
-      + 'projector without a second set of slides — a language is something you arm, not something you type.',
+      + 'projector without a second set of slides - a language is something you arm, not something you type.',
     art: LANGUAGES_ART,
+    video: {
+      title: 'Multiple Bible translations.',
+      teaser:
+        'Add the Bible versions you need and display them together on the same slide. Switch languages without '
+        + 'stopping your service.',
+      src: '/videos/custom-language-demo.mp4',
+      poster: '/videos/custom-language-demo-poster.jpg',
+      alt: 'Adding a translation from the archive inside the console, and picking it in the language picker',
+    },
     points: [
       {
-        title: 'Side by side scripture on the projector',
+        title: 'Show multiple translations together',
         body: 'Send a verse and it is drawn in each language you have on, in the order you set. Nothing is pasted '
           + 'and nothing is duplicated.',
       },
       {
-        title: 'Each screen chooses',
+        title: 'Choose languages for each screen',
         body: 'The congregation can read two while the stage carries one and the stream carries the other. It is '
           + 'the same verse, drawn for each screen.',
       },
       {
-        title: 'Songs work the same way',
+        title: 'Multilingual lyrics',
         body: 'A song holds the languages it is sung in. They stack on the big screen, and the stage and the lower '
           + 'third each carry one of them.',
       },
       {
-        title: 'Your language is not a special case',
-        body: 'Pick a translation from a public archive inside the console — over a thousand of them — or upload a '
+        title: 'Add the translations you need',
+        body: 'Pick a translation from a public archive inside the console - over a thousand of them - or upload a '
           + 'file of your own.',
       },
     ],
     steps: [
-      'Add the languages your congregation reads, in the order they should appear.',
-      'Choose which of them each output carries — projector, stage, lower third.',
-      'Search a passage once. Every armed language comes out on the slide together.',
-      'Turn a language on or off mid-service with one click, without touching the slides.',
+      'Choose the languages your congregation uses and set their order.',
+      'Choose which languages appear on the projector, stage, and livestream.',
+      'Search for a passage once and show every selected language together.',
+      'Turn languages on or off during the service without editing your slides.',
     ],
     faq: [
       {
-        q: 'Is this dual language Bible verse display software?',
+        q: 'Can I show multiple Bible translations on one slide?',
         a: 'Yes. Two or more translations are drawn on the same slide from one passage read once, which is the '
           + 'part a church usually does by hand in other presentation software.',
       },
       {
-        q: 'How many languages can one slide carry?',
+        q: 'How many languages can I show at once?',
         a: 'As many as your plan allows and the screen can hold legibly. Two is the common case, and three is '
           + 'workable on a wide projector.',
       },
       {
-        q: 'Can the stream show a different language from the projector?',
+        q: 'Can the livestream use a different language?',
         a: 'Yes. Each output picks the languages it carries, so the room can read two while the stream carries the '
           + 'one your online congregation needs.',
       },
       {
-        q: 'What if our translation is not in the list?',
+        q: 'What if our Bible translation is not available?',
         a: 'Browse the public archives from inside the console, or upload the file yourself. It then reads exactly '
           + 'like the translations we ship, side by side with them.',
       },
@@ -105,37 +118,46 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'bible-verses-on-screen',
     name: 'Bible verses on screen',
-    card: 'Search a passage, send it to the wall, and step through it a verse at a time.',
+    card: 'Find a Bible passage, put it on screen, and move through it one verse at a time.',
     icon: 'book',
     title: 'Put Bible Verses on the Screen at Church | LlamaPresenter',
     description:
       'Search a passage and send it to the projector, the stage and the stream in seconds. Multiple '
       + 'translations, your own layout, and nothing to install.',
-    headline: ['Bible verses on the screen,', 'in seconds'],
+    headline: ['Bible verses on screen,', 'in seconds'],
     lede:
       'The reading is announced and the passage has to be up before the second sentence. That is the whole job, '
       + 'and everything here is built around doing it in one search box.',
     art: LANGUAGES_ART,
+    video: {
+      title: 'Add Bible translations in seconds',
+      teaser:
+        'Choose a Bible version, add it to your presentation, and show multiple translations side by side. '
+        + 'No downloads. No restarting. Just select the version you need and keep presenting.',
+      src: '/videos/custom-language-demo.mp4',
+      poster: '/videos/custom-language-demo-poster.jpg',
+      alt: 'Browsing the archive for a translation and adding it beside the ones already on the console',
+    },
     points: [
       {
-        title: 'One box, any reference',
-        body: 'Type the reference or a phrase from it. The chapter opens as cards, and the card you click is what '
-          + 'the room sees.',
+        title: 'Find any Bible passage in seconds',
+        body: 'Search by book, chapter, verse, or even a phrase from the passage. Select the reference you need '
+          + 'and send it straight to your screen.',
       },
       {
-        title: 'Verse by verse, or the whole passage',
-        body: 'Step through a reading a card at a time, or group verses so a long passage arrives in readable '
-          + 'pieces.',
+        title: 'Show verses the way you want',
+        body: 'Present a verse at a time or display a longer passage across multiple slides. Keep every reading '
+          + 'clear and easy to follow.',
       },
       {
-        title: 'Your own layout',
-        body: 'Set the typeface, the size and the background once, in the template editor, and every verse comes '
-          + 'out in it.',
+        title: 'Match your church style',
+        body: 'Choose your font, text size, spacing, background, and other details in the template editor. Your '
+          + 'Bible verses will always match the look of your service.',
       },
       {
-        title: 'It comes from our own copy',
-        body: 'Scripture is read out of our database rather than fetched from somebody else mid-service, so a slow '
-          + 'third party can never hold up a reading.',
+        title: 'Reliable during your service',
+        body: 'Your Bible content is available directly in LlamaPresenter, so you are not waiting for another '
+          + 'service to respond during your presentation. Just find your passage and keep going.',
       },
     ],
     steps: [
@@ -152,11 +174,11 @@ export const USE_CASES: UseCase[] = [
       },
       {
         q: 'Can I show two translations at once?',
-        a: 'Yes. Arm both languages and the verse comes out in each of them on the same slide.',
+        a: 'Yes. Select both translations and the verse appears in each language on the same slide.',
       },
       {
         q: 'Is the Bible part of the free plan?',
-        a: 'Yes. The Bible, both outputs and the stage display are never gated. Pro raises the limits around them.',
+        a: 'Yes. Bible verses, projector, stage display, and livestream are available on the Free plan. Pro increases the limits and adds more advanced features.',
       },
     ],
     related: ['multilingual-church-services', 'worship-song-lyrics', 'stage-display'],
@@ -164,43 +186,44 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'worship-song-lyrics',
     name: 'Worship song lyrics',
-    card: 'Your library, your running order, and the words on the wall a beat before they are sung.',
+    card: 'Keep your song library organized, build your running order, and put lyrics on screen when you need them.',
     icon: 'lyrics',
     title: 'Worship Song Lyrics Software for Churches | LlamaPresenter',
     description:
       'Keep your song library online, build the running order for Sunday, and send lyrics to the projector, the '
       + 'stage and the stream. Import an existing ProPresenter library.',
-    headline: ['Worship song lyrics,', 'up before the first line is sung'],
+    headline: ['Worship song lyrics,', 'ready when you need them'],
     lede:
       'A song is a running order of its own, and the person on the keys is not the person on the laptop. The '
       + 'library, the order and the blocks are built during the week so Sunday is arrows and nothing else.',
     art: TEMPLATE_ART,
     points: [
       {
-        title: 'Bring the library you have',
-        body: 'Drop a ProPresenter export on the console and we read the lyrics out of it, song by song. It is the '
-          + 'words we take; the look comes from your template here.',
+        title: 'Import your existing songs',
+        body: 'Already have a ProPresenter library? Import your songs into LlamaPresenter and get your lyrics ready '
+          + 'without starting from scratch. Your templates handle the design.',
       },
       {
-        title: 'Blocks, not slides',
-        body: 'Verses and choruses are blocks you can join, split or reorder, so a repeat is a move rather than a '
-          + 'copy of the same slide.',
+        title: 'Easy song management',
+        body: 'Organize verses, choruses, bridges, and repeats with simple blocks. Change the order without '
+          + 'rebuilding your slides.',
       },
       {
-        title: 'Sung in two languages',
-        body: 'A song carries the languages it is sung in. They stack on the big screen, and the stage and the '
-          + 'lower third each take one.',
+        title: 'Sing in multiple languages',
+        body: 'Show two languages side by side on the main screen and choose the right language for your stage '
+          + 'display and livestream.',
       },
       {
-        title: 'Music beside the words',
-        body: 'Your own tracks play from the console, so the pre-service bed and the words are run from one place.',
+        title: 'Lyrics and music in one place',
+        body: 'Add your own music tracks and run them with your presentation. No need to switch between different '
+          + 'tools during your service.',
       },
     ],
     steps: [
-      'Import or write the songs into your library.',
-      'Build Sunday’s running order in the rail.',
-      'Send the first block and walk through it with the arrows or your phone.',
-      'Jump to a repeat without hunting for a duplicate slide.',
+      'Import your existing songs or add new ones to your library.',
+      'Build your service running order.',
+      'Send the first section and move through the song with the arrows or your phone.',
+      'Jump to a repeated section without creating duplicate slides.',
     ],
     faq: [
       {
@@ -210,7 +233,7 @@ export const USE_CASES: UseCase[] = [
       },
       {
         q: 'Do you provide the songs themselves?',
-        a: 'No. You bring your own lyrics, and your CCLI reporting stays with you as it always did.',
+        a: 'No. You bring your own lyrics, and your existing CCLI reporting remains with you.',
       },
       {
         q: 'Can the stage screen show something different from the wall?',
@@ -223,48 +246,48 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'church-livestream-graphics',
     name: 'Livestream graphics',
-    card: 'A transparent browser source for OBS: verses, lyrics and name cards over your stream.',
+    card: 'Show Bible verses, lyrics, and lower thirds directly over your church livestream.',
     icon: 'stream',
     title: 'Church Livestream Graphics for OBS | LlamaPresenter',
     description:
       'Put Bible verses, song lyrics and lower thirds over your church livestream with a transparent browser '
       + 'source. No capture card, no NDI, nothing to install on the streaming machine.',
-    headline: ['Church livestream graphics,', 'without a broadcast rig'],
+    headline: ['Church livestream graphics,', 'without extra hardware'],
     lede:
       'The stream needs its own version of the slide: smaller, lower, and often in a different language from the '
       + 'wall. It is a link you paste into OBS once, and it stays right for the rest of the service.',
     art: OUTPUTS_ART,
     points: [
       {
-        title: 'A browser source, not hardware',
+        title: 'Simple browser-based setup',
         body: 'Paste the stream link into OBS or vMix as a browser source. There is no capture card and no video '
           + 'feed to route around the building.',
       },
       {
-        title: 'Its own look',
+        title: 'Give your livestream its own look',
         body: 'The stream has its own template, so the text can sit where your camera framing wants it rather than '
           + 'where the projector wants it.',
       },
       {
-        title: 'Its own language',
-        body: 'Carry English online while the room reads two, from the same verse the operator just sent.',
+        title: 'Choose the stage language',
+        body: 'Show the language your online audience needs while the projector and stage use their own language settings.',
       },
       {
-        title: 'Name cards on top',
-        body: 'A lower third for whoever is speaking is fired from the console and counts itself down.',
+        title: 'Add speaker name cards',
+        body: 'Show a speaker\'s name and role with a lower third, then let it disappear automatically.',
       },
     ],
     steps: [
-      'Open the stream output link from the console.',
-      'Add it to OBS as a browser source, sized to your canvas.',
-      'Choose which languages and which template the stream carries.',
-      'Run the service. What you send appears over the stream, transparent behind.',
+      'Open the livestream output link from the console.',
+      'Add it to OBS as a browser source and size it to your canvas.',
+      'Choose the language and template for the livestream.',
+      'Run your service. The content you send appears over the livestream with a transparent background.',
     ],
     faq: [
       {
         q: 'Does it work with OBS?',
-        a: 'Yes. It is a normal browser source with a transparent background, so anything that takes one — OBS, '
-          + 'vMix, Ecamm — can take it.',
+        a: 'Yes. It is a normal browser source with a transparent background, so anything that takes one - OBS, '
+          + 'vMix, Ecamm - can take it.',
       },
       {
         q: 'Do I need a capture card or NDI?',
@@ -282,50 +305,50 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'stage-display',
     name: 'Stage display',
-    card: 'What is up, what is next, the clock and the timer — on the screen the platform can see.',
+    card: 'Show the current slide, next slide, clock, and timer on a screen your team can see.',
     icon: 'stage',
     title: 'Church Stage Display and Confidence Monitor | LlamaPresenter',
     description:
       'Multi-screen worship software: give the platform a stage view with the current slide, what is next, the '
       + 'running order, a clock and a countdown. It opens on any screen with a browser.',
-    headline: ['A church stage display,', 'not just a bigger monitor'],
+    headline: ['A church stage display,', 'with everything your team needs'],
     lede:
       'The person preaching needs three things: what is on the wall, what is coming, and how long is left. The '
       + 'stage view is those three, on a screen that costs whatever an old laptop costs.',
     art: TIMER_ART,
     points: [
       {
-        title: 'Now and next',
-        body: 'The current slide and the one after it, so nobody is reading the wall over their shoulder.',
+        title: 'See what is on now and what comes next',
+        body: 'Show the current slide and the next one so speakers can stay focused on the service.',
       },
       {
-        title: 'The clock and the countdown',
-        body: 'Wall time and the timer for this part of the service, side by side.',
+        title: 'Keep an eye on the time',
+        body: 'See the current time and the countdown for the service segment in one view.',
       },
       {
-        title: 'A screen, not a seat',
-        body: 'It is a link. Open it on a smart TV, a spare laptop or a tablet — there is no cable to the booth and '
+        title: 'Open it on any screen',
+        body: 'It is a link. Open it on a smart TV, a spare laptop or a tablet - there is no cable to the booth and '
           + 'nothing installed on it.',
       },
       {
-        title: 'Its own language',
-        body: 'The platform can read the language they preach in while the congregation reads another.',
+        title: 'Choose the stage language',
+        body: 'Show the language your team needs while the congregation sees its own language.',
       },
     ],
     steps: [
-      'Open the stage link on the screen at the front of the platform.',
-      'Choose what it carries: languages, the agenda, the clock.',
-      'Run the service from the console. The stage keeps up on its own.',
-      'Start a countdown when a segment begins; the platform sees it immediately.',
+      'Open the Stage View link on the screen your team uses.',
+      'Choose the language and information your team wants to see.',
+      'Run the service from the console and Stage View stays in sync.',
+      'Start a countdown when a segment begins and your team sees it immediately.',
     ],
     faq: [
       {
         q: 'What hardware does the stage screen need?',
-        a: 'Anything with a browser: a TV stick, an old laptop, a tablet. It only has to reach the link.',
+        a: 'Any device with a modern browser can display Stage View, including a smart TV, laptop, or tablet.',
       },
       {
         q: 'Can we have more than one stage screen?',
-        a: 'Yes. The link can be opened on as many screens as you like, and there is no per-screen cost.',
+        a: 'Yes. You can open the Stage View link on multiple screens.',
       },
       {
         q: 'Can the stage screen carry a countdown?',
@@ -334,7 +357,7 @@ export const USE_CASES: UseCase[] = [
       },
       {
         q: 'Is there a timer-only screen?',
-        a: 'Yes. The timer has a link of its own for a display that should show nothing else.',
+        a: 'Yes. The timer has its own link for a display that shows only the countdown.',
       },
     ],
     related: ['service-timing', 'worship-song-lyrics', 'lower-thirds'],
@@ -342,41 +365,41 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'service-timing',
     name: 'Service timing',
-    card: 'Countdowns, a running order and a message on the platform screen when time is tight.',
+    card: 'Keep your service on schedule with countdowns, a running order, and clear timing for your team.',
     icon: 'timer',
     title: 'Worship Stage Timer Online | Church Countdown | LlamaPresenter',
     description:
       'A worship stage timer online: countdowns, a running order and a church stage display countdown timer on a '
-      + 'screen of its own — part of the same session that runs your verses, lyrics and screens.',
-    headline: ['A worship stage timer,', 'that keeps the service on time'],
+      + 'screen of its own - part of the same session that runs your verses, lyrics and screens.',
+    headline: ['A worship stage timer,', 'that keeps your service on track'],
     lede:
       'Most churches solve timing with a separate timer in a separate tab, run by a separate person. Here the '
       + 'countdown belongs to the same service as the slides, so the person running Sunday is running all of it.',
     art: TIMER_ART,
     points: [
       {
-        title: 'A running order that counts',
-        body: 'Each item carries the time you gave it, so the agenda is the schedule rather than a note about it.',
+        title: 'A running order with timing',
+        body: 'Give each part of your service a planned duration and keep the running order easy to follow.',
       },
       {
-        title: 'On the stage, or on its own',
+        title: 'Show the timer where you need it',
         body: 'The church stage display countdown timer sits beside the slides, and has a link of its own for a '
           + 'screen that shows only the clock.',
       },
       {
-        title: 'Adjust without restarting',
-        body: 'Add or take a minute mid-segment. The platform sees the new number; nothing resets.',
+        title: 'Adjust the time as you go',
+        body: 'Add or remove time while a segment is running. The countdown updates without restarting.',
       },
       {
-        title: 'Every screen agrees',
-        body: 'The run is described rather than ticked over the wire, so two screens never drift a second apart.',
+        title: 'Keep every screen in sync',
+        body: 'Your screens stay synchronized with the same service timer.',
       },
     ],
     steps: [
-      'Give each part of the service the time it should take.',
-      'Start the countdown when the segment starts.',
-      'Add a minute, or take one, as the service moves.',
-      'Watch the same number the platform is watching.',
+      'Set the planned time for each part of your service.',
+      'Start the countdown when the segment begins.',
+      'Adjust the time as the service moves.',
+      'Let your team follow the same countdown.',
     ],
     faq: [
       {
@@ -385,11 +408,11 @@ export const USE_CASES: UseCase[] = [
           + 'it.',
       },
       {
-        q: 'Can the platform see a timer on its own screen?',
-        a: 'Yes. There is a timer-only link for a display at the back of the room or under the lectern.',
+        q: 'Can the team see the timer on its own screen?',
+        a: 'Yes. There is a timer-only link you can open on a separate display.',
       },
       {
-        q: 'What happens if a screen reloads mid-count?',
+        q: 'What happens if a screen reloads during a countdown?',
         a: 'It picks the run back up where it is. The countdown is described by when it started, not by a number '
           + 'being pushed to it.',
       },
@@ -399,57 +422,57 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'phone-remote-control',
     name: 'Phone remote control',
-    card: 'Drive the service from the phone in your hand, with no app to install.',
+    card: 'Control your church service from your phone, with nothing to install.',
     icon: 'phone',
     title: 'Mobile Remote Control for Worship Presentation | LlamaPresenter',
     description:
       'A mobile remote control worship presentation app that is not an app: open the console on any phone '
       + 'browser, signed in, and move the service from wherever you are standing.',
-    headline: ['Remote control your service,', 'from your phone'],
+    headline: ['Control your service,', 'from your phone'],
     lede:
       'Remote control for worship presentation usually means a companion app, on the same wifi as the machine at '
       + 'the front. Here the console is a page, so a phone that can open it can run the service.',
     art: REMOTE_ART,
     points: [
       {
-        title: 'No app, no pairing',
+        title: 'No app to install',
         body: 'Sign in on the phone browser and you have the console: the running order, the search box, the '
           + 'arrows. There is nothing to install and nothing to discover on the network.',
       },
       {
-        title: 'From anywhere, not just the booth',
+        title: 'Control it from anywhere',
         body: 'Lead from the platform, run the reading from the second row, or fix a slide from the back of the '
           + 'hall. It is the same session either way.',
       },
       {
-        title: 'Two people, one service',
-        body: 'A phone and a laptop can drive the same service at once, and both see the same live slide.',
+        title: 'Work together on one service',
+        body: 'Use a phone and laptop together. Both devices can control the same live service.',
       },
       {
-        title: 'Everything, not a subset',
+        title: 'More than a next-slide remote',
         body: 'Verses, songs, the timer and the name cards are all there. A phone remote here is the console, not '
           + 'a next-slide button.',
       },
     ],
     steps: [
-      'Open the console on your phone and sign in.',
-      'Pick the service you are running.',
-      'Search, send and clear from where you are standing.',
-      'Hand over by handing over the phone, or let somebody else open it on theirs.',
+      'Open LlamaPresenter on your phone and sign in.',
+      'Open the service you want to control.',
+      'Search, send, and clear content from your phone.',
+      'Hand over control by letting another team member sign in on their device.',
     ],
     faq: [
       {
-        q: 'Is there an app to install on the phone?',
+        q: 'Do I need to install an app?',
         a: 'No. The console is a web page, so any modern phone browser is the remote. There is nothing to install '
           + 'and nothing to pair.',
       },
       {
-        q: 'Does the phone have to be on the church wifi?',
-        a: 'No. It signs in like any other device, so mobile data works as well as the building’s network.',
+        q: 'Does the phone need to be on church Wi-Fi?',
+        a: 'No. As long as the phone can access LlamaPresenter, you can use it to control the service.',
       },
       {
-        q: 'Can two people control the service at once?',
-        a: 'Yes. Both see the same live slide, so a hand-over mid-service is a matter of who picks up the phone.',
+        q: 'Can two people control the same service?',
+        a: 'Yes. Multiple devices can access the same service and stay in sync.',
       },
     ],
     related: ['stage-display', 'service-timing', 'worship-song-lyrics'],
@@ -457,13 +480,13 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'church-slide-templates',
     name: 'Slide templates',
-    card: 'An online church slides editor: set the look once, and every verse and lyric comes out in it.',
+    card: 'Create your church slide design once and use it for every Bible verse and song lyric.',
     icon: 'template',
     title: 'Online Church Slides Editor and Templates | LlamaPresenter',
     description:
       'An online church slides editor for scripture and lyrics: set the typeface, the size, the background and '
       + 'the position once, and every slide the service sends comes out in your own look.',
-    headline: ['Church slide templates,', 'set once and reused every week'],
+    headline: ['Church slide templates,', 'create once and use every week'],
     lede:
       'Most presentation software makes you design the slide and then fill it in. The online church slides editor '
       + 'here works the other way: you design the template and the service fills it, so every verse and every '
@@ -471,45 +494,45 @@ export const USE_CASES: UseCase[] = [
     art: TEMPLATE_ART,
     points: [
       {
-        title: 'Design in the browser',
+        title: 'Design in your browser',
         body: 'Drag the text where it belongs, set the typeface and the size, drop a background behind it. It is '
           + 'the same editor wherever you sign in.',
       },
       {
-        title: 'A template per screen',
+        title: 'Give each screen its own template',
         body: 'The projector and the stream are different shapes with different problems, so each carries its own '
           + 'template rather than a scaled copy of one.',
       },
       {
-        title: 'Your typeface, not ours',
+        title: 'Use your own fonts',
         body: 'Add a Google font or a link to a woff2 and the pickers carry it. A font you added travels with the '
           + 'slide to every output.',
       },
       {
-        title: 'It applies to everything',
+        title: 'Use one design across your service',
         body: 'Verses, lyrics and name cards all come out of templates, so a change to the look is one change '
           + 'rather than a pass over every slide.',
       },
     ],
     steps: [
-      'Open the template editor and lay out a verse the way you want it.',
-      'Give the stream its own template, with the text where your camera framing wants it.',
-      'Choose the typeface, or add your own.',
-      'Run the service. Every slide arrives in that look, on the screen it belongs to.',
+      'Open the template editor and design your Bible verse layout.',
+      'Create a separate template for your livestream.',
+      'Choose a font or add your own.',
+      'Run your service and each screen uses its assigned template.',
     ],
     faq: [
       {
-        q: 'Do I design every slide?',
+        q: 'Do I need to design every slide?',
         a: 'No. You design the template, and the verses and lyrics you send are drawn into it. There are no slides '
           + 'to keep in step with each other.',
       },
       {
-        q: 'Can the stream look different from the projector?',
+        q: 'Can the livestream look different from the projector?',
         a: 'Yes. Each output carries its own template, which is usually the point: a wall and a stream want very '
           + 'different type.',
       },
       {
-        q: 'Can we use our own font?',
+        q: 'Can we use our own fonts?',
         a: 'Yes. A Google Fonts family or a link to a woff2, woff, ttf or otf file. It travels with the slide, so '
           + 'the outputs draw it too.',
       },
@@ -519,7 +542,7 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'lower-thirds',
     name: 'Lower thirds',
-    card: 'Name cards for whoever is speaking, laid over the stream and gone on their own.',
+    card: 'Show speaker names and roles over your livestream, then clear them automatically.',
     icon: 'lower3rd',
     title: 'Church Livestream Lower Thirds Software | LlamaPresenter',
     description:
@@ -532,47 +555,47 @@ export const USE_CASES: UseCase[] = [
     art: TEMPLATE_ART,
     points: [
       {
-        title: 'An output of its own',
-        body: 'The lower third is its own link. The projector and the stage never see a name card.',
+        title: 'Keep lower thirds separate',
+        body: 'The lower third has its own output, so speaker names appear on the livestream without affecting the projector or stage.',
       },
       {
-        title: 'It lays over what is showing',
-        body: 'The card sits on top of whatever the stream output already has — a verse, a lyric, nothing at all.',
+        title: 'Place it over your livestream',
+        body: 'The lower third appears over your existing livestream content, including Bible verses, lyrics, or video.',
       },
       {
-        title: 'It clears itself',
+        title: 'Clear it automatically',
         body: 'You set the hold. Every screen counts it down for itself, so a card is never left up because a '
           + 'browser tab went quiet.',
       },
       {
-        title: 'Your look',
+        title: 'Match your church style',
         body: 'The card is drawn from your own template, in your own typeface, rather than a stock band across the '
           + 'bottom.',
       },
     ],
     steps: [
-      'Open the lower third link and add it to your stream as a browser source.',
-      'Write the name and the role in the console.',
-      'Fire the card when they start speaking.',
-      'Let it clear itself, or take it down early.',
+      'Open the lower third output and add it to your stream as a browser source.',
+      'Enter the speaker\'s name and role in the console.',
+      'Show the lower third when they start speaking.',
+      'Let it disappear automatically or clear it early.',
     ],
     faq: [
       {
-        q: 'How do I add an OBS lower third overlay for church streams?',
+        q: 'How do I add a lower third to an OBS church livestream?',
         a: 'Open the lower third output link and add it to OBS as a browser source, sized to your canvas. It is '
           + 'transparent behind the card, so it sits over your camera.',
       },
       {
-        q: 'Does the projector show the name card too?',
-        a: 'No. It goes to the lower third output alone, which is usually the stream and nothing else.',
+        q: 'Will the projector show the lower third?',
+        a: 'No. The lower third uses its own output and does not affect the projector or stage.',
       },
       {
-        q: 'How long does a card stay up?',
-        a: 'As long as you set. Each screen counts the hold down for itself rather than waiting to be told.',
+        q: 'How long does a lower third stay on screen?',
+        a: 'You choose how long it stays on screen.',
       },
       {
-        q: 'Can it sit over a verse?',
-        a: 'Yes. It is laid over whatever that output is showing.',
+        q: 'Can it appear over a Bible verse?',
+        a: 'Yes. It can appear over whatever the livestream output is showing.',
       },
     ],
     related: ['church-livestream-graphics', 'worship-song-lyrics', 'stage-display'],

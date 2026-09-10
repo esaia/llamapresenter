@@ -3,10 +3,13 @@ import Link from 'next/link';
 
 import { Art } from '@/components/marketing/Art';
 import { BothCover } from '@/components/marketing/BothCover';
+import { Frame } from '@/components/marketing/Frame';
 import { Marker } from '@/components/marketing/Marker';
+import { ProductVideo } from '@/components/marketing/ProductVideo';
 import { Tick } from '@/components/marketing/Tick';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
+import { findUseCase } from '@/lib/marketing/useCases';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -81,6 +84,11 @@ const comparison = (PLANS: Record<PlanId, Plan>): { label: string; ours: string;
     label: 'Adding the fourth screen',
     ours: 'Another link, at no cost.',
     theirs: 'Another display, or another install.',
+  },
+  {
+    label: 'Learning curve',
+    ours: 'Simple and intuitive.',
+    theirs: 'Moderate. A schedule builder and a live view to learn.',
   },
   {
     label: 'Two languages on one slide',
@@ -296,6 +304,8 @@ export const revalidate = 60;
 export default async function ProclaimAlternativePage() {
   const PLANS = plansFor(await claimedSpots());
   const COMPARISON = comparison(PLANS);
+  /* The clip lives once, on the use case it was actually shot for. */
+  const video = findUseCase('multilingual-church-services')?.video;
 
   return (
     <main>
@@ -490,6 +500,27 @@ export default async function ProclaimAlternativePage() {
           </p>
         </div>
       </section>
+
+      {/* -------------------------------------------------------------- demo */}
+      {video ? (
+        <section className="border-y border-site-rule bg-site-band">
+          <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="text-sm font-medium tracking-wide text-site-faint uppercase">See it in the console</p>
+              <h2 className={`${DISPLAY} mt-3 text-3xl leading-[1.1] sm:text-4xl`}>{video.title}</h2>
+              <p className="mt-4 text-lg leading-relaxed text-site-muted">{video.teaser}</p>
+            </div>
+
+            <div className="mx-auto mt-10 max-w-5xl">
+              <Frame url="llamapresenter.com/studio" paneClassName="aspect-video">
+                <ProductVideo src={video.src} poster={video.poster} autoPlay={false} controls />
+              </Frame>
+
+              <p className="mt-4 text-center text-sm text-site-faint">{video.alt}</p>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {/* --------------------------------------------------------- why ours */}
       <section className="mx-auto max-w-7xl px-6 py-16 sm:py-24">

@@ -1,10 +1,13 @@
 import Link from 'next/link';
 
 import { CompareMatrix, type CompareColumn, type CompareGroup } from '@/components/marketing/CompareMatrix';
+import { Frame } from '@/components/marketing/Frame';
 import { Marker } from '@/components/marketing/Marker';
 import { Monitor } from '@/components/marketing/Monitor';
+import { ProductVideo } from '@/components/marketing/ProductVideo';
 import { plansFor, type Plan, type PlanId } from '@/lib/billing/plans';
 import { claimedSpots } from '@/lib/billing/seats';
+import { findUseCase } from '@/lib/marketing/useCases';
 
 /* The rounded display face the brand is drawn in, as on the rest of the site. */
 const DISPLAY = 'font-valera tracking-tight text-site-ink';
@@ -69,6 +72,15 @@ const groups = (PLANS: Record<PlanId, Plan>): CompareGroup[] => [
       },
       { label: 'Presents with no internet', cells: [{ soon: 'Soon' }, true, true, true, true] },
       { label: 'Open source', cells: [false, false, false, true, false] },
+    ],
+  },
+  {
+    title: 'Getting started',
+    rows: [
+      {
+        label: 'Learning curve',
+        cells: ['Simple and intuitive', 'Complex', 'Moderate', 'Moderate', 'Moderate'],
+      },
     ],
   },
   {
@@ -174,6 +186,8 @@ export const revalidate = 60;
 export default async function ComparePage() {
   const PLANS = plansFor(await claimedSpots());
   const GROUPS = groups(PLANS);
+  /* The clip lives once, on the use case it was actually shot for. */
+  const video = findUseCase('multilingual-church-services')?.video;
 
   return (
     <main>
@@ -216,6 +230,25 @@ export default async function ComparePage() {
           {' '}{CHECKED}, and a dash is a square we could not confirm rather than a no.
         </p>
       </section>
+
+      {/* -------------------------------------------------------------- demo */}
+      {video ? (
+        <section className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-medium tracking-wide text-site-faint uppercase">See it in the console</p>
+            <h2 className={`${DISPLAY} mt-3 text-3xl leading-[1.1] sm:text-4xl`}>{video.title}</h2>
+            <p className="mt-4 text-lg leading-relaxed text-site-muted">{video.teaser}</p>
+          </div>
+
+          <div className="mx-auto mt-10 max-w-5xl">
+            <Frame url="llamapresenter.com/studio" paneClassName="aspect-video">
+              <ProductVideo src={video.src} poster={video.poster} autoPlay={false} controls />
+            </Frame>
+
+            <p className="mt-4 text-center text-sm text-site-faint">{video.alt}</p>
+          </div>
+        </section>
+      ) : null}
 
       {/* ----------------------------------------------------- the long form */}
       <section className="border-t border-site-rule bg-site-band">
