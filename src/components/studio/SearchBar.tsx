@@ -39,11 +39,13 @@ export const SearchBar = ({
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
   const [jumpTo, setJumpTo] = useState<BookEntry | null>(null);
+  const [jumpQuery, setJumpQuery] = useState('');
 
   const hint = useSearchHint();
 
-  const openBrowse = (book: BookEntry | null) => {
+  const openBrowse = (book: BookEntry | null, query = '') => {
     setJumpTo(book);
+    setJumpQuery(query);
     onBrowse(true);
   };
 
@@ -64,7 +66,12 @@ export const SearchBar = ({
         return;
       }
 
-      setError('Could not read that reference. Try a book, chapter and verse — or use Browse.');
+      // Not a reference and not a book name — the words themselves are a
+      // reasonable thing to type, so ask Browse's own text search rather than
+      // rejecting a search a moment before Browse would have answered it.
+      setError('');
+      setInput('');
+      openBrowse(null, input);
       return;
     }
 
@@ -156,9 +163,11 @@ export const SearchBar = ({
       {browsing ? (
         <BrowseModal
           initialBook={jumpTo}
+          initialQuery={jumpQuery}
           onClose={() => {
             onBrowse(false);
             setJumpTo(null);
+            setJumpQuery('');
           }}
         />
       ) : null}

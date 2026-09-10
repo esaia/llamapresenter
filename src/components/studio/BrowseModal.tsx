@@ -85,9 +85,12 @@ interface Range {
  */
 export const BrowseModal = ({
   initialBook = null,
+  initialQuery = '',
   onClose,
 }: {
   initialBook?: BookEntry | null;
+  /** What the search bar couldn't read as a reference — asked here as words instead. */
+  initialQuery?: string;
   onClose: () => void;
 }) => {
   const { settings, addPassage, goLive, loadChapterCount, loadVerseCount } = useStudio();
@@ -100,7 +103,7 @@ export const BrowseModal = ({
     verses: 0,
   }));
   const [range, setRange] = useState<Range | null>(null);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // What the same box found in the text. A book name is answered from a table
