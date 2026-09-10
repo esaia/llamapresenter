@@ -98,7 +98,8 @@ const LibraryRow = ({
       selected
         ? 'border-studio-accent bg-studio-surface text-studio-text'
         : 'border-transparent text-studio-muted hover:bg-studio-surface',
-      drag.draggable && 'cursor-grab active:cursor-grabbing',
+      'cursor-pointer',
+      drag.draggable && 'active:cursor-grabbing',
       lifted && LIFTED_SLOT,
     )}
   >

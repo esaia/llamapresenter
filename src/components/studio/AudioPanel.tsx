@@ -90,11 +90,17 @@ const LibraryRow = ({
         // Filing a track is a commitment, so the row it would go into is filled
         // rather than outlined: it is unmistakable at a glance mid-service.
         filing && 'border-studio-accent bg-studio-accent text-studio-onaccent',
-        drag && 'cursor-grab active:cursor-grabbing',
+        'cursor-pointer',
+        drag && 'active:cursor-grabbing',
         lifted && LIFTED_SLOT,
       )}
+      onClick={onSelect}
     >
-      <button type="button" onClick={onSelect} className="flex min-w-0 flex-1 items-center gap-2 text-left">
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
+      >
         <Music className={cn('size-3.5 shrink-0', filing ? 'text-studio-onaccent' : 'text-studio-faint')} />
         <span className={cn('min-w-0 flex-1 truncate', selected && 'font-semibold')}>{label}</span>
       </button>
@@ -116,7 +122,10 @@ const LibraryRow = ({
         {onDelete ? (
           <button
             type="button"
-            onClick={onDelete}
+            onClick={event => {
+              event.stopPropagation();
+              onDelete();
+            }}
             aria-label={`Delete the ${label} library`}
             title="Delete this library — the tracks themselves stay"
             className={cn(
