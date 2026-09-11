@@ -34,6 +34,7 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
   const {
     songs,
     plan,
+    isGuest,
     usage,
     room,
     noteLimit,
@@ -108,7 +109,7 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
       // replaces a song already here, so only the new titles cost anything.
       const held = new Set(songs.map(song => song.title.toLowerCase()));
       const fresh = imported.filter(song => !held.has(song.title.toLowerCase()));
-      const limit = ceiling(plan, 'songs');
+      const limit = ceiling(plan, isGuest, 'songs');
       const room = limit === null ? null : Math.max(0, limit - (usage.songs ?? 0));
 
       if (room !== null && fresh.length > room) {

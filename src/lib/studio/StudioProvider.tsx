@@ -909,7 +909,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       const saved = hasRealId(card.id) ? { id: card.id } : {};
 
       // Editing a saved card is always allowed; only a new one is counted.
-      if (!saved.id && !allows(initial.plan, 'name_cards', cards.length)) refuse('name_cards');
+      if (!saved.id && !allows(initial.plan, initial.isGuest, 'name_cards', cards.length)) refuse('name_cards');
 
       const { data, error } = await db
         .from('name_cards')
@@ -934,7 +934,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         return [...without, written].sort((a, b) => a.position - b.position || a.title.localeCompare(b.title));
       });
     },
-    [cards.length, db, failed, initial.plan, initial.settings.user_id, refuse],
+    [cards.length, db, failed, initial.plan, initial.isGuest, initial.settings.user_id, refuse],
   );
 
   const removeCard = useCallback<StudioValue['removeCard']>(
@@ -1050,7 +1050,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       if (order.includes(lang) || order.length >= MAX_LANGS) return;
 
-      if (!allows(initial.plan, 'languages', order.length)) {
+      if (!allows(initial.plan, initial.isGuest, 'languages', order.length)) {
         setLimitNotice(limitMessage('languages'));
         return;
       }
@@ -1062,7 +1062,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         versions: { ...current.versions, [lang]: current.versions[lang] || defaultVersionOf(lang) },
       }));
     },
-    [initial.plan],
+    [initial.plan, initial.isGuest],
   );
 
   /**
@@ -1188,7 +1188,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    */
   const importTranslation = useCallback<StudioValue['importTranslation']>(
     async (files, into) => {
-      if (!allows(initial.plan, 'translations', translations.length)) refuse('translations');
+      if (!allows(initial.plan, initial.isGuest, 'translations', translations.length)) refuse('translations');
 
       setImporting({ done: 0, total: 0, label: '', from: 0, of: 1 });
 
@@ -1204,7 +1204,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         setImporting(null);
       }
     },
-    [initial.plan, refuse, storeTranslation, translations.length],
+    [initial.plan, initial.isGuest, refuse, storeTranslation, translations.length],
   );
 
   /**
@@ -1226,7 +1226,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       try {
         for (const [index, entry] of entries.entries()) {
-          if (!allows(initial.plan, 'translations', translations.length + index)) refuse('translations');
+          if (!allows(initial.plan, initial.isGuest, 'translations', translations.length + index)) refuse('translations');
 
           setImporting({ done: 0, total: 0, label: entry.name, from: index, of: entries.length });
 
@@ -1240,7 +1240,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         setImporting(null);
       }
     },
-    [initial.plan, refuse, storeTranslation, translations.length],
+    [initial.plan, initial.isGuest, refuse, storeTranslation, translations.length],
   );
 
   /**
@@ -1323,7 +1323,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // Checked before the fetch: refusing after the passage has been pulled
       // down wastes the wait and tells the operator nothing they could not have
       // been told immediately.
-      if (!allows(initial.plan, 'passages', workspaceRef.current.blocks.length)) refuse('passages');
+      if (!allows(initial.plan, initial.isGuest, 'passages', workspaceRef.current.blocks.length)) refuse('passages');
 
       setLoading(true);
 
@@ -1362,7 +1362,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         setLoading(false);
       }
     },
-    [client, initial.plan, refuse, settings.adminLang, targets],
+    [client, initial.plan, initial.isGuest, refuse, settings.adminLang, targets],
   );
 
   /**
@@ -1726,7 +1726,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       const known = new Set(songs.map(song => song.title.toLowerCase()));
       const fresh = imported.filter(song => !known.has(song.title.toLowerCase())).length;
 
-      if (!allows(initial.plan, 'songs', songs.length, fresh)) refuse('songs');
+      if (!allows(initial.plan, initial.isGuest, 'songs', songs.length, fresh)) refuse('songs');
 
       // A shelf of its own, named after what was dropped. Two bundles of the
       // same name are two imports and get two shelves, because that is what
@@ -1779,7 +1779,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         return [...byTitle.values()].sort((a, b) => a.title.localeCompare(b.title));
       });
     },
-    [db, failed, filing, initial.plan, initial.settings.user_id, libraries, refuse, songs],
+    [db, failed, filing, initial.plan, initial.isGuest, initial.settings.user_id, libraries, refuse, songs],
   );
 
   const saveSong = useCallback<StudioValue['saveSong']>(
@@ -1791,7 +1791,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // Only a song that is not in the library yet counts against the ceiling;
       // editing one already there is always allowed, whatever the plan.
       if (!saved.id && !songs.some(item => item.title.toLowerCase() === song.title.toLowerCase())) {
-        if (!allows(initial.plan, 'songs', songs.length)) refuse('songs');
+        if (!allows(initial.plan, initial.isGuest, 'songs', songs.length)) refuse('songs');
       }
 
       const { data, error } = await db
@@ -1849,7 +1849,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       return written;
     },
-    [db, failed, filing, initial.plan, initial.settings.user_id, refuse, songs],
+    [db, failed, filing, initial.plan, initial.isGuest, initial.settings.user_id, refuse, songs],
   );
 
   /**
@@ -2116,7 +2116,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
   const addPlaylist = useCallback<StudioValue['addPlaylist']>(
     async name => {
-      if (!allows(initial.plan, 'playlists', playlists.length)) refuse('playlists');
+      if (!allows(initial.plan, initial.isGuest, 'playlists', playlists.length)) refuse('playlists');
 
       const { data, error } = await db
         .from('song_playlists')
@@ -2130,7 +2130,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       setPlaylists(current => [...current, { id: data.id, name: data.name, songs: [] }]);
       setOpenList({ kind: 'playlist', id: data.id });
     },
-    [db, failed, initial.plan, initial.settings.user_id, playlists.length, refuse],
+    [db, failed, initial.plan, initial.isGuest, initial.settings.user_id, playlists.length, refuse],
   );
 
   const renameList = useCallback<StudioValue['renameList']>(
@@ -2276,7 +2276,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       // Only growing past the ceiling is refused. Dragging songs around inside
       // a running order that is already over the line leaves it the same
       // length, and has to keep working — see `roomForList`.
-      if (!allowsList(initial.plan, 'songs_per_playlist', landing, list.songs.length)) {
+      if (!allowsList(initial.plan, initial.isGuest, 'songs_per_playlist', landing, list.songs.length)) {
         refuse('songs_per_playlist');
       }
 
@@ -2290,7 +2290,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       await writePlaylist(playlistId, without);
     },
-    [initial.plan, playlists, refuse, writePlaylist],
+    [initial.plan, initial.isGuest, playlists, refuse, writePlaylist],
   );
 
   const orderPlaylist = useCallback<StudioValue['orderPlaylist']>(
@@ -2349,8 +2349,8 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
   );
 
   const room = useCallback<StudioValue['room']>(
-    (key, adding = 1, current) => allows(initial.plan, key, current ?? counts[key] ?? 0, adding),
-    [counts, initial.plan],
+    (key, adding = 1, current) => allows(initial.plan, initial.isGuest, key, current ?? counts[key] ?? 0, adding),
+    [counts, initial.plan, initial.isGuest],
   );
 
   const value = useMemo<StudioValue>(

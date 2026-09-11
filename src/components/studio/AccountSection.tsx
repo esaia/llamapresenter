@@ -124,7 +124,7 @@ export const AccountSection = () => {
           </p>
         )}
 
-        {free ? (
+        {free && !isGuest ? (
           // Where the line is, in the operator's own numbers. "15 of 15 songs"
           // is something they can check against what they were about to do this
           // morning; a bullet saying "song catalogue" is not.
@@ -191,8 +191,11 @@ export const AccountSection = () => {
         ) : (
           <div className="border-t border-studio-divider px-4 py-4">
             <p className="text-xs text-studio-text">
-              Everything is unlimited, except three languages on a slide — which is how many fit before a slide stops
-              being readable, and not something we would charge for.
+              {isGuest
+                ? 'Every ceiling is off while you’re trying it out. Sign up when you’re ready to send this to a ' +
+                  'real screen.'
+                : 'Everything is unlimited, except three languages on a slide — which is how many fit before a ' +
+                  'slide stops being readable, and not something we would charge for.'}
             </p>
 
             {/* What they have made, rather than a column of the word

@@ -14,17 +14,27 @@ export const gatesEnforced = process.env.NEXT_PUBLIC_ENFORCE_GATES === '1';
 
 export const planOf = (plan: string | null | undefined): PlanId => (plan === 'pro' ? 'pro' : 'free');
 
-/** The plan we treat someone as being on, which is Pro for everyone while gates are off. */
-export const effectivePlan = (plan: string | null | undefined): PlanId =>
-  gatesEnforced ? planOf(plan) : 'pro';
+/**
+ * The plan we treat someone as being on, which is Pro for everyone while gates
+ * are off, and Pro for a guest regardless — a demo room can't produce a
+ * shareable output link (see `isGuest` in `AppBar.tsx`), so there is nothing a
+ * generous ceiling could let them walk off with.
+ */
+export const effectivePlan = (plan: string | null | undefined, isGuest = false): PlanId =>
+  !gatesEnforced || isGuest ? 'pro' : planOf(plan);
 
 /** Whether `adding` more of something still fits. The console's half of the rule. */
-export const allows = (plan: string | null | undefined, key: LimitKey, current: number, adding = 1): boolean =>
-  roomFor(effectivePlan(plan), key, current, adding);
+export const allows = (
+  plan: string | null | undefined,
+  isGuest: boolean,
+  key: LimitKey,
+  current: number,
+  adding = 1,
+): boolean => roomFor(effectivePlan(plan, isGuest), key, current, adding);
 
 /** The ceiling in force, or `null` for none. */
-export const ceiling = (plan: string | null | undefined, key: LimitKey): number | null =>
-  limitOf(effectivePlan(plan), key);
+export const ceiling = (plan: string | null | undefined, isGuest: boolean, key: LimitKey): number | null =>
+  limitOf(effectivePlan(plan, isGuest), key);
 
 /**
  * Whether a list may become `wants` long, given it was `had` long. The console's
@@ -32,7 +42,8 @@ export const ceiling = (plan: string | null | undefined, key: LimitKey): number 
  */
 export const allowsList = (
   plan: string | null | undefined,
+  isGuest: boolean,
   key: LimitKey,
   wants: number,
   had: number,
-): boolean => roomForList(effectivePlan(plan), key, wants, had);
+): boolean => roomForList(effectivePlan(plan, isGuest), key, wants, had);
