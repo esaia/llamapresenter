@@ -270,10 +270,9 @@ export const Console = () => {
       // ⌘/Ctrl+V drops copies of those words right after whatever is picked
       // out — the selection when there is one, otherwise the live slide, the
       // same fallback Delete and Copy use above — in the order they were
-      // copied. Only the live-slide fallback ever reaches the projector: a
-      // selection can sit in a song nobody is showing, and pasting into one
-      // must never yank the wall away from what is actually live (see
-      // `pasteSlides` in `StudioProvider.tsx`).
+      // copied. Never sends anything to the projector, even pasted straight
+      // after the live slide: pasting is filing, and filing must never move
+      // what the room is looking at (see `pasteSlides` in `StudioProvider.tsx`).
       if (event.key.toLowerCase() === 'v' && (event.metaKey || event.ctrlKey) && tab === 'lyrics') {
         if (!clipboardRef.current || clipboardRef.current.length === 0) return;
 

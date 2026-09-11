@@ -2019,13 +2019,13 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    * half of the pair in `Console.tsx`, mirroring `removeSlide` above rather
    * than the editor.
    *
-   * Only puts the last one live when the paste landed right after the slide
-   * that was already on the projector. A selection can sit in any song, live
-   * or not — pasting into one is filing, and filing must never reach for the
-   * wall the room is looking at. `removeSlide`/`removeSlides` get to compute
-   * `onScreen` from `live` because the slide they are removing existed a
-   * moment ago; a pasted slide has no moment ago, so this checks whether the
-   * *anchor* — the slide it landed after — was the live one instead.
+   * Never sends anything to the projector, even when the anchor is the live
+   * slide itself: pasting is filing, and filing must never reach for the wall
+   * the room is looking at, whatever it duplicates. What it does have to do
+   * is keep the live *pointer* correct — an index, so a paste landing ahead of
+   * it in the same song has to slide it along the same way `removeSlide`
+   * does, or it would end up pointing at whichever slide the insert pushed
+   * into its old spot instead of the one actually on screen.
    */
   const pasteSlides = useCallback<StudioValue['pasteSlides']>(
     async (song, afterSlideId, clips) => {
@@ -2033,15 +2033,19 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
 
       if (at < 0 || clips.length === 0) return;
 
-      const onScreen =
-        live?.kind === 'lyrics' && live.songId === song.id && song.slides[live.slideIndex]?.id === afterSlideId;
-
       const pasted: SongSlide[] = clips.map(clip => ({ ...clip, id: crypto.randomUUID() }));
       const slides = [...song.slides.slice(0, at + 1), ...pasted, ...song.slides.slice(at + 1)];
       const inserted: Song = { ...song, slides };
 
       setSongs(current => current.map(item => (item.id === song.id ? inserted : item)));
-      if (onScreen) publishLyrics(inserted, at + pasted.length);
+
+      if (live?.kind === 'lyrics' && live.songId === song.id && live.slideIndex > at) {
+        setWorkspace(current =>
+          current.live?.kind === 'lyrics' && current.live.songId === song.id
+            ? { ...current, live: { ...current.live, slideIndex: current.live.slideIndex + pasted.length } }
+            : current,
+        );
+      }
 
       try {
         await saveSong(inserted);
@@ -2049,7 +2053,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
         setSongs(current => current.map(item => (item.id === song.id ? song : item)));
       }
     },
-    [live, publishLyrics, saveSong],
+    [live, saveSong],
   );
 
   const removeSongs = useCallback<StudioValue['removeSongs']>(
