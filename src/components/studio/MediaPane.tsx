@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, ChevronUp, Image as ImageIcon, Plus, Trash2, Upload } from 'lucide-react';
+import { ChevronDown, ChevronUp, Image as ImageIcon, Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import {
   useEffect,
   useLayoutEffect,
@@ -12,6 +12,7 @@ import {
 } from 'react';
 
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ContextMenu, useContextMenu } from '@/components/ui/ContextMenu';
 import { IconButton } from '@/components/ui/IconButton';
 import { cn } from '@/lib/cn';
 import {
@@ -67,6 +68,7 @@ export const MediaPane = () => {
   const [renaming, setRenaming] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<LocalFolder | null>(null);
   const [dropping, setDropping] = useState(false);
+  const shelfMenu = useContextMenu<LocalFolder>();
 
   useDragEnded(dropping, () => setDropping(false));
   const [dragging, setDragging] = useState(false);
@@ -369,6 +371,7 @@ export const MediaPane = () => {
                     type="button"
                     onClick={() => setShelf(folder.id)}
                     onDoubleClick={() => setRenaming(folder.id)}
+                    onContextMenu={event => shelfMenu.open(event, folder)}
                     className={cn(
                       'flex w-full items-center gap-2 border-b border-studio-border px-2.5 py-2',
                       'text-left text-xs transition-colors duration-150 focus:outline-none',
@@ -486,6 +489,16 @@ export const MediaPane = () => {
           </div>
         </div>
       ) : null}
+
+      <ContextMenu
+        menu={shelfMenu.menu}
+        onClose={shelfMenu.close}
+        items={folder => [
+          { label: 'Rename', icon: Pencil, onSelect: () => setRenaming(folder.id) },
+          { type: 'separator' },
+          { label: 'Delete shelf', icon: Trash2, danger: true, onSelect: () => setConfirming(folder) },
+        ]}
+      />
 
       <ConfirmDialog
         open={Boolean(confirming)}

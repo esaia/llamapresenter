@@ -102,12 +102,42 @@ export const headerOf = (line: string): string | null => {
 };
 
 /**
+ * One space-separated token that reads as a chord, never a word.
+ *
+ * The root stays case-sensitive — a chord chart always capitalizes it ("Em",
+ * never "em") — so a lowercase one-letter line ("a", "i") reads as the word
+ * it is rather than a chord nobody wrote.
+ */
+const CHORD_SYMBOL =
+  /^[A-G](?:#|b)?(?:maj7|maj9|maj|min7|min|m7|m9|m11|m13|m6|m|sus2|sus4|sus|add9|add11|add2|dim7|dim|aug|6|7|9|11|13)?(?:\/[A-G](?:#|b)?)?$/;
+const CHORD_MARKER = /^(?:N\.?C\.?|%|x\d+|\(x\d+\))$/i;
+const isChordToken = (token: string): boolean => CHORD_MARKER.test(token) || CHORD_SYMBOL.test(token);
+
+/**
+ * A line of nothing but chords, as a tab site prints above the words.
+ *
+ * Ultimate Guitar's `[ch]...[/ch]` wrapper gets stripped before this ever
+ * sees the text, but the chord symbols it wrapped — "E E B B F# F# G#m F#" —
+ * stay behind on their own line. Every token on it has to read as a chord, so
+ * a lyric line made of short words never trips it.
+ */
+export const isChordLine = (line: string): boolean => {
+  const tokens = line.trim().split(/\s+/).filter(Boolean);
+
+  return tokens.length > 0 && tokens.every(isChordToken);
+};
+
+/** "With Capo at 4th:" / "No Capo" — playing instructions, not words to sing. */
+const isCapoLine = (line: string): boolean => /^(with\s+)?capo\b|^no\s+capo\b/i.test(line.trim());
+
+/**
  * A lyric sheet as its sections.
  *
  * The header lines come out of the words — nobody wants "[Chorus]" on the
  * projector — and become the group the slides under them carry. Anything
  * before the first header belongs to no section, which is the honest answer
- * for a sheet that has none.
+ * for a sheet that has none. Chord lines and capo notes are dropped the same
+ * way: a chart, not a lyric sheet, put them there.
  */
 export const sectionsOf = (text: string): { group: string; text: string }[] => {
   const sections: { group: string; text: string }[] = [{ group: '', text: '' }];
@@ -119,6 +149,8 @@ export const sectionsOf = (text: string): { group: string; text: string }[] => {
       sections.push({ group: header, text: '' });
       continue;
     }
+
+    if (isChordLine(line) || isCapoLine(line)) continue;
 
     const last = sections[sections.length - 1];
     last.text = last.text ? `${last.text}\n${line}` : line;

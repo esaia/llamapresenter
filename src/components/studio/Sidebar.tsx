@@ -1,6 +1,17 @@
 'use client';
 
-import { ChevronRight, Mic2, MonitorPlay, Search, SlidersHorizontal, User, Video, X } from 'lucide-react';
+import {
+  ChevronRight,
+  Languages,
+  Mic2,
+  MonitorPlay,
+  PanelLeftClose,
+  PanelLeftOpen,
+  SlidersHorizontal,
+  User,
+  Video,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -81,7 +92,7 @@ const SummaryRow = ({
  * pointer left the icon would make the panel unreachable, which is exactly
  * what a live control (the transition slider) cannot afford.
  */
-const useHoverFlyout = () => {
+const useHoverFlyout = (align: 'center' | 'top' = 'center') => {
   const [open, setOpen] = useState(false);
   const [origin, setOrigin] = useState({ top: 0, left: 0 });
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -92,7 +103,7 @@ const useHoverFlyout = () => {
 
     const box = anchorRef.current?.getBoundingClientRect();
 
-    if (box) setOrigin({ top: box.top + box.height / 2, left: box.right + 8 });
+    if (box) setOrigin({ top: align === 'top' ? box.top : box.top + box.height / 2, left: box.right + 8 });
 
     setOpen(true);
   };
@@ -185,47 +196,17 @@ const MiniIcon = ({
  * horizontal scrollbar and be clipped by it instead of floating free.
  */
 const MiniFlyout = ({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) => {
-  const [open, setOpen] = useState(false);
-  const [origin, setOrigin] = useState({ top: 0, left: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleMouseDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-
-      if (!buttonRef.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false);
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-
-    document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [open]);
-
-  const toggle = () => {
-    const box = buttonRef.current?.getBoundingClientRect();
-
-    if (box) setOrigin({ top: box.top, left: box.right + 8 });
-
-    setOpen(value => !value);
-  };
+  const { open, origin, anchorRef, show, hide } = useHoverFlyout('top');
 
   return (
     <div className="flex justify-center border-b border-studio-divider px-2 py-3">
       <button
-        ref={buttonRef}
+        ref={anchorRef}
         type="button"
-        onClick={toggle}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
         aria-expanded={open}
         aria-label={label}
         title={label}
@@ -242,7 +223,8 @@ const MiniFlyout = ({ icon, label, children }: { icon: ReactNode; label: string;
       {open
         ? createPortal(
             <div
-              ref={panelRef}
+              onMouseEnter={show}
+              onMouseLeave={hide}
               style={{ top: origin.top, left: origin.left }}
               className="studio-scroll fixed z-30 max-h-[70vh] w-80 overflow-y-auto rounded-studio border
                 border-studio-border bg-studio-bg p-4 shadow-studio-panel"
@@ -355,10 +337,13 @@ const RailSection = ({
 export const Sidebar = ({
   onSettings,
   mini = false,
+  onToggleMini,
 }: {
   onSettings: (tab: string) => void;
   /** Icons only, each opening its section beside the rail instead of in it. */
   mini?: boolean;
+  /** Absent on the mobile drawer, which has its own close button and no mini shape. */
+  onToggleMini?: () => void;
 }) => {
   const {
     settings,
@@ -409,6 +394,22 @@ export const Sidebar = ({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-studio-bg">
+      {onToggleMini ? (
+        <div className={cn('flex border-b border-studio-border', mini ? 'justify-center py-2' : 'justify-start px-2 py-2')}>
+          <button
+            type="button"
+            onClick={onToggleMini}
+            aria-label={mini ? 'Expand setup' : 'Collapse setup to icons'}
+            title={mini ? 'Expand setup — languages, projector, stream' : 'Collapse setup to icons'}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-studio text-studio-muted
+              transition-colors duration-150 hover:bg-studio-surface hover:text-studio-text focus:outline-none
+              focus-visible:ring-2 focus-visible:ring-studio-accent/40"
+          >
+            {mini ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+          </button>
+        </div>
+      ) : null}
+
       <div className="studio-scroll min-h-0 flex-1 overflow-y-auto">
         {tab === 'lyrics' ? (
           <RailSection
@@ -431,7 +432,7 @@ export const Sidebar = ({
           </RailSection>
         ) : (
           <>
-            <RailSection mini={mini} icon={<Search className="size-4" />} title="Browsing in" hint="The language you read on the cards below.">
+            <RailSection mini={mini} icon={<Languages className="size-4" />} title="Browsing in" hint="The language you read on the cards below.">
               <div className="space-y-2">
                 <Select
                   value={settings.adminLang}

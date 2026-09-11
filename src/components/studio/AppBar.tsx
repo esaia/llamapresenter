@@ -14,8 +14,6 @@ import {
   Monitor,
   MonitorPlay,
   Music,
-  PanelLeftClose,
-  PanelLeftOpen,
   Settings,
   ShieldCheck,
 } from 'lucide-react';
@@ -209,17 +207,7 @@ const PresentMenu = () => {
   );
 };
 
-export const AppBar = ({
-  onSettings,
-  onOpenNav,
-  sidebarCollapsed,
-  onToggleSidebar,
-}: {
-  onSettings: () => void;
-  onOpenNav: () => void;
-  sidebarCollapsed: boolean;
-  onToggleSidebar: () => void;
-}) => {
+export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOpenNav: () => void }) => {
   const { tab, setTab, timer, isAdmin } = useStudio();
   const router = useRouter();
 
@@ -239,21 +227,6 @@ export const AppBar = ({
             focus-visible:ring-2 focus-visible:ring-studio-accent/40 lg:hidden"
         >
           <Menu className="size-4" />
-        </button>
-
-        {/* The mobile button above opens setup as a drawer; on a wide enough
-            window it already sits in view, so this only ever shrinks it to
-            icons or widens it back out. */}
-        <button
-          type="button"
-          onClick={onToggleSidebar}
-          aria-label={sidebarCollapsed ? 'Expand setup' : 'Collapse setup'}
-          title={sidebarCollapsed ? 'Expand setup — languages, projector, stream' : 'Collapse setup to icons'}
-          className="-ml-1 hidden h-8 w-8 shrink-0 items-center justify-center rounded-studio text-studio-muted
-            transition-colors duration-150 hover:bg-studio-surface hover:text-studio-text focus:outline-none
-            focus-visible:ring-2 focus-visible:ring-studio-accent/40 lg:inline-flex"
-        >
-          {sidebarCollapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </button>
 
         {/* Home for the console is the console. An operator mid-service who

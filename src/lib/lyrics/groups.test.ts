@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { colorOf, headerOf, sectionsOf, withoutPreamble } from './groups';
+import { colorOf, headerOf, isChordLine, sectionsOf, withoutPreamble } from './groups';
 
 describe('colorOf', () => {
   it('gives a family one colour, however it is numbered', () => {
@@ -62,6 +62,47 @@ describe('sectionsOf', () => {
 
   it('drops a section a sheet opened and never filled', () => {
     expect(sectionsOf('[Intro]\n\n[Verse]\na')).toEqual([{ group: 'Verse', text: 'a' }]);
+  });
+
+  it('drops a chord line a tab site left over its own words', () => {
+    expect(sectionsOf('[Verse 1]\nE\nYou are here\nB\nMoving in our midst')).toEqual([
+      { group: 'Verse 1', text: 'You are here\nMoving in our midst' },
+    ]);
+  });
+
+  it('drops an intro that is chords only, section and all', () => {
+    expect(sectionsOf('[Intro]\nE E B B F# F# G#m F#\n[Verse 1]\nYou are here')).toEqual([
+      { group: 'Verse 1', text: 'You are here' },
+    ]);
+  });
+
+  it('drops a capo note', () => {
+    expect(sectionsOf('With Capo at 4th:\nC C G G D D Em D\nNo Capo\n\nYou are here')).toEqual([
+      { group: '', text: 'You are here' },
+    ]);
+  });
+});
+
+describe('isChordLine', () => {
+  it('reads a line of nothing but chords', () => {
+    expect(isChordLine('C C G G D D Em D')).toBe(true);
+    expect(isChordLine('E E B B F# F# G#m F#')).toBe(true);
+    expect(isChordLine('N.C.')).toBe(true);
+  });
+
+  it('leaves a line of words alone', () => {
+    expect(isChordLine('You are here')).toBe(false);
+    expect(isChordLine('Moving in our midst')).toBe(false);
+  });
+
+  it('leaves a one-letter word alone — a chart never lowercases its root', () => {
+    expect(isChordLine('a')).toBe(false);
+    expect(isChordLine('i')).toBe(false);
+  });
+
+  it('has nothing to say about a blank line', () => {
+    expect(isChordLine('')).toBe(false);
+    expect(isChordLine('   ')).toBe(false);
   });
 });
 

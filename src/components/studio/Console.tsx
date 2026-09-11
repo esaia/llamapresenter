@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 
 import { useCustomFonts } from '@/components/projector/useCustomFonts';
 import { IconButton } from '@/components/ui/IconButton';
+import { cn } from '@/lib/cn';
 import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/studio/sidebarCollapse';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { toggleRun } from '@/lib/timer/model';
@@ -229,12 +230,7 @@ export const Console = () => {
 
   return (
     <div className="flex h-dvh flex-col bg-studio-bg">
-      <AppBar
-        onSettings={() => setSettingsTab('projector')}
-        onOpenNav={() => setNavOpen(true)}
-        sidebarCollapsed={sidebarCollapsed}
-        onToggleSidebar={() => sidebarStore.set(!sidebarCollapsed)}
-      />
+      <AppBar onSettings={() => setSettingsTab('projector')} onOpenNav={() => setNavOpen(true)} />
 
       {/* Sits on the seam under the app bar, so it is in the operator's eyeline
           wherever they are working — the wait is usually a language change made
@@ -285,9 +281,16 @@ export const Console = () => {
       <div className="flex min-h-0 flex-1">
         <aside
           data-studio-sidebar
-          className="hidden w-[18rem] shrink-0 border-r border-studio-border lg:block"
+          className={cn(
+            'hidden shrink-0 overflow-hidden border-r border-studio-border lg:block',
+            sidebarCollapsed ? 'w-14' : 'w-[18rem]',
+          )}
         >
-          <Sidebar onSettings={setSettingsTab} mini={sidebarCollapsed} />
+          <Sidebar
+            onSettings={setSettingsTab}
+            mini={sidebarCollapsed}
+            onToggleMini={() => sidebarStore.set(!sidebarCollapsed)}
+          />
         </aside>
 
         {navOpen ? (
