@@ -88,6 +88,19 @@ export interface TextStyle {
   color: string;
   align: Align;
   lineHeight: number;
+  /**
+   * A break the operator typed is drawn as one, instead of the usual rewrap:
+   * off, the box's own words are joined into one line and left to wrap at
+   * projector size the way every shipped look already does.
+   */
+  preserveLineBreaks: boolean;
+  /**
+   * Commas, periods, semicolons and the like dropped from the box's own
+   * words before they are drawn — a look built for a sung line rather than a
+   * read one, where the punctuation is a cue for the singer's eye and not the
+   * congregation's.
+   */
+  stripPunctuation: boolean;
   shadow: Shadow;
   /** An outline round the letters. Empty is none, not black. */
   stroke: string;
@@ -236,6 +249,8 @@ export const DEFAULT_TEXT: Omit<TextElement, 'id' | 'frame' | 'content'> = {
   align: 'left',
   valign: 'middle',
   lineHeight: 1.2,
+  preserveLineBreaks: false,
+  stripPunctuation: false,
   padding: 0,
   shadow: 'strong',
   stroke: '',
@@ -521,6 +536,8 @@ export const textStyleOf = (style: TextStyle): TextStyle => ({
   color: style.color,
   align: style.align,
   lineHeight: style.lineHeight,
+  preserveLineBreaks: style.preserveLineBreaks,
+  stripPunctuation: style.stripPunctuation,
   shadow: style.shadow,
   stroke: style.stroke,
   strokeWidth: style.strokeWidth,
@@ -548,6 +565,8 @@ const asTextStyle = (raw: Record<string, unknown>): TextStyle => {
     color: asColor(raw.color, DEFAULT_TEXT.color) || DEFAULT_TEXT.color,
     align: asOne(raw.align, ['left', 'center', 'right'] as const, 'left'),
     lineHeight: clamp(raw.lineHeight as number, 0.8, 3, 1.2),
+    preserveLineBreaks: raw.preserveLineBreaks === true,
+    stripPunctuation: raw.stripPunctuation === true,
     shadow: asOne(raw.shadow, ['none', 'soft', 'strong'] as const, 'strong'),
     stroke: asColor(raw.stroke),
     strokeWidth: clamp(raw.strokeWidth as number, 0, 5, 0.3),
@@ -761,8 +780,27 @@ interface Pass {
   translation: string;
 }
 
-/** The slide, one language at a time, in the order it will be drawn. */
-const passesOf = (ctx: TokenContext): Pass[] => {
+/**
+ * Sentence punctuation dropped from a song's own words — the marks a singer
+ * reads off a lead sheet, not something a congregation reading the wall needs.
+ * Apostrophes and hyphens survive: they sit inside a word rather than between
+ * words, and stripping them would fuse "don't" and "wretch-like" into one.
+ */
+const PUNCTUATION = /[.,;:!?"“”«»()[\]{}/\\…]/g;
+
+const stripPunctuation = (text: string): string => text.replace(PUNCTUATION, '').replace(/[ \t]{2,}/g, ' ').trim();
+
+/**
+ * The slide, one language at a time, in the order it will be drawn.
+ *
+ * `preserveLineBreaks` and `stripPunctuation` are the box's own, not the
+ * song's: a box that has asked to keep line breaks draws each of the song's
+ * as a line of its own, and a box that has not joins them into one line and
+ * lets it wrap at projector size, exactly as the shipped looks do. Only a
+ * song's own words are ever touched — verse text is the API's own HTML, and
+ * stripping punctuation out of markup is how a slash eats a closing tag.
+ */
+const passesOf = (ctx: TokenContext, preserveLineBreaks: boolean, removePunctuation: boolean): Pass[] => {
   const lyrics = ctx.showData?.lyrics;
 
   if (lyrics) {
@@ -770,24 +808,26 @@ const passesOf = (ctx: TokenContext): Pass[] => {
     // song, no two songs agreeing — so a lyric template never names one: it
     // says `{{lyrics}}` and the box repeats for however many the song has,
     // which is why there is no numbered form to offer.
-    //
-    // The line breaks a song was written with are ignored, exactly as the
-    // shipped looks ignore them: at projector size they wrap anyway, and
-    // honouring both gives a ragged block.
     const blocks = lyricBlocks(lyrics);
     // The stream is pointed at one of them; the projector draws them all.
     const drawn = ctx.lyricsLang
       ? [blocks.find(block => block.id === ctx.lyricsLang) ?? blocks[0]].filter(Boolean)
       : blocks;
 
-    return drawn.map(block => ({
-      id: block.id,
-      lines: [escapeHtml(block.text.split('\n').join(' '))],
-      reference: '',
-      book: '',
-      numbers: '',
-      translation: '',
-    }));
+    return drawn.map(block => {
+      const text = removePunctuation ? stripPunctuation(block.text) : block.text;
+
+      return {
+        id: block.id,
+        lines: preserveLineBreaks
+          ? text.split('\n').map(line => escapeHtml(line))
+          : [escapeHtml(text.split('\n').join(' '))],
+        reference: '',
+        book: '',
+        numbers: '',
+        translation: '',
+      };
+    });
   }
 
   return langsOf(ctx).map(lang => {
@@ -943,13 +983,22 @@ const renderPass = (content: string, current: Pass | null, passes: Pass[]): stri
  * what lets one template serve a one-language operator and a three-language
  * one without being two templates.
  */
-export const renderBox = (content: string, ctx: TokenContext): string[][] => {
-  const passes = passesOf(ctx);
+export const renderBox = (
+  content: string,
+  ctx: TokenContext,
+  preserveLineBreaks = false,
+  stripPunctuation = false,
+): string[][] => {
+  const passes = passesOf(ctx, preserveLineBreaks, stripPunctuation);
   const repeats: (Pass | null)[] = UNNUMBERED.test(content) ? passes : [null];
 
   return repeats.map(pass => renderPass(content, pass, passes)).filter(lines => lines.length > 0);
 };
 
 /** Every line the box draws, with the repeats run together. */
-export const renderTokens = (content: string, ctx: TokenContext): string[] =>
-  renderBox(content, ctx).flat();
+export const renderTokens = (
+  content: string,
+  ctx: TokenContext,
+  preserveLineBreaks = false,
+  stripPunctuation = false,
+): string[] => renderBox(content, ctx, preserveLineBreaks, stripPunctuation).flat();

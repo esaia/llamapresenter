@@ -435,7 +435,13 @@ export const CustomSlide = ({
 
     // A box whose tokens all came out empty is not drawn at all — that is what
     // lets one template serve a one-language operator and a three-language one.
-    return sharesOf(element, renderBox(element.content, ctx)).map(share => ({ element, share }));
+    return sharesOf(
+      element,
+      renderBox(element.content, ctx, element.preserveLineBreaks, element.stripPunctuation),
+    ).map(share => ({
+      element,
+      share,
+    }));
   });
 
   // After the paint that set every box's chosen size, shrink the ones that ask

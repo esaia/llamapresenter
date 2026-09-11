@@ -316,7 +316,7 @@ export default async function HomePage() {
       {/* Every answer open, in two columns. A dozen questions behind
           disclosure triangles is a dozen clicks to find out whether the thing
           runs on Windows — the answers are short enough to simply print. */}
-      <section id="faq" className="mx-auto max-w-7xl scroll-mt-20 px-6 py-16 sm:py-24">
+      <section id="faq" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-16 sm:py-24">
         <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
           <h2 className={`${DISPLAY} text-3xl leading-[1.1] sm:text-4xl`}>Frequently asked questions</h2>
 

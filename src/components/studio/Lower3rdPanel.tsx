@@ -5,6 +5,7 @@ import { Play, Square, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ContextMenu, useContextMenu } from '@/components/ui/ContextMenu';
 import { IconButton } from '@/components/ui/IconButton';
 import { cn } from '@/lib/cn';
 import {
@@ -47,6 +48,7 @@ export const Lower3rdPanel = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<NameCard | null>(null);
+  const cardMenu = useContextMenu<NameCard>();
 
   // Seconds left on the card that is up, so the operator can see it going.
   //
@@ -155,6 +157,7 @@ export const Lower3rdPanel = () => {
                     'transition-colors duration-150',
                     isLive ? 'border-studio-live bg-studio-live/5' : 'border-transparent hover:bg-studio-surface',
                   )}
+                  onContextMenu={event => cardMenu.open(event, card)}
                 >
                   {/* The hold, draining. Nobody in the room can see this output,
                       so the list itself has to show the strap running out. */}
@@ -351,6 +354,20 @@ export const Lower3rdPanel = () => {
           {error ? <p className="text-xs text-studio-stop">{error}</p> : null}
         </div>
       </div>
+
+      <ContextMenu
+        menu={cardMenu.menu}
+        onClose={cardMenu.close}
+        items={card => [
+          {
+            label: isLiveCard(cardRun, card) ? `Take ${card.title} off the stream` : `Put ${card.title} on the stream`,
+            icon: isLiveCard(cardRun, card) ? Square : Play,
+            onSelect: () => fire(card),
+          },
+          { type: 'separator' },
+          { label: 'Delete', icon: Trash2, danger: true, onSelect: () => setConfirming(card) },
+        ]}
+      />
 
       <ConfirmDialog
         open={Boolean(confirming)}

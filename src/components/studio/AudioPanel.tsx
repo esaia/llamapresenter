@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, type ChangeEvent, type DragEvent } from 'react';
-import { Check, Music, Play, Plus, Trash2, Upload } from 'lucide-react';
+import { useState, type ChangeEvent, type DragEvent, type MouseEvent } from 'react';
+import { Check, Music, Pencil, Play, Plus, Trash2, Upload } from 'lucide-react';
 
+import { ContextMenu, useContextMenu } from '@/components/ui/ContextMenu';
 import { cn } from '@/lib/cn';
 import { useAudio, type Track } from '@/lib/studio/AudioProvider';
 
@@ -36,6 +37,10 @@ const LibraryRow = ({
   onSelect,
   onDropTrack,
   onDelete,
+  onContextMenu,
+  editing,
+  onRename,
+  onDone,
   drag,
   dragging,
   lifted,
@@ -46,6 +51,11 @@ const LibraryRow = ({
   onSelect: () => void;
   onDropTrack: (event: DragEvent) => void;
   onDelete?: () => void;
+  onContextMenu?: (event: MouseEvent) => void;
+  /** Renaming is only possible for a real library, never "All tracks". */
+  editing?: boolean;
+  onRename?: () => void;
+  onDone?: (name: string) => void;
   /** The row's part in the library reorder, for the rows that take part. */
   drag?: ReturnType<Sortable<unknown>['row']>;
   /** True while some library is in the air — this row or another. */
@@ -82,6 +92,7 @@ const LibraryRow = ({
         setOver(false);
         onDropTrack(event);
       }}
+      onContextMenu={onContextMenu}
       className={cn(
         'group/library flex items-center gap-2 border-l-2 py-1.5 pr-2 pl-2.5 text-xs transition-colors duration-150',
         selected
@@ -96,14 +107,30 @@ const LibraryRow = ({
       )}
       onClick={onSelect}
     >
-      <button
-        type="button"
-        onClick={onSelect}
-        className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
-      >
-        <Music className={cn('size-3.5 shrink-0', filing ? 'text-studio-onaccent' : 'text-studio-faint')} />
-        <span className={cn('min-w-0 flex-1 truncate', selected && 'font-semibold')}>{label}</span>
-      </button>
+      {editing ? (
+        <input
+          autoFocus
+          defaultValue={label}
+          onClick={event => event.stopPropagation()}
+          onBlur={event => onDone?.(event.target.value)}
+          onKeyDown={event => {
+            if (event.key === 'Enter') event.currentTarget.blur();
+            if (event.key === 'Escape') onDone?.(label);
+          }}
+          className="min-w-0 flex-1 rounded-studio border border-studio-accent bg-studio-bg px-1.5 py-0.5 text-xs
+            text-studio-text focus:outline-none"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={onSelect}
+          onDoubleClick={onRename}
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left"
+        >
+          <Music className={cn('size-3.5 shrink-0', filing ? 'text-studio-onaccent' : 'text-studio-faint')} />
+          <span className={cn('min-w-0 flex-1 truncate', selected && 'font-semibold')}>{label}</span>
+        </button>
+      )}
 
       {/* The count and the delete share one slot of fixed width, so revealing
           the second does not shove the row's contents sideways — the old hover
@@ -166,6 +193,7 @@ export const AudioPanel = () => {
     addLocalFiles,
     removeTrack,
     addCategory,
+    renameCategory,
     removeCategory,
     setTrackCategory,
     trackList,
@@ -182,12 +210,16 @@ export const AudioPanel = () => {
   const [library, setLibrary] = useState(ALL);
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
+  const [renaming, setRenaming] = useState<string | null>(null);
 
   // Dragging: a file coming in from the desktop, and the row being moved —
   // onto a library to file it, or between rows to reorder the list.
   const [filesOver, setFilesOver] = useState(false);
 
   useDragEnded(filesOver, () => setFilesOver(false));
+
+  const libraryMenu = useContextMenu<{ id: string; name: string }>();
+  const trackMenu = useContextMenu<Track>();
 
   const open = categories.some(category => category.id === library) ? library : ALL;
   const shown = trackList(open === ALL ? null : open);
@@ -313,6 +345,14 @@ export const AudioPanel = () => {
               onSelect={() => setLibrary(category.id)}
               onDropTrack={event => file(event, category.id)}
               onDelete={() => void removeCategory(category.id)}
+              onContextMenu={event => libraryMenu.open(event, { id: category.id, name: category.name })}
+              editing={renaming === category.id}
+              onRename={() => setRenaming(category.id)}
+              onDone={value => {
+                setRenaming(null);
+
+                if (value.trim() && value.trim() !== category.name) void renameCategory(category.id, value.trim());
+              }}
               drag={libraries.row(category.id)}
               dragging={Boolean(libraries.lifted)}
               lifted={libraries.lifted === category.id}
@@ -386,6 +426,7 @@ export const AudioPanel = () => {
               <li
                 key={track.id}
                 {...reorder.row(track.id)}
+                onContextMenu={event => trackMenu.open(event, track)}
                 className={cn(
                   'group relative mx-1 flex cursor-grab items-center gap-2.5 rounded-studio px-2 py-1.5',
                   'transition-colors duration-150 active:cursor-grabbing',
@@ -461,6 +502,31 @@ export const AudioPanel = () => {
           ) : null}
         </ul>
       </div>
+
+      <ContextMenu
+        menu={libraryMenu.menu}
+        onClose={libraryMenu.close}
+        items={category => [
+          { label: 'Rename', icon: Pencil, onSelect: () => setRenaming(category.id) },
+          { type: 'separator' },
+          {
+            label: `Delete "${category.name}"`,
+            icon: Trash2,
+            danger: true,
+            onSelect: () => void removeCategory(category.id),
+          },
+        ]}
+      />
+
+      <ContextMenu
+        menu={trackMenu.menu}
+        onClose={trackMenu.close}
+        items={track => [
+          { label: 'Play', icon: Play, onSelect: () => play(track, open === ALL ? null : open) },
+          { type: 'separator' },
+          { label: 'Delete', icon: Trash2, danger: true, onSelect: () => void removeTrack(track.id) },
+        ]}
+      />
     </div>
   );
 };

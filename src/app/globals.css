@@ -1507,6 +1507,25 @@ html[data-preview='stream'] [data-preview-only='stream'],
 html[data-preview='stage'] [data-preview-only='stage'] {
   display: block;
 }
+
+/* ---------------------------------------------------------------------------
+   The left rail's mini state, decided before React can know it.
+
+   Same problem as the preview tab above, and the same answer: a per-machine
+   `localStorage` flag the server cannot read. A blocking script stamps it on
+   <html> (`lib/studio/sidebarCollapse.ts`) so the rail is already the right
+   width in the first frame instead of snapping shut to icons a moment after
+   paint. Shrunk rather than hidden — `Sidebar.tsx` reads the same flag as a
+   `mini` prop and swaps in icon-only rows, which is what the narrower width
+   is actually for.
+--------------------------------------------------------------------------- */
+[data-studio-sidebar] {
+  transition: width 200ms ease-out;
+}
+
+html[data-sidebar-collapsed] [data-studio-sidebar] {
+  width: 3.5rem;
+}
 /* ---------------------------------------------------------------------------
    Name cards — who is speaking.
 

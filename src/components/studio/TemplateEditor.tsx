@@ -803,9 +803,44 @@ const TextInspector = ({
             ? 'All draws the box once per language, each in its own. Stack runs them together inside the box; a box each cuts the box into equal shares — so a language switched off gives its share back and what is left re-centres, which two hand-placed boxes cannot do. A numbered token pins a box to one language instead, for giving it a font and colour of its own.'
             : 'A box with nothing to say is not drawn, so a template built for three languages still works when one is up.'}
       </p>
+
+      {/* Same box-level, content-shaped question as line breaks below — sits
+          here instead, by the words themselves, because it is read as often
+          as `content` is edited and not as a style choice. */}
+      {/\{\{\s*(?:verses|lyrics)/i.test(element.content) ? (
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <span className="text-xs text-studio-muted">Punctuation</span>
+
+          <Toggles
+            value={element.stripPunctuation}
+            options={[
+              { value: false, label: 'Show it as typed', text: 'Keep' },
+              { value: true, label: 'Drop commas, periods and the like', text: 'Ignore' },
+            ]}
+            onPick={stripPunctuation => patch({ stripPunctuation })}
+          />
+        </div>
+      ) : null}
     </div>
 
     <TextStyleRows style={element} fonts={fonts} patch={patch} />
+
+    {/* Only means anything for a box whose words come from `{{verses}}` or
+        `{{lyrics}}` — a box of plain, typed words already draws every line it
+        was given. Box-level, not a style: the two shares of a split box read
+        the same words, so it cannot sensibly differ between them. */}
+    {/\{\{\s*(?:verses|lyrics)/i.test(element.content) ? (
+      <Row label="Line breaks">
+        <Toggles
+          value={element.preserveLineBreaks}
+          options={[
+            { value: false, label: 'Rewrap to fit the box', text: 'Rewrap' },
+            { value: true, label: 'Keep every break as it was typed', text: 'Keep as typed' },
+          ]}
+          onPick={preserveLineBreaks => patch({ preserveLineBreaks })}
+        />
+      </Row>
+    ) : null}
 
     {/* Where the words sit in the box, and how far off its edges. Box-level:
         the shares of a split box divide that box, so these are the same for

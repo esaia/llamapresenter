@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { X } from 'lucide-react';
 
 import { useCustomFonts } from '@/components/projector/useCustomFonts';
 import { IconButton } from '@/components/ui/IconButton';
+import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/studio/sidebarCollapse';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { toggleRun } from '@/lib/timer/model';
 
@@ -38,6 +39,31 @@ const dropCardFocus = () => {
   const focused = document.activeElement;
 
   if (focused instanceof HTMLElement && focused.matches('[data-slide-card]')) focused.blur();
+};
+
+/**
+ * Backs the sidebar's collapsed flag with `useSyncExternalStore` rather than
+ * plain state, so the toggle button's icon agrees with what the blocking
+ * script in `layout.tsx` already painted instead of flipping a frame after
+ * hydration.
+ */
+const sidebarListeners = new Set<() => void>();
+let sidebarSnapshot: boolean | null = null;
+
+const sidebarStore = {
+  subscribe: (listener: () => void) => {
+    sidebarListeners.add(listener);
+    return () => {
+      sidebarListeners.delete(listener);
+    };
+  },
+  get: () => (sidebarSnapshot ??= readSidebarCollapsed()),
+  getServer: () => false,
+  set: (collapsed: boolean) => {
+    sidebarSnapshot = collapsed;
+    writeSidebarCollapsed(collapsed);
+    sidebarListeners.forEach(listener => listener());
+  },
 };
 
 /**
@@ -77,6 +103,7 @@ export const Console = () => {
   const sortable = useSortable(blocks, block => block.id, orderBlocks);
   const [settingsTab, setSettingsTab] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
+  const sidebarCollapsed = useSyncExternalStore(sidebarStore.subscribe, sidebarStore.get, sidebarStore.getServer);
   const [searching, setSearching] = useState(false);
   const [browsing, setBrowsing] = useState(false);
 
@@ -202,7 +229,12 @@ export const Console = () => {
 
   return (
     <div className="flex h-dvh flex-col bg-studio-bg">
-      <AppBar onSettings={() => setSettingsTab('projector')} onOpenNav={() => setNavOpen(true)} />
+      <AppBar
+        onSettings={() => setSettingsTab('projector')}
+        onOpenNav={() => setNavOpen(true)}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => sidebarStore.set(!sidebarCollapsed)}
+      />
 
       {/* Sits on the seam under the app bar, so it is in the operator's eyeline
           wherever they are working — the wait is usually a language change made
@@ -251,8 +283,11 @@ export const Console = () => {
       ) : null}
 
       <div className="flex min-h-0 flex-1">
-        <aside className="hidden w-[18rem] shrink-0 border-r border-studio-border lg:block">
-          <Sidebar onSettings={setSettingsTab} />
+        <aside
+          data-studio-sidebar
+          className="hidden w-[18rem] shrink-0 border-r border-studio-border lg:block"
+        >
+          <Sidebar onSettings={setSettingsTab} mini={sidebarCollapsed} />
         </aside>
 
         {navOpen ? (

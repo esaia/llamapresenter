@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { previewModeScript } from '@/lib/studio/previewMode';
 import { railWidthScript } from '@/lib/studio/railWidth';
+import { sidebarCollapsedScript } from '@/lib/studio/sidebarCollapse';
 
 import './globals.css';
 
@@ -49,6 +50,11 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
             server has no way to know it, so it is stamped on <html> here and
             the panes are shown from CSS. */}
         <script dangerouslySetInnerHTML={{ __html: previewModeScript }} />
+
+        {/* And whether the operator collapsed the left rail, for the same
+            reason: stamped on <html> here so the rail is already shut in the
+            first frame rather than snapping shut a moment after paint. */}
+        <script dangerouslySetInnerHTML={{ __html: sidebarCollapsedScript }} />
 
         {children}
       </body>

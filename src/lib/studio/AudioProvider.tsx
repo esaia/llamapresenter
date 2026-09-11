@@ -157,6 +157,7 @@ interface AudioValue {
   moveTrack: (id: string, beforeId: string | null, libraryId: string | null) => Promise<void>;
   setTrackCategory: (id: string, categoryId: string | null) => Promise<void>;
   addCategory: (name: string) => Promise<void>;
+  renameCategory: (id: string, name: string) => Promise<void>;
   removeCategory: (id: string) => Promise<void>;
   /** Drop a library in front of another, or at the end when `beforeId` is null. */
   moveCategory: (id: string, beforeId: string | null) => Promise<void>;
@@ -776,6 +777,10 @@ export const AudioProvider = ({ initial, children }: { initial: AudioInitial; ch
           ]);
       },
       moveCategory,
+      renameCategory: async (id, name) => {
+        await db.from('audio_categories').update({ name }).eq('id', id);
+        setLibraries(current => current.map(category => (category.id === id ? { ...category, name } : category)));
+      },
       removeCategory: async id => {
         await db.from('audio_categories').delete().eq('id', id);
         setLibraries(current => current.filter(category => category.id !== id));

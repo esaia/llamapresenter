@@ -1,10 +1,11 @@
 'use client';
 
-import { Library, ListMusic } from 'lucide-react';
-import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { Library, ListMusic, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState, type DragEvent, type MouseEvent } from 'react';
 import { HiOutlinePencil, HiOutlinePlus, HiOutlineSearch } from 'react-icons/hi';
 
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ContextMenu, useContextMenu } from '@/components/ui/ContextMenu';
 import { IconButton } from '@/components/ui/IconButton';
 import { Kbd } from '@/components/ui/Kbd';
 import { cn } from '@/lib/cn';
@@ -112,6 +113,7 @@ const ListRow = ({
   onOpen,
   onRename,
   onDone,
+  onContextMenu,
   ...drag
 }: {
   kind: OpenList['kind'];
@@ -125,9 +127,11 @@ const ListRow = ({
   onOpen: () => void;
   onRename: () => void;
   onDone: (name: string) => void;
+  onContextMenu: (event: MouseEvent) => void;
 } & Record<string, unknown>) => (
   <li
     {...drag}
+    onContextMenu={onContextMenu}
     className={cn(
       // Full-bleed rows divided by a line, exactly as the songs read
       // underneath: the two panes are one list of lists and its contents, and
@@ -231,6 +235,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
   const [over, setOver] = useState<string | null>(null);
   const [dropIndex, setDropIndex] = useState<number | null>(null);
   const [confirming, setConfirming] = useState<{ list: OpenList; name: string; count: number } | null>(null);
+  const listMenu = useContextMenu<{ list: OpenList; name: string }>();
 
   const playlist = playlists.find(list => list.id === open.id);
   const shown = open.kind === 'playlist' ? songsInPlaylist(songs, playlist) : songsInLibrary(songs, libraries, open.id);
@@ -332,6 +337,7 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
 
         if (value.trim() && value.trim() !== name) void renameList(list, value.trim());
       }}
+      onContextMenu={(event: MouseEvent) => listMenu.open(event, { list, name })}
     />
   );
 
@@ -427,6 +433,26 @@ export const SongRail = ({ onEdit, onRemove, onSearch }: {
         onRemove={onRemove}
         onPlace={(songIds, index) => open.kind === 'playlist' && void placeInPlaylist(open.id, songIds, index).catch(() => {})}
         onDrop={songIds => open.kind === 'playlist' && void removeFromPlaylist(open.id, songIds)}
+      />
+
+      <ContextMenu
+        menu={listMenu.menu}
+        onClose={listMenu.close}
+        items={({ list, name }) => [
+          {
+            label: 'Rename',
+            icon: Pencil,
+            onSelect: () => setRenaming(list.id),
+          },
+          { type: 'separator' },
+          {
+            label: list.kind === 'playlist' ? 'Delete playlist' : 'Delete library',
+            icon: Trash2,
+            danger: true,
+            disabled: list.kind === 'library' && libraries.length < 2,
+            onSelect: () => setConfirming({ list, name, count: countOf(list) }),
+          },
+        ]}
       />
 
       <ConfirmDialog
@@ -528,6 +554,7 @@ const SongList = ({
   }, []);
 
   const chosen = items.filter(item => picked.includes(item.id));
+  const songMenu = useContextMenu<Song[]>();
 
   /** Is this row part of a selection of several, rather than a row on its own? */
   const manyPicked = (songId: string) => picked.length > 1 && picked.includes(songId);
@@ -623,6 +650,16 @@ const SongList = ({
               : undefined
           }
           title={running ? undefined : 'Drag onto a playlist, or onto another library'}
+          onContextMenu={event => {
+            const targets = picked.includes(song.id) ? chosen : [song];
+
+            if (!picked.includes(song.id)) {
+              setPicked([song.id]);
+              setAnchor(index);
+            }
+
+            songMenu.open(event, targets);
+          }}
           className={cn(
             'group/song flex cursor-grab items-center gap-1 border-b border-studio-divider last:border-b-0',
             // Filled with the accent, so what the operator has hold of is
@@ -711,6 +748,24 @@ const SongList = ({
           {running ? 'Drag songs here to build this service.' : 'No songs on this shelf yet.'}
         </li>
       ) : null}
+
+      <ContextMenu
+        menu={songMenu.menu}
+        onClose={songMenu.close}
+        items={targets => [
+          ...(targets.length === 1
+            ? [{ label: 'Edit', icon: Pencil, onSelect: () => onEdit(targets[0]) }]
+            : []),
+          { type: 'separator' as const },
+          {
+            label:
+              (running ? 'Remove from playlist' : 'Delete') + (targets.length > 1 ? ` (${targets.length})` : ''),
+            icon: Trash2,
+            danger: true,
+            onSelect: () => (running ? onDrop(targets.map(item => item.id)) : onRemove(targets)),
+          },
+        ]}
+      />
     </ul>
   );
 };

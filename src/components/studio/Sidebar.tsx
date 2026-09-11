@@ -1,7 +1,8 @@
 'use client';
 
-import { ChevronRight, MonitorPlay, User, Video, X } from 'lucide-react';
-import type { CSSProperties, ReactNode } from 'react';
+import { ChevronRight, Mic2, MonitorPlay, Search, SlidersHorizontal, User, Video, X } from 'lucide-react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Select } from '@/components/ui/Select';
 import { Toggle } from '@/components/ui/Toggle';
@@ -72,12 +73,293 @@ const SummaryRow = ({
 );
 
 /**
+ * A flyout that opens on hover (or focus) rather than click, portaled and
+ * fixed-positioned for the same reason `MiniFlyout` is: nested and `absolute`,
+ * it would both grow the mini rail's scrolling region a horizontal scrollbar
+ * and be clipped by it. Held open by hovering the panel too — the gap between
+ * it and the icon is small, but a tooltip that vanished the instant the
+ * pointer left the icon would make the panel unreachable, which is exactly
+ * what a live control (the transition slider) cannot afford.
+ */
+const useHoverFlyout = () => {
+  const [open, setOpen] = useState(false);
+  const [origin, setOrigin] = useState({ top: 0, left: 0 });
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const show = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+
+    const box = anchorRef.current?.getBoundingClientRect();
+
+    if (box) setOrigin({ top: box.top + box.height / 2, left: box.right + 8 });
+
+    setOpen(true);
+  };
+
+  const hide = () => {
+    closeTimer.current = setTimeout(() => setOpen(false), 100);
+  };
+
+  useEffect(
+    () => () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    },
+    [],
+  );
+
+  return { open, origin, anchorRef, show, hide };
+};
+
+/** `SummaryRow`, shrunk to its icon: the mini rail's version of the same row. */
+const MiniIcon = ({
+  icon,
+  thumb,
+  label,
+  value,
+  onClick,
+}: {
+  icon: ReactNode;
+  thumb?: string;
+  label: string;
+  value: string;
+  onClick: () => void;
+}) => {
+  const { open, origin, anchorRef, show, hide } = useHoverFlyout();
+
+  return (
+    <div className="flex justify-center px-2 py-1.5">
+      <button
+        ref={anchorRef}
+        type="button"
+        onClick={onClick}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        aria-label={`${label}: ${value}`}
+        className="flex size-9 items-center justify-center rounded-studio transition-colors duration-150
+          hover:bg-studio-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40"
+      >
+        {thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={thumb} alt="" className="size-7 shrink-0 rounded-[4px] object-cover ring-1 ring-studio-border" />
+        ) : (
+          <span
+            className="flex size-7 shrink-0 items-center justify-center rounded-[4px] border border-studio-border
+              bg-studio-surface text-studio-muted"
+          >
+            {icon}
+          </span>
+        )}
+      </button>
+
+      {open
+        ? createPortal(
+            <div
+              role="tooltip"
+              onMouseEnter={show}
+              onMouseLeave={hide}
+              style={{ top: origin.top, left: origin.left }}
+              className="fixed z-30 w-52 -translate-y-1/2 rounded-studio border border-studio-border bg-studio-bg
+                px-3 py-2 shadow-studio-panel"
+            >
+              <span className="block text-xs font-medium text-studio-text">{label}</span>
+              <span className="block truncate text-[11px] text-studio-faint">{value}</span>
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
+};
+
+/**
+ * One section of the rail, shrunk to an icon: hover shows what it is, click
+ * pops the whole section open beside the rail rather than widening it.
+ *
+ * The panel is portaled to `document.body` and positioned in fixed
+ * coordinates rather than nested and `absolute`: the rail it lives in scrolls
+ * vertically, and a box that scrolls one axis has its other axis's `visible`
+ * computed to `auto` — so an `absolute` panel here would both grow the rail a
+ * horizontal scrollbar and be clipped by it instead of floating free.
+ */
+const MiniFlyout = ({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) => {
+  const [open, setOpen] = useState(false);
+  const [origin, setOrigin] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleMouseDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (!buttonRef.current?.contains(target) && !panelRef.current?.contains(target)) setOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
+  const toggle = () => {
+    const box = buttonRef.current?.getBoundingClientRect();
+
+    if (box) setOrigin({ top: box.top, left: box.right + 8 });
+
+    setOpen(value => !value);
+  };
+
+  return (
+    <div className="flex justify-center border-b border-studio-divider px-2 py-3">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-label={label}
+        title={label}
+        className={cn(
+          'flex size-9 items-center justify-center rounded-studio text-studio-muted transition-colors duration-150',
+          'hover:bg-studio-surface hover:text-studio-text focus:outline-none focus-visible:ring-2',
+          'focus-visible:ring-studio-accent/40',
+          open && 'bg-studio-surface text-studio-text',
+        )}
+      >
+        {icon}
+      </button>
+
+      {open
+        ? createPortal(
+            <div
+              ref={panelRef}
+              style={{ top: origin.top, left: origin.left }}
+              className="studio-scroll fixed z-30 max-h-[70vh] w-80 overflow-y-auto rounded-studio border
+                border-studio-border bg-studio-bg p-4 shadow-studio-panel"
+            >
+              {children}
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
+};
+
+/** The crossfade slider, shrunk to an icon whose hover panel holds the live control. */
+const MiniTransition = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => {
+  const { open, origin, anchorRef, show, hide } = useHoverFlyout();
+
+  return (
+    <div className="flex justify-center border-b border-studio-divider py-1.5">
+      <button
+        ref={anchorRef}
+        type="button"
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        aria-label="Transition"
+        title="Transition"
+        className="flex size-9 items-center justify-center rounded-studio text-studio-muted transition-colors
+          duration-150 hover:bg-studio-surface hover:text-studio-text focus:outline-none focus-visible:ring-2
+          focus-visible:ring-studio-accent/40"
+      >
+        <SlidersHorizontal className="size-4" />
+      </button>
+
+      {open
+        ? createPortal(
+            <div
+              onMouseEnter={show}
+              onMouseLeave={hide}
+              style={{ top: origin.top, left: origin.left }}
+              className="fixed z-30 w-56 -translate-y-1/2 rounded-studio border border-studio-border bg-studio-bg
+                px-3 py-2.5 shadow-studio-panel"
+            >
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-[11px] text-studio-faint">Transition</span>
+
+                <input
+                  type="range"
+                  min={MIN_TRANSITION_MS}
+                  max={MAX_TRANSITION_MS}
+                  step={10}
+                  value={value}
+                  aria-label="Slide transition duration in milliseconds"
+                  title="Crossfade between slides. Slide it to zero for a hard cut."
+                  onChange={event => onChange(Number(event.target.value))}
+                  style={
+                    {
+                      '--range-fill': `${((value - MIN_TRANSITION_MS) / (MAX_TRANSITION_MS - MIN_TRANSITION_MS)) * 100}%`,
+                    } as CSSProperties
+                  }
+                  className="studio-range h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full
+                    bg-studio-border"
+                />
+
+                <span className="w-11 shrink-0 text-right text-[11px] text-studio-muted tabular-nums">
+                  {value === 0 ? 'Cut' : `${value}ms`}
+                </span>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
+};
+
+/** One section of the rail, in whichever of its two shapes `mini` calls for. */
+const RailSection = ({
+  mini,
+  icon,
+  title,
+  hint,
+  children,
+}: {
+  mini: boolean;
+  icon: ReactNode;
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) =>
+  mini ? (
+    <MiniFlyout icon={icon} label={title}>
+      <h2 className="mb-1 text-[11px] font-semibold tracking-wider text-studio-faint uppercase">{title}</h2>
+      {hint ? <p className="mb-3 text-xs leading-relaxed text-studio-muted">{hint}</p> : null}
+      {children}
+    </MiniFlyout>
+  ) : (
+    <Section title={title} hint={hint}>
+      {children}
+    </Section>
+  );
+
+/**
  * The live rail: what is being browsed, and what the projector is armed with.
  *
  * Setup that is not touched mid-service — backgrounds, typefaces, the stream —
  * sits one click away in the settings dialog, summarised at the foot.
  */
-export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) => {
+export const Sidebar = ({
+  onSettings,
+  mini = false,
+}: {
+  onSettings: (tab: string) => void;
+  /** Icons only, each opening its section beside the rail instead of in it. */
+  mini?: boolean;
+}) => {
   const {
     settings,
     update,
@@ -129,7 +411,9 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
     <div className="flex h-full min-h-0 flex-col bg-studio-bg">
       <div className="studio-scroll min-h-0 flex-1 overflow-y-auto">
         {tab === 'lyrics' ? (
-          <Section
+          <RailSection
+            mini={mini}
+            icon={<Mic2 className="size-4" />}
             title={song ? song.title : 'Song'}
             hint={
               song
@@ -144,10 +428,10 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                 Open a song to say which languages it is sung in.
               </p>
             )}
-          </Section>
+          </RailSection>
         ) : (
           <>
-            <Section title="Browsing in" hint="The language you read on the cards below.">
+            <RailSection mini={mini} icon={<Search className="size-4" />} title="Browsing in" hint="The language you read on the cards below.">
               <div className="space-y-2">
                 <Select
                   value={settings.adminLang}
@@ -176,9 +460,11 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                   className="w-full"
                 />
               </div>
-            </Section>
+            </RailSection>
 
-            <Section
+            <RailSection
+              mini={mini}
+              icon={<MonitorPlay className="size-4" />}
               title="Projector"
               hint={
                 many
@@ -290,7 +576,7 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
                   </a>
                 </p>
               )}
-            </Section>
+            </RailSection>
           </>
         )}
 
@@ -302,53 +588,90 @@ export const Sidebar = ({ onSettings }: { onSettings: (tab: string) => void }) =
             — a hard cut for a reading, a long fade under a prayer — and it
             belongs where the screens themselves are summarised, at the width
             of a rail control rather than a page of settings. */}
-        <label className="flex h-9 items-center gap-2 border-b border-studio-divider px-4">
-          <span className="shrink-0 text-[11px] text-studio-faint">Transition</span>
-
-          <input
-            type="range"
-            min={MIN_TRANSITION_MS}
-            max={MAX_TRANSITION_MS}
-            step={10}
+        {mini ? (
+          <MiniTransition
             value={settings.transitionMs}
-            aria-label="Slide transition duration in milliseconds"
-            title="Crossfade between slides. Slide it to zero for a hard cut."
-            onChange={event => update({ transitionMs: Number(event.target.value) })}
-            style={
-              {
-                '--range-fill': `${((settings.transitionMs - MIN_TRANSITION_MS) / (MAX_TRANSITION_MS - MIN_TRANSITION_MS)) * 100}%`,
-              } as CSSProperties
-            }
-            className="studio-range h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-studio-border"
+            onChange={transitionMs => update({ transitionMs })}
           />
+        ) : (
+          <label className="flex h-9 items-center gap-2 border-b border-studio-divider px-4">
+            <span className="shrink-0 text-[11px] text-studio-faint">Transition</span>
 
-          <span className="w-11 shrink-0 text-right text-[11px] text-studio-muted tabular-nums">
-            {settings.transitionMs === 0 ? 'Cut' : `${settings.transitionMs}ms`}
-          </span>
-        </label>
+            <input
+              type="range"
+              min={MIN_TRANSITION_MS}
+              max={MAX_TRANSITION_MS}
+              step={10}
+              value={settings.transitionMs}
+              aria-label="Slide transition duration in milliseconds"
+              title="Crossfade between slides. Slide it to zero for a hard cut."
+              onChange={event => update({ transitionMs: Number(event.target.value) })}
+              style={
+                {
+                  '--range-fill': `${((settings.transitionMs - MIN_TRANSITION_MS) / (MAX_TRANSITION_MS - MIN_TRANSITION_MS)) * 100}%`,
+                } as CSSProperties
+              }
+              className="studio-range h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full
+                bg-studio-border"
+            />
 
-        <SummaryRow
-          icon={<MonitorPlay className="size-4" />}
-          label="Projector look"
-          value={`${theme?.label ?? 'Custom image'} · ${fontLabelOf(settings.font, settings.customFonts)}`}
-          thumb={theme?.src}
-          onClick={() => onSettings('projector')}
-        />
+            <span className="w-11 shrink-0 text-right text-[11px] text-studio-muted tabular-nums">
+              {settings.transitionMs === 0 ? 'Cut' : `${settings.transitionMs}ms`}
+            </span>
+          </label>
+        )}
 
-        <SummaryRow
-          icon={<Video className="size-4" />}
-          label="Stream"
-          value={settings.obsHidden ? 'Blanked' : `${labelOf(streamLangOf(settings))} · ${settings.lowerThirdPosition}`}
-          onClick={() => onSettings('stream')}
-        />
+        {mini ? (
+          <>
+            <MiniIcon
+              icon={<MonitorPlay className="size-4" />}
+              label="Projector look"
+              value={`${theme?.label ?? 'Custom image'} · ${fontLabelOf(settings.font, settings.customFonts)}`}
+              thumb={theme?.src}
+              onClick={() => onSettings('projector')}
+            />
 
-        <SummaryRow
-          icon={<User className="size-4" />}
-          label={isGuest ? 'Guest' : 'Account'}
-          value={isGuest ? 'Trying it out — sign in to keep it' : email || 'Unknown'}
-          thumb={isGuest ? undefined : (avatarUrl ?? undefined)}
-          onClick={() => onSettings('account')}
-        />
+            <MiniIcon
+              icon={<Video className="size-4" />}
+              label="Stream"
+              value={settings.obsHidden ? 'Blanked' : `${labelOf(streamLangOf(settings))} · ${settings.lowerThirdPosition}`}
+              onClick={() => onSettings('stream')}
+            />
+
+            <MiniIcon
+              icon={<User className="size-4" />}
+              label={isGuest ? 'Guest' : 'Account'}
+              value={isGuest ? 'Trying it out — sign in to keep it' : email || 'Unknown'}
+              thumb={isGuest ? undefined : (avatarUrl ?? undefined)}
+              onClick={() => onSettings('account')}
+            />
+          </>
+        ) : (
+          <>
+            <SummaryRow
+              icon={<MonitorPlay className="size-4" />}
+              label="Projector look"
+              value={`${theme?.label ?? 'Custom image'} · ${fontLabelOf(settings.font, settings.customFonts)}`}
+              thumb={theme?.src}
+              onClick={() => onSettings('projector')}
+            />
+
+            <SummaryRow
+              icon={<Video className="size-4" />}
+              label="Stream"
+              value={settings.obsHidden ? 'Blanked' : `${labelOf(streamLangOf(settings))} · ${settings.lowerThirdPosition}`}
+              onClick={() => onSettings('stream')}
+            />
+
+            <SummaryRow
+              icon={<User className="size-4" />}
+              label={isGuest ? 'Guest' : 'Account'}
+              value={isGuest ? 'Trying it out — sign in to keep it' : email || 'Unknown'}
+              thumb={isGuest ? undefined : (avatarUrl ?? undefined)}
+              onClick={() => onSettings('account')}
+            />
+          </>
+        )}
       </div>
     </div>
   );
