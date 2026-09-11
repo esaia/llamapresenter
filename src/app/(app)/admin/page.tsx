@@ -27,19 +27,24 @@ export default async function AdminPage() {
 
   const byUser = new Map((subscriptions ?? []).map(row => [row.user_id, row]));
 
-  const rows: AdminRow[] = (profiles ?? []).map(profile => {
-    const sub = byUser.get(profile.id);
+  // An anonymous "Try free" session gets this same profile row — no email,
+  // no name — so it is indistinguishable from a real signup except by having
+  // neither. Worth reading, not worth listing: this is a page for operators.
+  const rows: AdminRow[] = (profiles ?? [])
+    .filter(profile => profile.email || profile.full_name)
+    .map(profile => {
+      const sub = byUser.get(profile.id);
 
-    return {
-      id: profile.id,
-      email: profile.email ?? profile.full_name ?? profile.id,
-      createdAt: profile.created_at,
-      plan: sub?.plan ?? 'free',
-      status: sub?.status ?? 'active',
-      currentPeriodEnd: sub?.current_period_end ?? null,
-      cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
-    };
-  });
+      return {
+        id: profile.id,
+        email: profile.email ?? profile.full_name ?? profile.id,
+        createdAt: profile.created_at,
+        plan: sub?.plan ?? 'free',
+        status: sub?.status ?? 'active',
+        currentPeriodEnd: sub?.current_period_end ?? null,
+        cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
+      };
+    });
 
   return (
     <div className="min-h-dvh bg-studio-bg text-studio-text">

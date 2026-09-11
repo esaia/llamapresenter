@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, type MouseEvent } from 'react';
 import { HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
 
 import { IconButton } from '@/components/ui/IconButton';
@@ -23,6 +23,7 @@ export const LyricCard = ({
   slide,
   index,
   isLive,
+  selected,
   font,
   fonts,
   align = 'center',
@@ -36,11 +37,13 @@ export const LyricCard = ({
   slide: SongSlide;
   index: number;
   isLive: boolean;
+  /** Picked out by a marquee or a ctrl/shift-click, apart from being live. */
+  selected?: boolean;
   font: string;
   fonts: CustomFont[];
   align?: Align;
   size?: number;
-  onGoLive: () => void;
+  onGoLive: (event: MouseEvent<HTMLButtonElement>) => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onGroup?: (group: string) => void;
@@ -122,18 +125,21 @@ export const LyricCard = ({
       <button
         type="button"
         data-slide-card
+        data-slide-id={slide.id}
         onClick={onGoLive}
         // Only the live card has anything to say on hover. The words were the
         // tooltip once, which meant hovering a grid put a second copy of the
         // slide over the one already being read.
         title={isLive ? 'Click again to clear the screen' : undefined}
         className={cn(
-          'flex aspect-video w-full flex-col justify-center rounded-[4px] bg-studio-slide p-2 text-left',
+          'relative flex aspect-video w-full flex-col justify-center rounded-[4px] bg-studio-slide p-2 text-left',
           'transition-shadow duration-150 focus:outline-none',
           type.className,
           isLive
             ? 'ring-4 ring-studio-live'
-            : 'ring-1 ring-transparent hover:ring-2 hover:ring-studio-accent focus-visible:ring-2 focus-visible:ring-studio-accent',
+            : selected
+              ? 'ring-4 ring-studio-accent'
+              : 'ring-1 ring-transparent hover:ring-2 hover:ring-studio-accent focus-visible:ring-2 focus-visible:ring-studio-accent',
         )}
         style={type.style ? { fontFamily: type.style } : undefined}
       >

@@ -1,14 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { X } from 'lucide-react';
 
 import { useCustomFonts } from '@/components/projector/useCustomFonts';
 import { IconButton } from '@/components/ui/IconButton';
-import { cn } from '@/lib/cn';
-import { readSidebarCollapsed, writeSidebarCollapsed } from '@/lib/studio/sidebarCollapse';
+import {
+  readSidebarCollapsed,
+  SIDEBAR_FULL_WIDTH,
+  SIDEBAR_WIDTH_VAR,
+  writeSidebarCollapsed,
+} from '@/lib/studio/sidebarCollapse';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { toggleRun } from '@/lib/timer/model';
+import type { SongSlide } from '@/lib/types';
 
 import { AppBar } from './AppBar';
 import { AudioBar } from './AudioBar';
@@ -43,10 +48,17 @@ const dropCardFocus = () => {
 };
 
 /**
- * Backs the sidebar's collapsed flag with `useSyncExternalStore` rather than
- * plain state, so the toggle button's icon agrees with what the blocking
- * script in `layout.tsx` already painted instead of flipping a frame after
- * hydration.
+ * Backs the sidebar's collapsed flag with `useSyncExternalStore`, unknown
+ * (`null`) on the server and on the very first client render rather than
+ * guessed at `false`.
+ *
+ * The server cannot read `localStorage`, so any guess is sometimes wrong —
+ * but a *wrong* one used to mean rendering the full shape's rows into a rail
+ * that a blocking script in `layout.tsx` had already narrowed to the mini
+ * width, which reads as broken rather than as a frame that is merely late.
+ * `null` renders nothing in the aside until the real value is known, which is
+ * a blank rail for a frame instead of a squeezed one, and — because both the
+ * server and this first render agree on `null` — never a hydration mismatch.
  */
 const sidebarListeners = new Set<() => void>();
 let sidebarSnapshot: boolean | null = null;
@@ -58,8 +70,8 @@ const sidebarStore = {
       sidebarListeners.delete(listener);
     };
   },
-  get: () => (sidebarSnapshot ??= readSidebarCollapsed()),
-  getServer: () => false,
+  get: (): boolean => (sidebarSnapshot ??= readSidebarCollapsed()),
+  getServer: (): boolean | null => null,
   set: (collapsed: boolean) => {
     sidebarSnapshot = collapsed;
     writeSidebarCollapsed(collapsed);
@@ -86,6 +98,10 @@ export const Console = () => {
     live,
     songs,
     removeSlide,
+    removeSlides,
+    pasteSlides,
+    selectedSlides,
+    setSelectedSlides,
     limitNotice,
     dismissLimit,
     room,
@@ -105,8 +121,21 @@ export const Console = () => {
   const [settingsTab, setSettingsTab] = useState<string | null>(null);
   const [navOpen, setNavOpen] = useState(false);
   const sidebarCollapsed = useSyncExternalStore(sidebarStore.subscribe, sidebarStore.get, sidebarStore.getServer);
+
+  // Keeps the width in step with the resolved value even when the blocking
+  // script could not run at all (a CSP, an extension) — a write, not a
+  // `setState`, so it stays the recommended shape for synchronizing with an
+  // external system from an effect.
+  useEffect(() => {
+    if (sidebarCollapsed !== null) writeSidebarCollapsed(sidebarCollapsed);
+  }, [sidebarCollapsed]);
+
   const [searching, setSearching] = useState(false);
   const [browsing, setBrowsing] = useState(false);
+
+  // Copied words, held here until a paste asks for them — every selected
+  // card's words when there is a selection, the live card's alone otherwise.
+  const clipboardRef = useRef<Omit<SongSlide, 'id'>[] | null>(null);
 
   /**
    * Open the passage browser, or say why not.
@@ -146,6 +175,14 @@ export const Console = () => {
         return;
       }
 
+      // Escape also lets go of a marquee selection — a quieter way out than
+      // clicking the grid's empty background.
+      if (event.key === 'Escape' && tab === 'lyrics' && selectedSlides.size > 0) {
+        event.preventDefault();
+        setSelectedSlides(new Set());
+        return;
+      }
+
       // Nothing below here belongs to a dialog. These shortcuts are global
       // because an operator's hands are never in one place — but a dialog is
       // the one time that is wrong: ⌘F over the template editor opened the
@@ -169,15 +206,30 @@ export const Console = () => {
       // Stepping slides must not fight with typing a reference or a lyric.
       if (typing) return;
 
-      // Delete takes the slide the operator is looking at, which is the one on
-      // the projector: selecting a card and putting it up are the same gesture
-      // here, so there is no quieter selection to delete instead. Backspace as
-      // well as Delete — the key a Mac keyboard actually has is ⌫.
+      // Delete takes whatever the grid has picked out — a marquee's worth of
+      // cards when there is one, and otherwise the slide the operator is
+      // looking at, which is the one on the projector: selecting a card and
+      // putting it up are the same gesture there, so there is no quieter
+      // selection to delete instead. Backspace as well as Delete — the key a
+      // Mac keyboard actually has is ⌫.
       //
       // Songs only. On the Bible tab a card's × trims the passage rather than
       // dropping one verse, and a key that means two different things on two
       // tabs is a key nobody trusts.
       if ((event.key === 'Delete' || event.key === 'Backspace') && tab === 'lyrics') {
+        if (selectedSlides.size > 0) {
+          event.preventDefault();
+
+          for (const song of songs) {
+            const ids = song.slides.filter(slide => selectedSlides.has(slide.id)).map(slide => slide.id);
+
+            if (ids.length > 0) void removeSlides(song, ids);
+          }
+
+          setSelectedSlides(new Set());
+          return;
+        }
+
         if (live?.kind !== 'lyrics') return;
 
         const song = songs.find(item => item.id === live.songId);
@@ -187,6 +239,70 @@ export const Console = () => {
 
         event.preventDefault();
         void removeSlide(song, slide.id);
+        return;
+      }
+
+      // ⌘/Ctrl+C takes the words of every card picked out — the selection
+      // when there is one, otherwise the live card, the same fallback Delete
+      // uses above — and holds them until a paste asks.
+      if (event.key.toLowerCase() === 'c' && (event.metaKey || event.ctrlKey) && tab === 'lyrics') {
+        const clips: Omit<SongSlide, 'id'>[] = [];
+
+        if (selectedSlides.size > 0) {
+          for (const song of songs) {
+            for (const slide of song.slides) {
+              if (selectedSlides.has(slide.id)) clips.push({ text: slide.text, group: slide.group, alt: slide.alt });
+            }
+          }
+        } else if (live?.kind === 'lyrics') {
+          const slide = songs.find(item => item.id === live.songId)?.slides[live.slideIndex];
+
+          if (slide) clips.push({ text: slide.text, group: slide.group, alt: slide.alt });
+        }
+
+        if (clips.length === 0) return;
+
+        event.preventDefault();
+        clipboardRef.current = clips;
+        return;
+      }
+
+      // ⌘/Ctrl+V drops copies of those words right after whatever is picked
+      // out — the selection when there is one, otherwise the live slide, the
+      // same fallback Delete and Copy use above — in the order they were
+      // copied. Only the live-slide fallback ever reaches the projector: a
+      // selection can sit in a song nobody is showing, and pasting into one
+      // must never yank the wall away from what is actually live (see
+      // `pasteSlides` in `StudioProvider.tsx`).
+      if (event.key.toLowerCase() === 'v' && (event.metaKey || event.ctrlKey) && tab === 'lyrics') {
+        if (!clipboardRef.current || clipboardRef.current.length === 0) return;
+
+        if (selectedSlides.size > 0) {
+          event.preventDefault();
+
+          for (const song of songs) {
+            const picked = song.slides.filter(slide => selectedSlides.has(slide.id));
+            const after = picked[picked.length - 1];
+
+            if (after) void pasteSlides(song, after.id, clipboardRef.current);
+          }
+
+          // Used, not carried forward — a selection left over from an earlier
+          // click would otherwise silently steer wherever the *next* paste
+          // lands, nowhere near where it looks like it should.
+          setSelectedSlides(new Set());
+          return;
+        }
+
+        if (live?.kind !== 'lyrics') return;
+
+        const song = songs.find(item => item.id === live.songId);
+        const slide = song?.slides[live.slideIndex];
+
+        if (!song || !slide) return;
+
+        event.preventDefault();
+        void pasteSlides(song, slide.id, clipboardRef.current);
         return;
       }
 
@@ -215,7 +331,21 @@ export const Console = () => {
     window.addEventListener('keydown', onKey);
 
     return () => window.removeEventListener('keydown', onKey);
-  }, [browse, browsing, live, removeSlide, searching, songs, stepLive, tab, updateTimer]);
+  }, [
+    browse,
+    browsing,
+    live,
+    pasteSlides,
+    removeSlide,
+    removeSlides,
+    searching,
+    selectedSlides,
+    setSelectedSlides,
+    songs,
+    stepLive,
+    tab,
+    updateTimer,
+  ]);
 
   // A notice that has been read should not have to be dismissed. Long enough to
   // finish reading twice, and the button is still there for anyone who wants it
@@ -281,16 +411,16 @@ export const Console = () => {
       <div className="flex min-h-0 flex-1">
         <aside
           data-studio-sidebar
-          className={cn(
-            'hidden shrink-0 overflow-hidden border-r border-studio-border lg:block',
-            sidebarCollapsed ? 'w-14' : 'w-[18rem]',
-          )}
+          style={{ width: `var(${SIDEBAR_WIDTH_VAR}, ${SIDEBAR_FULL_WIDTH}px)` }}
+          className="hidden shrink-0 overflow-hidden border-r border-studio-border lg:block"
         >
-          <Sidebar
-            onSettings={setSettingsTab}
-            mini={sidebarCollapsed}
-            onToggleMini={() => sidebarStore.set(!sidebarCollapsed)}
-          />
+          {sidebarCollapsed !== null ? (
+            <Sidebar
+              onSettings={setSettingsTab}
+              mini={sidebarCollapsed}
+              onToggleMini={() => sidebarStore.set(!sidebarCollapsed)}
+            />
+          ) : null}
         </aside>
 
         {navOpen ? (

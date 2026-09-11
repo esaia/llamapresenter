@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
 
 import { cn } from '@/lib/cn';
 import { cardLangOf, langsOf } from '@/lib/lyrics/langs';
@@ -73,7 +73,18 @@ export const SlideGrid = ({
   cue?: number;
   onEditSlide: (index: number) => void;
 }) => {
-  const { settings, cardSize, live, selectLyric, saveSong, reorderSlides, removeSlide, setSongLangs } = useStudio();
+  const {
+    settings,
+    cardSize,
+    live,
+    selectLyric,
+    saveSong,
+    reorderSlides,
+    removeSlide,
+    setSongLangs,
+    selectedSlides,
+    setSelectedSlides,
+  } = useStudio();
 
   /**
    * A save the caller does not wait on.
@@ -108,6 +119,75 @@ export const SlideGrid = ({
     byHandle: false,
     layout: 'grid',
   });
+
+  /**
+   * A drag across the gaps between cards, the way Finder rubber-bands icons.
+   *
+   * Only a mousedown that lands on the grid itself — never on a card, which
+   * has its own drag for reordering — arms this, so the two gestures never
+   * fight over the same pixel.
+   */
+  const grid = useRef<HTMLDivElement>(null);
+  const [marquee, setMarquee] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+
+  const toggleSelected = (id: string) => {
+    setSelectedSlides(current => {
+      const next = new Set(current);
+
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+
+      return next;
+    });
+  };
+
+  const beginMarquee = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || event.target !== event.currentTarget) return;
+
+    const additive = event.shiftKey || event.metaKey || event.ctrlKey;
+    const base = additive ? new Set(selectedSlides) : new Set<string>();
+
+    if (!additive) setSelectedSlides(base);
+
+    event.preventDefault();
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+
+    const onMove = (moveEvent: globalThis.MouseEvent) => {
+      const box = grid.current?.getBoundingClientRect();
+
+      if (!box) return;
+
+      const left = Math.min(startX, moveEvent.clientX);
+      const right = Math.max(startX, moveEvent.clientX);
+      const top = Math.min(startY, moveEvent.clientY);
+      const bottom = Math.max(startY, moveEvent.clientY);
+
+      setMarquee({ x: left - box.left, y: top - box.top, w: right - left, h: bottom - top });
+
+      const hits = new Set(base);
+
+      grid.current?.querySelectorAll<HTMLElement>('[data-slide-id]').forEach(card => {
+        const cardBox = card.getBoundingClientRect();
+        const overlaps = cardBox.left < right && cardBox.right > left && cardBox.top < bottom && cardBox.bottom > top;
+        const id = card.dataset.slideId;
+
+        if (overlaps && id) hits.add(id);
+      });
+
+      setSelectedSlides(hits);
+    };
+
+    const onUp = () => {
+      setMarquee(null);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  };
 
   // Asked for from the playlist, so the list is taken to it rather than the
   // operator being left to find it: the song's own title goes to the top of the
@@ -165,10 +245,13 @@ export const SlideGrid = ({
       ) : null}
 
       {/* The gaps between the cards belong to the grid, so a release in one of
-          them is still a release on the order the drag arrived at. */}
+          them is still a release on the order the drag arrived at. A mousedown
+          landing here rather than on a card arms the marquee instead. */}
       <div
-        className="grid gap-x-4 gap-y-3"
+        ref={grid}
+        className="relative grid gap-x-4 gap-y-3"
         style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${cardSize}px, 1fr))` }}
+        onMouseDown={beginMarquee}
         {...slides.list()}
       >
         {slides.items.map((slide, index) => (
@@ -186,7 +269,19 @@ export const SlideGrid = ({
               fonts={settings.customFonts}
               align={settings.lyricsAlign}
               isLive={onScreen && live.slideIndex === index}
-              onGoLive={() => selectLyric(song, index)}
+              selected={selectedSlides.has(slide.id)}
+              onGoLive={event => {
+                // Shift or ctrl/cmd picks a card out without sending it live —
+                // the same modifier a Finder click uses to build a selection.
+                if (event.shiftKey || event.metaKey || event.ctrlKey) {
+                  toggleSelected(slide.id);
+                  return;
+                }
+
+                if (selectedSlides.size > 0) setSelectedSlides(new Set());
+
+                selectLyric(song, index);
+              }}
               onEdit={() => onEditSlide(index)}
               /* A song has to keep a slide. Emptying one out is the editor's
                  job, where the song can be deleted outright. */
@@ -202,6 +297,14 @@ export const SlideGrid = ({
             />
           </div>
         ))}
+
+        {marquee ? (
+          <div
+            aria-hidden
+            className="absolute z-30 rounded-[2px] border border-studio-accent bg-studio-accent/10"
+            style={{ left: marquee.x, top: marquee.y, width: marquee.w, height: marquee.h }}
+          />
+        ) : null}
       </div>
     </section>
   );

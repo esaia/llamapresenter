@@ -8,7 +8,9 @@ import {
   useMemo,
   useRef,
   useState,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -317,6 +319,9 @@ interface StudioValue {
   activeSongId: string | null;
   /** The song last asked for off the rail, which is what the panel scrolls to. */
   songCue: { id: string; at: number } | null;
+  /** Slides picked out in the grid, by id — what a lyrics-tab Delete or copy reaches. */
+  selectedSlides: Set<string>;
+  setSelectedSlides: Dispatch<SetStateAction<Set<string>>>;
   /**
    * Open a song. `from` says which list it was picked out of, because that is
    * what the workspace shows: a song picked off the playlist is one item of a
@@ -370,6 +375,10 @@ interface StudioValue {
   setSongLangs: (song: Song) => Promise<void>;
   /** Drop one slide from a song, from the grid rather than the editor. */
   removeSlide: (song: Song, slideId: string) => Promise<void>;
+  /** Drop several slides from a song at once — a multi-selected Delete. */
+  removeSlides: (song: Song, slideIds: string[]) => Promise<void>;
+  /** Copy slides' words in after another slide, from the grid rather than the editor. */
+  pasteSlides: (song: Song, afterSlideId: string, slides: Omit<SongSlide, 'id'>[]) => Promise<void>;
   removeSongs: (ids: string[]) => Promise<void>;
   publishLyrics: (song: Song, slideIndex: number) => void;
   selectLyric: (song: Song, slideIndex: number) => void;
@@ -499,6 +508,13 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
    * second request rather than no change at all.
    */
   const [songCue, setSongCue] = useState<{ id: string; at: number } | null>(null);
+
+  /**
+   * Slides picked out in the grid — a marquee drag, or a ctrl/shift-click —
+   * held apart from `live` because a selection is never sent to the projector
+   * on its own. It only says which cards a Delete or a copy reaches.
+   */
+  const [selectedSlides, setSelectedSlides] = useState<Set<string>>(new Set());
 
   const setActiveSongId = useCallback<StudioValue['setActiveSongId']>(id => {
     setActiveSong(id);
@@ -1964,6 +1980,78 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     [clearProjector, live, publishLyrics, saveSong],
   );
 
+  /**
+   * The slides a marquee or a ctrl/shift-click picked out, dropped from a song
+   * in one save — the multi-selected half of what `removeSlide` does one at a
+   * time.
+   */
+  const removeSlides = useCallback<StudioValue['removeSlides']>(
+    async (song, slideIds) => {
+      const drop = new Set(slideIds);
+      const slides = song.slides.filter(slide => !drop.has(slide.id));
+
+      if (slides.length === song.slides.length || slides.length === 0) return;
+
+      const trimmed: Song = { ...song, slides };
+      const onScreen =
+        live?.kind === 'lyrics' && live.songId === song.id ? song.slides[live.slideIndex]?.id : null;
+
+      setSongs(current => current.map(item => (item.id === song.id ? trimmed : item)));
+
+      if (onScreen) {
+        const at = slides.findIndex(slide => slide.id === onScreen);
+
+        if (at >= 0) publishLyrics(trimmed, at);
+        else clearProjector();
+      }
+
+      try {
+        await saveSong(trimmed);
+      } catch {
+        setSongs(current => current.map(item => (item.id === song.id ? song : item)));
+      }
+    },
+    [clearProjector, live, publishLyrics, saveSong],
+  );
+
+  /**
+   * Copied slides' words, inserted right after another slide — the ⌘/Ctrl+V
+   * half of the pair in `Console.tsx`, mirroring `removeSlide` above rather
+   * than the editor.
+   *
+   * Only puts the last one live when the paste landed right after the slide
+   * that was already on the projector. A selection can sit in any song, live
+   * or not — pasting into one is filing, and filing must never reach for the
+   * wall the room is looking at. `removeSlide`/`removeSlides` get to compute
+   * `onScreen` from `live` because the slide they are removing existed a
+   * moment ago; a pasted slide has no moment ago, so this checks whether the
+   * *anchor* — the slide it landed after — was the live one instead.
+   */
+  const pasteSlides = useCallback<StudioValue['pasteSlides']>(
+    async (song, afterSlideId, clips) => {
+      const at = song.slides.findIndex(item => item.id === afterSlideId);
+
+      if (at < 0 || clips.length === 0) return;
+
+      const onScreen =
+        live?.kind === 'lyrics' && live.songId === song.id && song.slides[live.slideIndex]?.id === afterSlideId;
+
+      const pasted: SongSlide[] = clips.map(clip => ({ ...clip, id: crypto.randomUUID() }));
+      const slides = [...song.slides.slice(0, at + 1), ...pasted, ...song.slides.slice(at + 1)];
+      const inserted: Song = { ...song, slides };
+
+      setSongs(current => current.map(item => (item.id === song.id ? inserted : item)));
+      if (onScreen) publishLyrics(inserted, at + pasted.length);
+
+      try {
+        await saveSong(inserted);
+      } catch {
+        setSongs(current => current.map(item => (item.id === song.id ? song : item)));
+      }
+    },
+    [live, publishLyrics, saveSong],
+  );
+
   const removeSongs = useCallback<StudioValue['removeSongs']>(
     async ids => {
       if (ids.length === 0) return;
@@ -2321,6 +2409,8 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       songs,
       activeSongId,
       songCue,
+      selectedSlides,
+      setSelectedSlides,
       setActiveSongId,
       libraries,
       playlists,
@@ -2340,6 +2430,8 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       reorderSlides,
       setSongLangs,
       removeSlide,
+      removeSlides,
+      pasteSlides,
       removeSongs,
       publishLyrics,
       selectLyric,
@@ -2358,6 +2450,7 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
     [
       activeSongId,
       songCue,
+      selectedSlides,
       setActiveSongId,
       addPassage,
       blackout,
@@ -2422,6 +2515,8 @@ export const StudioProvider = ({ initial, children }: { initial: StudioInitial; 
       reorderSlides,
       setSongLangs,
       removeSlide,
+      removeSlides,
+      pasteSlides,
       selectLyric,
       selectVerse,
       setLocalBackground,

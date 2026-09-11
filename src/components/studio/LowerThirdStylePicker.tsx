@@ -16,7 +16,6 @@ import {
   filesUsedBy,
   SAMPLE_LYRICS as SAMPLE_LYRIC_SLIDE,
   SAMPLE_VERSE as SAMPLE_VERSE_SLIDE,
-  startingTemplate,
   type SlideTemplate,
   type TemplateTarget,
 } from "@/lib/projector/template";
@@ -31,6 +30,7 @@ import { useStudio } from "@/lib/studio/StudioProvider";
 import type { Align } from "@/lib/types";
 
 import { ColorField } from "./ColorField";
+import { NewStrapModal } from "./NewStrapModal";
 import { TemplateEditor } from "./TemplateEditor";
 
 // Each look re-points the CSS variables on `.lower3rd-bar`; see globals.css.
@@ -84,7 +84,7 @@ const ALIGN_CLASS: Record<Align, string> = {
  * grid, for the same reason: a tile that is always ragged-left in one face is
  * answering a question the operator has already given a different answer to.
  */
-const Preview = ({
+export const Preview = ({
   variant,
   top,
   lyrics,
@@ -157,6 +157,8 @@ export const LowerThirdStylePicker = () => {
   const [target, setTarget] = useState(showData?.lyrics ? "lyrics" : "verses");
   // Which of the operator's own straps is open on the canvas, if any.
   const [editing, setEditing] = useState("");
+  // Whether the "start from" chooser is open for a new one.
+  const [choosing, setChoosing] = useState(false);
 
   // What the custom tile draws its sample against: the stream's own wire
   // style, which already reduces the armed set to the one language the
@@ -211,12 +213,12 @@ export const LowerThirdStylePicker = () => {
   ];
 
   /** Draw another one; saved before the canvas opens, as the projector's is. */
-  const add = () => {
+  const add = (template: SlideTemplate) => {
     const row = {
       id: crypto.randomUUID(),
       target: kind,
       name: newTemplateName(settings, kind),
-      template: startingTemplate(kind),
+      template,
     };
 
     // Over the plan's ceiling the editor still opens — on a template that was
@@ -347,7 +349,7 @@ export const LowerThirdStylePicker = () => {
             heading: what it makes is another one of these. */}
         <button
           type="button"
-          onClick={add}
+          onClick={() => setChoosing(true)}
           className={cn(
             "block w-full overflow-hidden rounded-studio border border-dashed border-studio-border text-left",
             "text-studio-muted transition-colors duration-150 hover:border-studio-faint hover:text-studio-text",
@@ -365,6 +367,21 @@ export const LowerThirdStylePicker = () => {
           </span>
         </button>
       </div>
+
+      {choosing ? (
+        <NewStrapModal
+          open={choosing}
+          onClose={() => setChoosing(false)}
+          kind={kind}
+          top={top}
+          lyrics={lyrics}
+          font={font}
+          fonts={settings.customFonts}
+          align={align}
+          colors={colors}
+          onPick={add}
+        />
+      ) : null}
 
       {editing ? (
         <TemplateEditor target={kind} id={editing} onClose={() => setEditing("")} />

@@ -18,7 +18,8 @@
  */
 import { apiBookName } from '@/lib/bible/passage';
 import { lyricBlocks } from '@/lib/lyrics/langs';
-import { asHex } from '@/lib/studio/color';
+import { defaultsOf, type Colorway } from '@/lib/lower3rd/colors';
+import { asHex, withAlpha } from '@/lib/studio/color';
 import { REQUIRED_LANG, type Align, type Lang, type LocalFileMeta, type ShowData, type Verse } from '@/lib/types';
 
 /**
@@ -373,6 +374,125 @@ export const DEFAULT_STREAM_LYRIC_TEMPLATE: SlideTemplate = {
       radius: 0.8,
     },
   ],
+};
+
+/**
+ * The colours a shipped strap is painted in, filled out with that look's own
+ * defaults for whatever the operator has not set — the same fall-through
+ * `varsFor` gives the CSS version.
+ */
+const paintOf = (variant: string, colors: Colorway): Required<Colorway> => ({
+  plate: '',
+  accent: '',
+  ink: '#ffffff',
+  ...defaultsOf(variant),
+  ...colors,
+});
+
+/**
+ * One of the six shipped strap looks, redrawn as boxes.
+ *
+ * Not a pixel clone — the box editor has no flex layout, so "Split bar"'s
+ * side-by-side columns and "Reference card"'s reordered chip are approximated
+ * with plain frames rather than reproduced exactly. The point is a
+ * recognisable, already-coloured starting point to drag from, the same
+ * reasoning behind `DEFAULT_TEMPLATE` itself.
+ */
+export const templateFromVariant = (variant: string, kind: TemplateTarget, colors: Colorway): SlideTemplate => {
+  const paint = paintOf(variant, colors);
+  const lyrics = kind === 'streamLyrics';
+
+  const body: TextElement = {
+    ...DEFAULT_TEXT,
+    id: lyrics ? 'lyrics' : 'verses',
+    frame: lyrics ? { x: 0.06, y: 0.76, w: 0.88, h: 0.16 } : { x: 0.06, y: 0.74, w: 0.88, h: 0.14 },
+    content: lyrics ? '{{lyrics}}' : '{{verses}}',
+    size: lyrics ? 5.5 : 5,
+    align: lyrics ? 'center' : 'left',
+    color: paint.ink,
+    padding: 1.6,
+    radius: 0.8,
+  };
+
+  const reference: TextElement = {
+    ...DEFAULT_TEXT,
+    id: 'reference',
+    frame: { x: 0.06, y: 0.885, w: 0.88, h: 0.055 },
+    content: '{{reference}}',
+    size: 2.6,
+    italic: true,
+    color: withAlpha(paint.ink, 0.82),
+    valign: 'top',
+  };
+
+  if (variant === 'scrim') {
+    body.plateKind = 'gradient';
+    body.plateGradient = { from: withAlpha(paint.plate, 0.9), to: withAlpha(paint.plate, 0), angle: 180 };
+  } else if (variant === 'solid') {
+    body.plateKind = 'color';
+    body.plate = withAlpha(paint.plate, 0.88);
+  } else if (variant === 'bands') {
+    body.plateKind = 'color';
+    body.plate = withAlpha(paint.plate, 0.93);
+    body.plateSpan = 'line';
+    body.lineHeight = 1.5;
+    body.plateGap = 0.16;
+    reference.plateKind = 'color';
+    reference.plate = withAlpha(paint.plate, 0.93);
+    reference.plateSpan = 'line';
+    reference.lineHeight = 1.8;
+    reference.plateGap = 0.16;
+  } else if (variant === 'card') {
+    // The chip rides above the verse, as the CSS look's `column-reverse` does.
+    body.frame = lyrics ? body.frame : { x: 0.06, y: 0.77, w: 0.88, h: 0.13 };
+    body.plateKind = 'color';
+    body.plate = withAlpha(paint.plate, 1);
+    body.radius = 0;
+    reference.frame = { x: 0.06, y: 0.715, w: 0.4, h: 0.045 };
+    reference.plateKind = 'color';
+    reference.plate = withAlpha(paint.accent || paint.plate, 0.95);
+    reference.italic = false;
+    reference.weight = 700;
+    reference.caps = 'upper';
+    reference.color = paint.ink;
+    reference.valign = 'middle';
+    reference.padding = 0.6;
+    reference.radius = 0.4;
+  } else if (variant === 'split') {
+    body.frame = lyrics ? body.frame : { x: 0.06, y: 0.74, w: 0.6, h: 0.14 };
+    body.plateKind = 'color';
+    body.plate = withAlpha(paint.plate, 0.93);
+    reference.frame = { x: 0.68, y: 0.74, w: 0.26, h: 0.14 };
+    reference.italic = false;
+    reference.weight = 700;
+    reference.size = 3.2;
+    reference.color = paint.ink;
+    reference.valign = 'middle';
+    reference.align = 'right';
+  } else if (variant === 'plain') {
+    body.shadow = 'strong';
+    reference.shadow = 'strong';
+  }
+
+  if (lyrics) return { elements: [body] };
+
+  const rule: ShapeElement = {
+    kind: 'line',
+    id: 'rule',
+    frame: { x: 0.06, y: 0.735, w: 0.88, h: 0.004 },
+    opacity: 1,
+    rotation: 0,
+    fillKind: 'color',
+    fill: paint.accent || paint.plate,
+    gradient: DEFAULT_GRADIENT,
+    file: null,
+    fit: 'cover',
+    stroke: '',
+    strokeWidth: 0,
+    radius: 0,
+  };
+
+  return { elements: variant === 'split' ? [rule, body, reference] : [body, reference] };
 };
 
 /** A new element of each kind, dropped in the middle of the frame. */
