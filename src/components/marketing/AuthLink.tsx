@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, useTransition } from 'react';
 
 import { supabase } from '@/lib/supabase/client';
 
@@ -21,6 +22,8 @@ import { supabase } from '@/lib/supabase/client';
  */
 export const AuthLink = ({ className }: { className?: string }) => {
   const [signedIn, setSignedIn] = useState(false);
+  const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   useEffect(() => {
     let cancelled = false;
@@ -36,9 +39,24 @@ export const AuthLink = ({ className }: { className?: string }) => {
     };
   }, []);
 
+  const href = signedIn ? '/studio' : '/login';
+
+  // The console is a server component that loads a session's worth of data
+  // before it can render, so the click and the page appearing are seconds
+  // apart. A plain `Link` leaves that gap silent; routing inside a transition
+  // instead makes `pending` true the instant it's clicked and false only once
+  // the next page is ready, so the label can say so in between.
   return (
-    <Link href={signedIn ? '/studio' : '/login'} className={className}>
-      {signedIn ? 'Open console' : 'Sign in'}
+    <Link
+      href={href}
+      className={className}
+      aria-disabled={pending}
+      onClick={event => {
+        event.preventDefault();
+        startTransition(() => router.push(href));
+      }}
+    >
+      {pending ? 'Opening…' : signedIn ? 'Open console' : 'Sign in'}
     </Link>
   );
 };
