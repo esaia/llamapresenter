@@ -21,7 +21,7 @@ which home a piece of knowledge takes.
 
 | Rule | Globs |
 | --- | --- |
-| _(none yet)_ | |
+| [projector-negative-zindex-stacking](projector-negative-zindex-stacking.md) | `src/components/projector/**` |
 
 Add a row whenever you add a file. An unindexed rule is an unread rule.
 
