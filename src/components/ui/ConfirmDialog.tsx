@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { Button, type ButtonProps } from '@/components/ui/Button';
 import { Modal, useModalClose } from '@/components/ui/Modal';
 
@@ -26,6 +28,18 @@ export const ConfirmDialog = ({
   onCancel: () => void;
 }) => {
   const close = useModalClose();
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') close.current?.(onConfirm);
+    };
+
+    window.addEventListener('keydown', onKey);
+
+    return () => window.removeEventListener('keydown', onKey);
+  }, [close, onConfirm, open]);
 
   return (
     <Modal
