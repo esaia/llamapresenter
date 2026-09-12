@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type CSSProperties, type DragEvent, type HTMLAttributes } from 'react';
-import { ChevronDown, ChevronUp, ListMusic, Music, Pause, Play, Trash2 } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, ListMusic, Music, Pause, Play, Plus, Trash2 } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 import { useAudio, type Track } from '@/lib/studio/AudioProvider';
@@ -139,6 +139,7 @@ export const AudioPlaylist = () => {
     setFadeMs,
     playTrack,
     addLocalFiles,
+    addCategory,
     setTrackCategory,
     trackList,
     moveTrack,
@@ -151,6 +152,8 @@ export const AudioPlaylist = () => {
   const [view, setView] = useState(ALL);
   const [listsOpen, setListsOpen] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const [naming, setNaming] = useState(false);
+  const [name, setName] = useState('');
 
   useDragEnded(dragging, () => setDragging(false));
 
@@ -170,6 +173,15 @@ export const AudioPlaylist = () => {
   const libraries = useLibraryReorder(categories, (id, beforeId) => void moveCategory(id, beforeId));
 
   const span = runtime(shown);
+
+  const create = () => {
+    const trimmed = name.trim();
+
+    setNaming(false);
+    setName('');
+
+    if (trimmed) void addCategory(trimmed);
+  };
 
   // Dropped straight onto the rail, a file is meant for the library the
   // operator is looking at.
@@ -223,6 +235,22 @@ export const AudioPlaylist = () => {
           className="studio-scroll max-h-28 shrink-0 overflow-y-auto border-b border-studio-divider py-1"
           {...libraries.list()}
         >
+          <div className="flex items-center justify-between gap-2 py-1 pr-3 pl-2.5">
+            <span className="min-w-0 flex-1 truncate text-[11px] font-semibold tracking-wider text-studio-faint uppercase">
+              Libraries
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setNaming(true)}
+              aria-label="New library"
+              title="New library"
+              className="shrink-0 text-studio-muted hover:text-studio-text"
+            >
+              <Plus className="size-3.5" />
+            </button>
+          </div>
+
           <LibraryRow
             icon={<ListMusic className="size-3.5" />}
             label="All tracks"
@@ -244,6 +272,36 @@ export const AudioPlaylist = () => {
               {...libraries.row(category.id)}
             />
           ))}
+
+          {naming ? (
+            <div className="flex items-center gap-1.5 py-1 pr-3 pl-2.5">
+              <input
+                autoFocus
+                value={name}
+                onChange={event => setName(event.target.value)}
+                onBlur={create}
+                onKeyDown={event => {
+                  if (event.key === 'Enter') create();
+                  if (event.key === 'Escape') {
+                    setNaming(false);
+                    setName('');
+                  }
+                }}
+                placeholder="Library name"
+                className="min-w-0 flex-1 rounded-studio border border-studio-border bg-studio-bg px-2 py-1 text-xs
+                  outline-none placeholder:text-studio-faint"
+              />
+              <button
+                type="button"
+                onMouseDown={event => event.preventDefault()}
+                onClick={create}
+                aria-label="Create the library"
+                className="shrink-0 text-studio-muted hover:text-studio-text"
+              >
+                <Check className="size-3.5" />
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
