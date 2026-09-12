@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type CSSProperties, type DragEvent, type HTMLAttributes } from 'react';
-import { ChevronDown, ChevronUp, ListMusic, Music, Pause, Play } from 'lucide-react';
+import { ChevronDown, ChevronUp, ListMusic, Music, Pause, Play, Trash2 } from 'lucide-react';
 
 import { cn } from '@/lib/cn';
 import { useAudio, type Track } from '@/lib/studio/AudioProvider';
@@ -73,6 +73,7 @@ const LibraryRow = ({
   count,
   selected,
   onSelect,
+  onDelete,
   lifted,
   ...drag
 }: {
@@ -81,12 +82,20 @@ const LibraryRow = ({
   count: number;
   selected: boolean;
   onSelect: () => void;
+  /** Absent for "All tracks", which is a view, not a library. */
+  onDelete?: () => void;
   /** True while this row is the one in the air. */
   lifted?: boolean;
 } & HTMLAttributes<HTMLButtonElement> & { draggable?: boolean }) => (
   <button
     type="button"
     onClick={onSelect}
+    onKeyDown={event => {
+      if (onDelete && (event.key === 'Backspace' || event.key === 'Delete')) {
+        event.preventDefault();
+        onDelete();
+      }
+    }}
     aria-pressed={selected}
     {...drag}
     className={cn(
@@ -134,6 +143,8 @@ export const AudioPlaylist = () => {
     trackList,
     moveTrack,
     moveCategory,
+    removeTrack,
+    removeCategory,
   } = useAudio();
   const { setTab } = useStudio();
 
@@ -228,6 +239,7 @@ export const AudioPlaylist = () => {
               count={tracks.filter(track => (track.categoryId ?? null) === category.id).length}
               selected={open === category.id}
               onSelect={() => setView(category.id)}
+              onDelete={() => void removeCategory(category.id)}
               lifted={libraries.lifted === category.id}
               {...libraries.row(category.id)}
             />
@@ -274,7 +286,8 @@ export const AudioPlaylist = () => {
                 key={track.id}
                 {...reorder.row(track.id)}
                 className={cn(
-                  'flex cursor-grab items-center gap-1 border-b border-studio-divider px-1.5 py-1.5 last:border-b-0',
+                  'group flex cursor-grab items-center gap-1 border-b border-studio-divider px-1.5 py-1.5',
+                  'last:border-b-0',
                   // Stopping a track takes its highlight off the row; fading it
                   // out matches the sound, which is on its own ramp.
                   'transition-colors duration-200 active:cursor-grabbing',
@@ -285,6 +298,12 @@ export const AudioPlaylist = () => {
                 <button
                   type="button"
                   onClick={() => playTrack(track, open === ALL ? null : open)}
+                  onKeyDown={event => {
+                    if (event.key === 'Backspace' || event.key === 'Delete') {
+                      event.preventDefault();
+                      void removeTrack(track.id);
+                    }
+                  }}
                   disabled={unavailable}
                   title={isCurrent && playing ? 'Fade out' : `Play ${track.title}`}
                   className="flex min-w-0 flex-1 items-center gap-2 rounded-studio px-1 py-0.5 text-left
@@ -320,6 +339,19 @@ export const AudioPlaylist = () => {
                       {unavailable ? 'On another computer' : length ? `${length} · ${track.artist}` : track.artist}
                     </span>
                   </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void removeTrack(track.id)}
+                  aria-label={`Delete ${track.title}`}
+                  title={`Delete ${track.title}`}
+                  className="flex size-7 shrink-0 items-center justify-center rounded-studio text-studio-faint
+                    opacity-0 transition duration-150 group-hover:opacity-100 hover:text-studio-danger
+                    focus:outline-none focus-visible:opacity-100 focus-visible:ring-2
+                    focus-visible:ring-studio-accent/40"
+                >
+                  <Trash2 className="size-3.5" />
                 </button>
               </div>
             );
