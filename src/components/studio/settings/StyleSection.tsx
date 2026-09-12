@@ -28,7 +28,6 @@ const ALIGNMENTS = [
   { value: 'right' as Align, label: 'Align right', Icon: MdFormatAlignRight },
 ];
 
-/** A titled block inside the settings dialog. */
 export const Field = ({
   label,
   hint,
@@ -47,13 +46,6 @@ export const Field = ({
   </div>
 );
 
-/**
- * Typeface and alignment for one kind of slide: verses, or song lyrics.
- *
- * Exported, because the stream sets the same two things about its own output
- * and an operator who has learned this control on the projector panel should
- * not have to learn a second one on the stream panel.
- */
 export const TypeRow = ({
   label,
   hint,
@@ -66,7 +58,6 @@ export const TypeRow = ({
   label: string;
   hint: string;
   font: string;
-  /** The operator's own faces, offered below the ones we ship. */
   fonts: CustomFont[];
   setFont: (value: string) => void;
   align: Align;
@@ -101,13 +92,6 @@ export const TypeRow = ({
   </Field>
 );
 
-/**
- * How one kind of slide is sized: fitted, or held at a share of the screen.
- *
- * Verses and songs each have a pair of their own, because they are fitted to
- * different ceilings — a song may fill a quarter of the screen height, a verse
- * a thirteenth — and a single held size could not mean both.
- */
 const TextSizeField = ({
   label,
   hint,
@@ -132,8 +116,6 @@ const TextSizeField = ({
         options={SCALE_MODES}
       />
 
-      {/* Live in both modes, as the same control is in the template editor:
-          fitting reads it as a ceiling, holding pins the text to it. */}
       <div className="flex shrink-0 items-center gap-2">
         <input
           type="range"
@@ -163,22 +145,9 @@ const TextSizeField = ({
   </Field>
 );
 
-/**
- * The projector panel of the settings dialog: the background behind the words,
- * the typeface they are set in, and how one slide gives way to the next.
- *
- * Everything under the layout grid belongs to the tab above it. A verse and a
- * song keep separate looks, separate type and separate sizing, and showing
- * both sets at once meant an operator who had come about the song reading four
- * controls to find the two that moved — and a lyrics choice that hid a control
- * while the Verses tab was open, which reads as the panel losing it.
- */
 export const StyleSection = () => {
   const { settings, showData, update } = useStudio();
 
-  // Opens on whichever kind of slide is live, and the grid, the sizing and the
-  // type below it all follow it. Held here rather than in the picker because
-  // it is no longer only the picker's.
   const [target, setTarget] = useState<LookTarget>(showData?.lyrics ? 'lyrics' : 'verses');
 
   const lyrics = target === 'lyrics';
@@ -188,8 +157,6 @@ export const StyleSection = () => {
     <div className="space-y-6">
       <ProjectorLookPicker target={target} onTarget={setTarget} />
 
-      {/* A custom slide sizes and sets each of its own boxes, and answers both
-          of these in the template — so under that look they are dead UI. */}
       {custom ? null : (
         <>
           {lyrics ? (

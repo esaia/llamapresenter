@@ -29,9 +29,6 @@ const CopyRow = ({ label, url }: { label: string; url: string }) => {
           text-studio-text focus:outline-none"
       />
 
-      {/* The tick is the whole acknowledgement, and it waits for the clipboard
-          rather than for the click: a copy the browser refused keeps the
-          clipboard icon instead of claiming the link is in hand. */}
       <button
         type="button"
         aria-label={copied ? 'Copied' : `Copy the ${label} link`}
@@ -84,11 +81,6 @@ const PresenceRow = ({
   </div>
 );
 
-/**
- * Where this service is playing. The old app addressed outputs by a relay room
- * code that had to be typed in at the other end; a session now carries its own
- * key, so every link below is self-contained and there is nothing to enter.
- */
 export const DevicesSection = () => {
   const { session, peers } = useStudio();
 

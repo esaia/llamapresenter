@@ -8,25 +8,11 @@ import { clampRailWidth, RAIL_MIN_WIDTH, RAIL_WIDTH_VAR, readRailWidth, writeRai
 import { AudioPlaylist } from '@/components/studio/audio/AudioPlaylist';
 import { PreviewPanel } from '@/components/studio/preview/PreviewPanel';
 
-/**
- * The output rail: what the projector is showing, and what the service is
- * going to play, in the fixed place a presentation app keeps them.
- *
- * Its width is a per-machine preference — the operator's desk screen and the
- * laptop they rehearse on want different splits — so it lives in this browser
- * rather than in the account, and reaches the layout as a CSS variable the
- * document sets before it paints. See `lib/studio/railWidth`.
- */
 export const RightRail = ({ onSettings }: { onSettings: (tab: string) => void }) => {
   const [dragging, setDragging] = useState(false);
 
-  // The blocking script in the root layout has normally set this already; this
-  // covers the case where it could not run (a CSP, an extension) at the cost of
-  // one frame at the default width.
   useLayoutEffect(() => writeRailWidth(readRailWidth()), []);
 
-  // A rail sized on a wide screen must give the running order its room back on
-  // a narrower one.
   useEffect(() => {
     const onResize = () => writeRailWidth(clampRailWidth(readRailWidth()));
 
@@ -44,7 +30,6 @@ export const RightRail = ({ onSettings }: { onSettings: (tab: string) => void })
     const startX = event.clientX;
     const startWidth = readRailWidth();
 
-    // The handle is on the left edge, so dragging left widens the rail.
     const onMove = (move: globalThis.PointerEvent) =>
       writeRailWidth(clampRailWidth(startWidth + (startX - move.clientX)));
 
@@ -58,7 +43,6 @@ export const RightRail = ({ onSettings }: { onSettings: (tab: string) => void })
     document.addEventListener('pointerup', onUp);
   }, []);
 
-  // Selecting the verse text behind the cursor while dragging looks broken.
   useEffect(() => {
     if (!dragging) return;
 

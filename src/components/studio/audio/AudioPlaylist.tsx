@@ -12,7 +12,6 @@ import { useLibraryReorder } from '@/components/studio/audio/libraryDrag';
 import { LIFTED_SLOT } from '@/components/studio/shared/sortable';
 import { useTrackReorder } from '@/components/studio/audio/trackDrag';
 
-/** Three bars, animated only on the track actually playing. */
 const BARS = [
   { duration: 780, delay: 0, rest: 0.55 },
   { duration: 1020, delay: 160, rest: 1 },
@@ -45,10 +44,8 @@ const clock = (ms: number | null | undefined) => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 };
 
-/** Every track, as opposed to one of the operator's libraries. */
 const ALL = '__all__';
 
-/** How long a list runs, in the words a running order is planned in. */
 const runtime = (tracks: Track[]) => {
   const total = tracks.reduce((sum, track) => sum + (track.durationMs ?? 0), 0);
 
@@ -61,12 +58,6 @@ const runtime = (tracks: Track[]) => {
   return `${Math.floor(minutes / 60)} hr ${String(minutes % 60).padStart(2, '0')} min`;
 };
 
-/**
- * One library in the picker. A row rather than an option in a dropdown: which
- * libraries exist, and which one is open, are both worth being able to see at a
- * glance mid-service — a native menu hides the answer until it is clicked, and
- * covers the verse behind it while it is open.
- */
 const LibraryRow = ({
   icon,
   label,
@@ -82,9 +73,7 @@ const LibraryRow = ({
   count: number;
   selected: boolean;
   onSelect: () => void;
-  /** Absent for "All tracks", which is a view, not a library. */
   onDelete?: () => void;
-  /** True while this row is the one in the air. */
   lifted?: boolean;
 } & HTMLAttributes<HTMLButtonElement> & { draggable?: boolean }) => (
   <button
@@ -101,9 +90,6 @@ const LibraryRow = ({
     className={cn(
       'flex w-full items-center gap-2 border-l-2 py-1 pr-3 pl-2.5 text-left transition-colors duration-150',
       'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40 focus-visible:ring-inset',
-      // Accent means live in this rail — it is what the playing track wears —
-      // so the open library is marked as a selection instead: a grey fill and
-      // a rule down its edge.
       selected
         ? 'border-studio-accent bg-studio-surface text-studio-text'
         : 'border-transparent text-studio-muted hover:bg-studio-surface',
@@ -120,14 +106,6 @@ const LibraryRow = ({
   </button>
 );
 
-/**
- * The music, under the preview — the shape a presentation app puts its audio
- * in. The picker at the top switches between the libraries from the Audio tab,
- * so a bed can be found without leaving the passage that is on screen.
- *
- * There is no separate queue: a library is the running order, so what plays
- * here is what the Audio tab holds, in the order it holds it.
- */
 export const AudioPlaylist = () => {
   const {
     tracks,
@@ -157,19 +135,13 @@ export const AudioPlaylist = () => {
 
   useDragEnded(dragging, () => setDragging(false));
 
-  // A library deleted from the Audio tab must not leave the rail looking at
-  // nothing.
   const open = categories.some(category => category.id === view) ? view : ALL;
   const shown = trackList(open === ALL ? null : open);
 
-  // Reordering is scoped to the list being looked at: a library keeps its own
-  // running order, and All tracks keeps its own.
   const reorder = useTrackReorder(shown, (id, beforeId) =>
     void moveTrack(id, beforeId, open === ALL ? null : open),
   );
 
-  // The libraries carry an order of their own — the one a service starts from
-  // belongs at the top, whatever its name.
   const libraries = useLibraryReorder(categories, (id, beforeId) => void moveCategory(id, beforeId));
 
   const span = runtime(shown);
@@ -183,8 +155,6 @@ export const AudioPlaylist = () => {
     if (trimmed) void addCategory(trimmed);
   };
 
-  // Dropped straight onto the rail, a file is meant for the library the
-  // operator is looking at.
   const drop = async (event: DragEvent) => {
     event.preventDefault();
     setDragging(false);
@@ -227,9 +197,6 @@ export const AudioPlaylist = () => {
         </button>
       </div>
 
-      {/* The libraries, the way a presentation app shows them: a short standing
-          list above their contents, collapsible when the passages below need
-          the room. */}
       {listsOpen ? (
         <div
           className="studio-scroll max-h-28 shrink-0 overflow-y-auto border-b border-studio-divider py-1"
@@ -346,8 +313,6 @@ export const AudioPlaylist = () => {
                 className={cn(
                   'group flex cursor-grab items-center gap-1 border-b border-studio-divider px-1.5 py-1.5',
                   'last:border-b-0',
-                  // Stopping a track takes its highlight off the row; fading it
-                  // out matches the sound, which is on its own ramp.
                   'transition-colors duration-200 active:cursor-grabbing',
                   isCurrent ? 'bg-studio-accent/10' : 'hover:bg-studio-surface',
                   reorder.lifted === track.id && LIFTED_SLOT,
@@ -417,9 +382,6 @@ export const AudioPlaylist = () => {
         )}
       </div>
 
-      {/* Set once, before a service, and it governs both the ramp in and the
-          ramp out — so a bed can be brought under a prayer and taken away
-          again without either being noticed. */}
       <label className="flex h-9 shrink-0 items-center gap-2 border-t border-studio-divider px-3">
         <span className="shrink-0 text-[11px] text-studio-faint">Fade</span>
 

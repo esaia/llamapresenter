@@ -12,7 +12,6 @@ import { useLibraryReorder } from '@/components/studio/audio/libraryDrag';
 import { LIFTED_SLOT, type Sortable } from '@/components/studio/shared/sortable';
 import { useTrackReorder } from '@/components/studio/audio/trackDrag';
 
-/** Every track, as opposed to one of the operator's libraries. */
 const ALL = '__all__';
 
 const clock = (ms: number | null | undefined) => {
@@ -23,13 +22,6 @@ const clock = (ms: number | null | undefined) => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 };
 
-/**
- * One library in the left column.
- *
- * It is a drop target as well as a filter: filing a track is dragging it onto
- * the library it belongs in, which is how a presentation app does it and saves
- * a menu on every row.
- */
 const LibraryRow = ({
   label,
   count,
@@ -52,25 +44,15 @@ const LibraryRow = ({
   onDropTrack: (event: DragEvent) => void;
   onDelete?: () => void;
   onContextMenu?: (event: MouseEvent) => void;
-  /** Renaming is only possible for a real library, never "All tracks". */
   editing?: boolean;
   onRename?: () => void;
   onDone?: (name: string) => void;
-  /** The row's part in the library reorder, for the rows that take part. */
   drag?: ReturnType<Sortable<unknown>['row']>;
-  /** True while some library is in the air — this row or another. */
   dragging?: boolean;
-  /** True while this row is the one in the air. */
   lifted?: boolean;
 }) => {
   const [over, setOver] = useState(false);
 
-  // Two drags cross this row and mean opposite things: a track being filed
-  // here, and a library being carried past. While a library is in the air the
-  // row is a place in a running order, never a folder — so it neither takes the
-  // drop as a filing nor lights up as if it would.
-  // Lit only when a track is what is over the row: `over` is not set during a
-  // library drag, and saying so once keeps the row's parts from disagreeing.
   const filing = over && !dragging;
 
   return (
@@ -98,8 +80,6 @@ const LibraryRow = ({
         selected
           ? 'border-studio-accent bg-studio-surface text-studio-text'
           : 'border-transparent text-studio-muted hover:bg-studio-surface',
-        // Filing a track is a commitment, so the row it would go into is filled
-        // rather than outlined: it is unmistakable at a glance mid-service.
         filing && 'border-studio-accent bg-studio-accent text-studio-onaccent',
         'cursor-pointer',
         drag && 'active:cursor-grabbing',
@@ -132,9 +112,6 @@ const LibraryRow = ({
         </button>
       )}
 
-      {/* The count and the delete share one slot of fixed width, so revealing
-          the second does not shove the row's contents sideways — the old hover
-          added a control and moved everything the pointer was aiming at. */}
       <span className="relative flex size-6 shrink-0 items-center justify-end">
         <span
           className={cn(
@@ -170,18 +147,6 @@ const LibraryRow = ({
   );
 };
 
-/**
- * The music library: every track this account has, and the libraries the
- * operator files them into.
- *
- * There is no separate queue. A library *is* the running order — the one a
- * service needs is made by making a library for it — so a track is in exactly
- * one place and the rail plays straight out of it.
- *
- * Playback happens on the console's machine only — it never reaches the
- * projector — because the sound goes to the hall's desk, not through the
- * screen.
- */
 export const AudioPanel = () => {
   const {
     tracks,
@@ -205,15 +170,11 @@ export const AudioPanel = () => {
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
 
-  // Which library the track column is showing, and the name being typed for a
-  // new one. A library deleted while it is open falls back to everything.
   const [library, setLibrary] = useState(ALL);
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
   const [renaming, setRenaming] = useState<string | null>(null);
 
-  // Dragging: a file coming in from the desktop, and the row being moved —
-  // onto a library to file it, or between rows to reorder the list.
   const [filesOver, setFilesOver] = useState(false);
 
   useDragEnded(filesOver, () => setFilesOver(false));
@@ -224,14 +185,10 @@ export const AudioPanel = () => {
   const open = categories.some(category => category.id === library) ? library : ALL;
   const shown = trackList(open === ALL ? null : open);
 
-  // Reordering is scoped to the list being looked at: a library keeps its own
-  // running order, and All tracks keeps its own.
   const reorder = useTrackReorder(shown, (id, beforeId) =>
     void moveTrack(id, beforeId, open === ALL ? null : open),
   );
 
-  // The list of libraries is a running order too: the one a service starts from
-  // belongs at the top, wherever its name falls in the alphabet.
   const libraries = useLibraryReorder(categories, (id, beforeId) => void moveCategory(id, beforeId));
 
   const file = (event: DragEvent, categoryId: string | null) => {
@@ -240,8 +197,6 @@ export const AudioPanel = () => {
     if (id && tracks.some(track => track.id === id)) void setTrackCategory(id, categoryId);
   };
 
-  // Files dropped into the track column are filed where the operator is
-  // looking: they have already said which library they mean by opening it.
   const importFiles = async (event: DragEvent) => {
     const added = await addLocalFiles([...event.dataTransfer.files]);
 
@@ -304,8 +259,6 @@ export const AudioPanel = () => {
       {error ? <p className="text-studio-danger px-3 py-2 text-xs">{error}</p> : null}
 
       <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[auto_minmax(0,1fr)] sm:grid-cols-[14rem_1fr] sm:grid-rows-1">
-        {/* The libraries themselves. A track is filed by dragging it onto one,
-            and unfiled by dragging it back onto All tracks. */}
         <ul
           className="studio-scroll border-studio-divider max-h-40 overflow-y-auto border-b py-1 sm:max-h-none
             sm:border-r sm:border-b-0"
@@ -390,8 +343,6 @@ export const AudioPanel = () => {
           ) : null}
         </ul>
 
-        {/* Files dropped here are added, and filed straight into the library
-            that is open. */}
         <ul
           onDragOver={event => {
             if (reorder.lifted) return reorder.list().onDragOver(event);
@@ -464,8 +415,6 @@ export const AudioPanel = () => {
                   </span>
                 </span>
 
-                {/* Same fixed slot as the libraries: the length steps aside for
-                    the delete instead of the row rearranging itself. */}
                 <span className="relative flex h-6 w-10 shrink-0 items-center justify-end">
                   <span
                     className="text-studio-faint text-[11px] tabular-nums transition-opacity duration-150

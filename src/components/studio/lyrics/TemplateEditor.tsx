@@ -86,13 +86,6 @@ import { labelOf, type Align, type Lang, type ProjectorStyle } from '@/lib/types
 import { ColorField } from '@/components/studio/pickers/ColorField';
 import { LIFTED_SLOT, useSortable } from '@/components/studio/shared/sortable';
 
-/**
- * What can be put on the slide.
- *
- * Drawn rather than named: five words across the top of the dialog is a
- * sentence to read every time, and the shapes are exactly the things an icon
- * says faster than a label does. The name stays in the tooltip.
- */
 const TOOLS: { kind: ElementKind; label: string; Icon: typeof Type }[] = [
   { kind: 'text', label: 'Text', Icon: Type },
   { kind: 'rect', label: 'Rectangle', Icon: Square },
@@ -109,17 +102,14 @@ const KIND_LABELS: Record<ElementKind, string> = {
   picture: 'Picture',
 };
 
-/** Re-exported: the kind of slide a template is drawn for. */
 export type { TemplateTarget };
 
-/** What a text box can be told to say, for each kind of slide. */
 const VERSE_TOKENS = [
   { name: 'verses', label: 'Verse text' },
   { name: 'reference', label: 'Reference' },
   { name: 'translation', label: 'Translation' },
 ];
 
-// A song slide has one thing to say: the words.
 const LYRIC_TOKENS = [{ name: 'lyrics', label: 'Words' }];
 
 const TOKEN_ROWS: Record<TemplateTarget, { name: string; label: string }[]> = {
@@ -129,28 +119,12 @@ const TOKEN_ROWS: Record<TemplateTarget, { name: string; label: string }[]> = {
   streamLyrics: LYRIC_TOKENS,
 };
 
-/**
- * The tokens on offer, and which language each takes.
- *
- * A grid rather than a row of buttons once there is a second language: the
- * same three things can each be asked for in any of them, and nine buttons in
- * a line is a list to read where a table is a thing to point at.
- *
- * **All** is the unnumbered token, which draws the box once per language — so
- * one reference box gives every language its own reference rather than three
- * copies of the first one's. The numbered columns pin a box to one language,
- * for giving each its own font and colour. They are numbered rather than named
- * because the slot is positional: `2` is whatever the operator has armed
- * second, so the template survives a church swapping Russian for Greek. The
- * name is in the tooltip.
- */
 const TokenPicker = ({
   target,
   langs,
   onInsert,
 }: {
   target: TemplateTarget;
-  /** The languages a numbered token could name. Empty when none can be named. */
   langs: string[];
   onInsert: (token: string) => void;
 }) => {
@@ -224,13 +198,6 @@ const VALIGNS: {
   { value: 'bottom', label: 'Bottom', Icon: MdVerticalAlignBottom },
 ];
 
-/**
- * Sending a box to an edge of the slide, or onto one of its centre lines.
- *
- * Against the frame rather than against another box: a selection here is one
- * element, and "centre this on the screen" is both the thing asked for most
- * often and the thing the eye is worst at judging.
- */
 const EDGES: { edge: Edge; label: string; Icon: typeof Type }[] = [
   { edge: 'left', label: 'Align to the left edge', Icon: AlignStartVertical },
   {
@@ -252,14 +219,6 @@ const EDGES: { edge: Edge; label: string; Icon: typeof Type }[] = [
   },
 ];
 
-/**
- * What an element is called in the layers list.
- *
- * A text box is called by what it says, because that is how the operator
- * thinks of it — "the reference one" — and three boxes all called Text is a
- * list that has to be clicked through to be read. Everything else has only its
- * kind to go on, and a picture has its file.
- */
 const KindIcon = ({ kind }: { kind: ElementKind }) => {
   const Icon = TOOLS.find(tool => tool.kind === kind)?.Icon ?? Type;
 
@@ -273,28 +232,12 @@ const nameOf = (element: TemplateElement): string => {
   return KIND_LABELS[element.kind];
 };
 
-/** How far an arrow key moves a box, as a fraction of the frame. */
 const NUDGE = 0.002;
 
-/**
- * How long a gesture stays open, in milliseconds.
- *
- * Long enough that a slider dragged in fits, or a sentence typed at speed,
- * stays one undo; short enough that stopping to think and then carrying on
- * starts a new one.
- */
 const GESTURE_MS = 700;
 
 const uid = () => `el-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 
-/**
- * Adding a box, behind one button.
- *
- * Five icons sat along the top of the dialog permanently, which is five things
- * to look past for the one act they perform — and that act happens a handful
- * of times per template and never again. A `+` says "put something here" in
- * the place every editor puts it, and the kinds are a click away when wanted.
- */
 const AddMenu = ({ disabled, onAdd }: { disabled: boolean; onAdd: (kind: ElementKind) => void }) => {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -361,16 +304,6 @@ const AddMenu = ({ disabled, onAdd }: { disabled: boolean; onAdd: (kind: Element
   );
 };
 
-// ------------------------------------------------------------------- controls
-
-/**
- * A labelled line in the inspector. Everything in here is one of these.
- *
- * `stack` puts the label above instead of beside, which is what a colour needs:
- * the picker opens anchored to its row, and it is wider than the column a
- * label leaves behind — so a beside-label colour row makes the whole panel
- * scroll sideways rather than the popover simply fitting.
- */
 const Row = ({ label, stack, children }: { label: string; stack?: boolean; children: React.ReactNode }) =>
   stack ? (
     <div>
@@ -384,7 +317,6 @@ const Row = ({ label, stack, children }: { label: string; stack?: boolean; child
     </div>
   );
 
-/** A row of small toggles, one of which is on. */
 const Toggles = <T,>({
   value,
   options,
@@ -396,7 +328,6 @@ const Toggles = <T,>({
     label: string;
     Icon?: typeof MdFormatAlignLeft;
     text?: string;
-    /** Paints the label in what it sets — three identical Aa say nothing. */
     style?: React.CSSProperties;
   }[];
   onPick: (value: T) => void;
@@ -418,10 +349,6 @@ const Toggles = <T,>({
             : 'text-studio-muted hover:bg-studio-surface hover:text-studio-text',
         )}
       >
-        {/* An explicit size, not `text-sm`: a lucide icon is sized by its
-            width and height rather than by the font, so a font-size class
-            left the fill icons at their full 24px while the react-icons
-            beside them shrank. */}
         {option.Icon ? (
           <option.Icon className="size-3.5" />
         ) : (
@@ -432,7 +359,6 @@ const Toggles = <T,>({
   </div>
 );
 
-/** A number the operator drags, with the value beside it. */
 const Slider = ({
   value,
   min,
@@ -474,16 +400,6 @@ const Slider = ({
   </div>
 );
 
-// ------------------------------------------------------------------ inspector
-
-/**
- * How the words are set: everything that can differ between an original and
- * its translation, and nothing that cannot.
- *
- * One component, rendered twice — once for the box and once for the second
- * language when it has been given a style of its own — so the two can never
- * drift into offering different controls.
- */
 const TextStyleRows = ({
   style,
   fonts,
@@ -498,8 +414,6 @@ const TextStyleRows = ({
       <FontPicker label="Typeface" value={style.font} onChange={value => patch({ font: value })} fonts={fonts} />
     </Row>
 
-    {/* One question, one pair of words — the same two the projector panel
-        offers for a shipped song look, because it is the same question. */}
     <Row label="Size" stack>
       <Select
         className="w-full"
@@ -530,9 +444,6 @@ const TextStyleRows = ({
       </p>
     </Row>
 
-    {/* Weight and italic are one question — how the type is cut — and italic
-        is on or off rather than one of two choices, so it is a switch beside
-        the weights instead of a second three-wide strip saying Aa twice. */}
     <Row label="Style">
       <div className="flex items-center gap-1.5">
         <div className="min-w-0 flex-1">
@@ -617,8 +528,6 @@ const TextStyleRows = ({
       />
     </Row>
 
-    {/* An outline round the letters, for pale words over a bright photograph
-        where a shadow alone leaves them swimming. */}
     <Row label="Text outline" stack>
       <ColorField
         label="Text outline"
@@ -644,9 +553,6 @@ const TextStyleRows = ({
       </Row>
     ) : null}
 
-    {/* The panel behind the words, for a background too busy for a shadow to
-        save. No picture on offer: a picture behind words is a background, and
-        the slide already has one. */}
     <Row label="Plate">
       <Toggles
         value={style.plateKind}
@@ -676,10 +582,6 @@ const TextStyleRows = ({
       <GradientRows value={style.plateGradient} onChange={plateGradient => patch({ plateGradient })} />
     ) : null}
 
-    {/* One panel, or a band behind each line with the picture showing through
-        between them. Under both kinds, not only a flat colour: a gradient
-        banded is a normal thing to want, and hiding the control left a plate
-        set to bands and then changed to a gradient with nowhere to go. */}
     {style.plateKind !== 'none' ? (
       <>
         <Row label="Behind">
@@ -761,11 +663,8 @@ const TextInspector = ({
 }: {
   element: TextElement;
   target: TemplateTarget;
-  /** The whole library, not the narrowed set a payload carries. */
   fonts: CustomFont[];
-  /** The languages a numbered token could name; empty for a song. */
   armed: string[];
-  /** How many languages a box may have to hold, which is a different question. */
   holds: number;
   patch: (change: Partial<TextElement>) => void;
 }) => (
@@ -804,9 +703,6 @@ const TextInspector = ({
             : 'A box with nothing to say is not drawn, so a template built for three languages still works when one is up.'}
       </p>
 
-      {/* Same box-level, content-shaped question as line breaks below — sits
-          here instead, by the words themselves, because it is read as often
-          as `content` is edited and not as a style choice. */}
       {/\{\{\s*(?:verses|lyrics)/i.test(element.content) ? (
         <div className="mt-3 flex items-center justify-between gap-2">
           <span className="text-xs text-studio-muted">Punctuation</span>
@@ -825,10 +721,6 @@ const TextInspector = ({
 
     <TextStyleRows style={element} fonts={fonts} patch={patch} />
 
-    {/* Only means anything for a box whose words come from `{{verses}}` or
-        `{{lyrics}}` — a box of plain, typed words already draws every line it
-        was given. Box-level, not a style: the two shares of a split box read
-        the same words, so it cannot sensibly differ between them. */}
     {/\{\{\s*(?:verses|lyrics)/i.test(element.content) ? (
       <Row label="Line breaks">
         <Toggles
@@ -842,9 +734,6 @@ const TextInspector = ({
       </Row>
     ) : null}
 
-    {/* Where the words sit in the box, and how far off its edges. Box-level:
-        the shares of a split box divide that box, so these are the same for
-        each of them by construction. */}
     <Row label="V-align">
       <Toggles value={element.valign} options={VALIGNS} onPick={valign => patch({ valign })} />
     </Row>
@@ -888,10 +777,6 @@ const TextInspector = ({
       </Row>
     ) : null}
 
-    {/* A translation set differently from the original — smaller, quieter, on
-        its own plate. Only offered where it can show: the shares of a split
-        box. Turning it on copies the box's own style, so the two start alike
-        and the operator changes only what they mean to. */}
     {holds > 1 && element.perLanguage === 'split' ? (
       <>
         <Row label="Translation">
@@ -923,15 +808,6 @@ const TextInspector = ({
   </>
 );
 
-
-/**
- * The library, as pictures rather than filenames.
- *
- * A picture is chosen by looking at it — the operator knows the one they want
- * by sight and often not by name at all — which is why the Media pane shows
- * thumbnails and why this shows the same ones. Shared by the Picture element
- * and by a shape filled with one.
- */
 const PicturePicker = ({
   chosen,
   pictures,
@@ -971,17 +847,7 @@ const PicturePicker = ({
         />
       ) : null}
 
-      {/* Bounded and scrolling on its own: a dozen pictures is a column taller
-          than the panel, and the grid growing without limit pushed everything
-          below it off the bottom of the dialog.
-
-          Padded on every side, not only against the scrollbar: the chosen
-          tile's ring is drawn outside its own box, so a scroll box tight to
-          the tiles clips it away on the top row and down both edges — the
-          selection reads as missing exactly where it is hardest to spot. */}
       <div className="studio-scroll grid max-h-56 grid-cols-2 gap-1.5 overflow-y-auto p-1 pr-2">
-        {/* Clearing is a tile of its own, so "no picture" is somewhere to click
-            rather than something to know about. */}
         <button
           type="button"
           aria-pressed={!chosen}
@@ -1012,7 +878,6 @@ const PicturePicker = ({
                 : 'ring-1 ring-studio-border hover:ring-studio-faint',
             )}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={thumbs[picture.id]} alt="" loading="lazy" className="aspect-video w-full object-cover" />
           </button>
         ))}
@@ -1021,11 +886,7 @@ const PicturePicker = ({
   );
 };
 
-/** How a picture sits in the box it fills. Shared by both places that ask. */
 const FitRow = ({ value, onPick }: { value: Fit; onPick: (fit: Fit) => void }) => (
-  // Three words in a strip rather than a sentence behind a dropdown: they are
-  // alternatives to compare, and the difference between them is visible on the
-  // canvas the moment one is pressed.
   <Row label="Fit">
     <Toggles
       value={value}
@@ -1045,7 +906,6 @@ const RadiusRow = ({ value, onChange }: { value: number; onChange: (radius: numb
   </Row>
 );
 
-/** From, to and an angle — the same three wherever a gradient is offered. */
 const GradientRows = ({ value, onChange }: { value: Gradient; onChange: (gradient: Gradient) => void }) => (
   <>
     <Row label="From" stack>
@@ -1098,10 +958,6 @@ const ShapeInspector = ({
   patch: (change: Partial<ShapeElement>) => void;
 }) => (
   <>
-    {/* What the shape is painted with, before what it is painted in. An image
-        fill is not the Picture element said twice: a picture is always a
-        rectangle, so an ellipse filled with one is the only way to get a round
-        photograph or a circular logo onto a slide. */}
     <Row label="Fill">
       <Toggles
         value={element.fillKind}
@@ -1219,9 +1075,6 @@ const PictureInspector = ({
   </>
 );
 
-// --------------------------------------------------------------------- canvas
-
-/** Where a grip sits on the box, and which way the cursor points on it. */
 const HANDLE_STYLE: Record<Handle, { left: string; top: string; cursor: string }> = {
   nw: { left: '0%', top: '0%', cursor: 'nwse-resize' },
   n: { left: '50%', top: '0%', cursor: 'ns-resize' },
@@ -1242,25 +1095,6 @@ const boxStyle = (frame: Frame, rotation = 0): React.CSSProperties => ({
   transform: rotation ? `rotate(${rotation}deg)` : undefined,
 });
 
-// --------------------------------------------------------------------- editor
-
-/**
- * The canvas the ninth verse look is drawn on.
- *
- * The slide under the selection chrome is the real `<CustomSlide>` — the same
- * component `/show` draws with — over the operator's own background and scrim,
- * so what is being dragged is what the room will see. That is the same reason
- * the look tiles render real slides rather than pictures of them.
- *
- * The draft is local. The library is written once, on Save, because the
- * console re-publishes the live slide on every style change and a drag is a
- * hundred of those: an operator tidying up a layout would otherwise be
- * redrawing a live projector on every frame of it.
- *
- * `id` names which of their templates is open. It is always one that exists —
- * the picker's plus button saves the new one before opening this — so Save is
- * a write back to a row rather than a decision about which row to make.
- */
 export const TemplateEditor = ({
   target,
   id,
@@ -1273,67 +1107,25 @@ export const TemplateEditor = ({
   const { settings, update, room } = useStudio();
 
   const lyrics = target === 'lyrics' || target === 'streamLyrics';
-  // The stream composites over live video, so its canvas has no photograph
-  // under it and its templates are the operator's other two.
   const stream = target === 'stream' || target === 'streamLyrics';
 
   const entry = templatesFor(settings, target).find(row => row.id === id);
 
-  /**
-   * A drawing the plan will not let them keep.
-   *
-   * The picker used to refuse at the door, which answered the question — is
-   * this worth paying for? — by never showing the thing being sold. So the
-   * editor opens for everyone and it is Save that holds: draw on it, move the
-   * boxes, see what it does, and find the line at the moment you would have
-   * kept it. Only a template that is not in the library yet can be locked;
-   * editing one already saved has nothing to do with the ceiling.
-   */
   const locked = !entry && !room('custom_templates');
 
   const saved = entry?.template ?? startingTemplate(target);
 
-  // The name, which is what the tile in the picker is labelled with. Held
-  // beside the draft and written with it, so an abandoned rename is abandoned
-  // along with everything else in the dialog.
   const [name, setName] = useState(entry?.name ?? 'Custom');
 
-  /**
-   * The draft, and every state it has been in.
-   *
-   * A gesture is one step: `edit` is handed a key naming what is being done,
-   * and while that key holds — a drag across the canvas, a slider being
-   * pulled, a burst of typing — the present is replaced rather than stacked
-   * behind. An undo that walked back through a hundred pointer moves would be
-   * no undo at all.
-   */
   const [history, setHistory] = useState(() => start(saved));
 
   const draft = history.present;
 
-  // The gesture in progress: its key, and when it was last touched. A key that
-  // has gone quiet for a moment has ended, so the next change starts a step.
   const gesture = useRef<{ key: string; at: number } | null>(null);
 
-  /**
-   * Held open for as long as a pointer is down.
-   *
-   * The clock alone is not enough to tell one gesture from the next: aiming a
-   * box across the slide means pausing, and a pause longer than the window
-   * split one drag into several steps — so undo walked back a few pixels and
-   * looked broken. A resize is usually one quick pull, which is why it was
-   * only ever the move that showed it. While this is set, the drag is one act
-   * however long it takes.
-   */
   const holding = useRef(false);
 
   const edit = useCallback((key: string, next: (current: SlideTemplate) => SlideTemplate) => {
-    // Worked out here, not inside the updater. React may run an updater more
-    // than once for the same change, and one that moved `gesture` as it went
-    // read its own writing on the second pass: the first run stacked a step
-    // and opened the gesture, the second saw that gesture and amended
-    // instead, and the amend is the answer React keeps. Nothing was ever
-    // stacked, so undo stayed greyed out however much was moved.
     const now = Date.now();
     const open = gesture.current?.key === key;
     const held = open && (holding.current || now - (gesture.current?.at ?? 0) < GESTURE_MS);
@@ -1343,7 +1135,6 @@ export const TemplateEditor = ({
     setHistory(current => (held ? amend(current, next(current.present)) : commit(current, next(current.present))));
   }, []);
 
-  /** Only ever one step: a discrete act is never continued into the next. */
   const act = useCallback(
     (next: (current: SlideTemplate) => SlideTemplate) => {
       gesture.current = null;
@@ -1366,62 +1157,27 @@ export const TemplateEditor = ({
   const [shelves, setShelves] = useState<LocalFolder[]>([]);
   const [thumbs, setThumbs] = useState<Record<string, string>>({});
 
-  // What ⌘C put down. A ref rather than state: nothing on screen changes when
-  // something is copied, and the system clipboard is no use for an element —
-  // it holds text, and this is a box with a frame and a colour.
   const clipboard = useRef<TemplateElement | null>(null);
 
-  /**
-   * The languages the canvas is drawn in.
-   *
-   * A fixed layout has to be built against its worst case, and the worst case
-   * is every language the operator runs at once — so the canvas simply draws
-   * them, with no knob to turn it down. Boxes laid out against a single block
-   * would collide the first Sunday two are up.
-   *
-   * A song's languages cannot be listed here at all; only verses have a set
-   * the operator arms.
-   */
   const bibleLangs: Lang[] = settings.langOrder.filter(lang => settings.enabled[lang]);
 
-  /**
-   * How many languages a box may have to hold, and what a numbered token could
-   * name. A song's languages are the song's own — named per song, no two songs
-   * agreeing — so none of them can be named in a template: `{{lyrics}}` covers
-   * whatever the song has. The arranging controls still apply, which is why
-   * the count is here and the names are not.
-   */
-  // The stream carries one language — the one the rail points at it, and the
-  // one the song points at it — so nothing there stacks, shares a box, or can
-  // be named by a numbered token.
   const armed: string[] = stream || lyrics ? [] : bibleLangs.map(lang => labelOf(lang));
   const holds = stream ? 1 : lyrics ? 2 : armed.length;
 
-  /** The languages the canvas draws: every armed one, or the stream's single. */
   const canvasLangs: Lang[] = stream ? [streamLangOf(settings)] : bibleLangs;
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{
     id: string;
-    /** A grip, `turn` for the rotate knob, or null for a plain move. */
     handle: Handle | 'turn' | null;
     x: number;
     y: number;
     frame: Frame;
     rotation: number;
-    /** Where the pointer stood on the dial when the turn began. */
     grabbed: number;
     box: DOMRect;
   } | null>(null);
 
-  /**
-   * The operator's own pictures, with a thumbnail for each.
-   *
-   * Read once: the media pane is not open behind this dialog, so the library
-   * cannot change while it is up. Object URLs die with the document that
-   * minted them, so they are made here and revoked on the way out — the same
-   * arrangement the Media pane uses.
-   */
   useEffect(() => {
     let live: string[] = [];
 
@@ -1461,24 +1217,15 @@ export const TemplateEditor = ({
   const style: ProjectorStyle = {
     ...projectorStyle(settings),
     template: draft,
-    // The whole library rather than the narrowed set a payload carries: a face
-    // picked a moment ago is not in the saved template yet, and the canvas has
-    // to draw it. The console has already loaded every one of them.
     fonts: settings.customFonts,
-    // The languages the canvas is being drawn for, which is the operator's own
-    // set unless they are checking what a shorter one looks like.
     order: lyrics ? [] : canvasLangs,
     enabled: lyrics ? {} : Object.fromEntries(canvasLangs.map(lang => [lang, true])),
-    // On the stream a song is drawn in one language, so the sample is too.
     ...(stream ? { lyricsLang: 'sample-1' } : {}),
     ...(lyrics ? { lyricsTemplate: draft, lyricsLook: CUSTOM_LOOK } : { look: CUSTOM_LOOK }),
   };
 
   const sample = lyrics ? SAMPLE_LYRICS : sampleShowData(canvasLangs);
 
-  // The stream has no background of its own — it composites over whatever the
-  // camera is pointed at — so its canvas stands in for that rather than
-  // showing a picture the overlay will never sit on.
   const background =
     stream || settings.theme === LOCAL_THEME
       ? ''
@@ -1486,10 +1233,6 @@ export const TemplateEditor = ({
         ? settings.dynamicImage
         : themeSrc(settings.theme);
 
-  /**
-   * Change one element. The gesture is keyed by the element *and the field*,
-   * so pulling a slider is one step, and pulling the next one is another.
-   */
   const replace = (id: string, change: Partial<TemplateElement>) =>
     edit(`${id}:${Object.keys(change).join(',')}`, current => ({
       elements: current.elements.map(one => (one.id === id ? ({ ...one, ...change } as TemplateElement) : one)),
@@ -1511,10 +1254,6 @@ export const TemplateEditor = ({
     setSelected(null);
   };
 
-  /**
-   * Drop a copy of an element on the slide, offset a little so it is visibly
-   * a second thing rather than looking like nothing happened.
-   */
   const paste = (source: TemplateElement | null) => {
     if (!source || draft.elements.length >= MAX_ELEMENTS) return;
 
@@ -1534,14 +1273,6 @@ export const TemplateEditor = ({
 
   const duplicate = (id: string) => paste(draft.elements.find(one => one.id === id) ?? null);
 
-  /**
-   * The layers list: the slide's elements, topmost first.
-   *
-   * Reversed, because the list reads in the order the eye meets the slide —
-   * what is in front is at the top — while the array is z-order, back to
-   * front. The drag hands back the order it arrived at in list terms, so it is
-   * turned over again on the way in.
-   */
   const sortable = useSortable(
     [...draft.elements].reverse(),
     one => one.id,
@@ -1555,7 +1286,6 @@ export const TemplateEditor = ({
     { byHandle: false },
   );
 
-  /** Move one element through the stack. Array order is z-order. */
   const restack = (id: string, by: number) =>
     act(current => {
       const index = current.elements.findIndex(one => one.id === id);
@@ -1570,7 +1300,6 @@ export const TemplateEditor = ({
       return { elements };
     });
 
-  /** The middle of an element, in the page's own pixels. */
   const centreOf = (frame: Frame, box: DOMRect) => ({
     cx: box.left + (frame.x + frame.w / 2) * box.width,
     cy: box.top + (frame.y + frame.h / 2) * box.height,
@@ -1589,8 +1318,6 @@ export const TemplateEditor = ({
 
     setSelected(id);
     setTurning(handle === 'turn');
-    // A fresh act: the first move of the drag stacks a step, and every one
-    // after it amends that same step until the pointer comes up.
     gesture.current = null;
     holding.current = true;
     dragRef.current = {
@@ -1600,8 +1327,6 @@ export const TemplateEditor = ({
       y: event.clientY,
       frame: target.frame,
       rotation: target.rotation,
-      // Where on the dial the knob was picked up, so the box turns by how far
-      // the pointer has come round rather than snapping its top to the pointer.
       grabbed: angleFrom(cx, cy, event.clientX, event.clientY),
       box,
     };
@@ -1623,8 +1348,6 @@ export const TemplateEditor = ({
     }
 
     if (drag.handle) {
-      // Along the box's own edges, not the screen's: a grip on a turned box
-      // still widens it when pulled away from its opposite side.
       const local = unrotate(event.clientX - drag.x, event.clientY - drag.y, drag.rotation);
 
       replace(drag.id, {
@@ -1637,8 +1360,6 @@ export const TemplateEditor = ({
     const dx = (event.clientX - drag.x) / drag.box.width;
     const dy = (event.clientY - drag.y) / drag.box.height;
 
-    // Only a move snaps. A resize is already aimed at an edge, and pulling one
-    // that keeps jumping half a percent reads as the canvas fighting back.
     const others = draft.elements.filter(one => one.id !== drag.id).map(one => one.frame);
     const snapped = snapTo(clampToFrame(moveBy(drag.frame, dx, dy)), others);
 
@@ -1654,16 +1375,6 @@ export const TemplateEditor = ({
     setTurning(false);
   };
 
-  /**
-   * Delete removes the selection, the arrows nudge it, Escape drops it.
-   *
-   * On the window rather than on the canvas: a box is selected by dragging it,
-   * and a drag has to `preventDefault` to stop the browser starting a text
-   * selection — which also stops the canvas ever taking focus. Keying off the
-   * canvas therefore meant Delete worked only if the operator had happened to
-   * tab into it. What has to be excluded instead is the text the inspector is
-   * for: Delete inside the content box is a character, not an element.
-   */
   useEffect(() => {
     const typing = (target: EventTarget | null) => {
       const node = target as HTMLElement | null;
@@ -1680,9 +1391,6 @@ export const TemplateEditor = ({
         return;
       }
 
-      // ⌘Z / ⇧⌘Z, and Ctrl+Y for the Windows hand. Before the selection
-      // check, because undo is about the slide rather than about any one box
-      // — there is history to walk whether or not something is picked.
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         step(event.shiftKey ? redo : undo);
@@ -1713,9 +1421,6 @@ export const TemplateEditor = ({
         return;
       }
 
-      // ⌘C / ⌘V — the same act as the duplicate button, in the gesture every
-      // other editor uses for it. Paste puts down the last thing copied, so
-      // copying one box and pasting three times gives three of it.
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c') {
         event.preventDefault();
         clipboard.current = element;
@@ -1757,12 +1462,6 @@ export const TemplateEditor = ({
     onClose();
   };
 
-  /**
-   * Drop it from the library. A look still pointing at it is not touched here:
-   * `fromRow` reads a look naming a template that has gone as the shipped one,
-   * which is the same fallback a deleted font gets and one place rather than
-   * four.
-   */
   const discard = () => {
     update({ customTemplates: settings.customTemplates.filter(row => row.id !== id) });
     onClose();
@@ -1778,9 +1477,6 @@ export const TemplateEditor = ({
         onClick={event => event.stopPropagation()}
       >
         <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b border-studio-border px-4">
-          {/* The name, edited where the title used to be printed: an operator
-              with three of these needs to tell them apart in the grid, and the
-              only place that name can come from is here. */}
           <input
             value={name}
             onChange={event => setName(event.target.value)}
@@ -1800,7 +1496,6 @@ export const TemplateEditor = ({
           />
 
           <div className="flex items-center gap-2">
-            {/* Nothing to delete until there is something kept. */}
             {locked ? null : (
               <IconButton label="Delete this layout" tone="danger" onClick={discard}>
                 <HiOutlineTrash className="text-base" />
@@ -1826,19 +1521,11 @@ export const TemplateEditor = ({
         </header>
 
         <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-          {/* The whole pane, not just the canvas: the margin around the slide
-              reads as "off the slide", and clicking there to drop a selection
-              is the gesture every editor has. A box stops the event itself, so
-              only the empty space gets here. */}
           <div
             role="presentation"
             onPointerDown={() => setSelected(null)}
             className="flex min-h-0 min-w-0 flex-1 items-center justify-center p-4"
           >
-            {/* The frame is exactly 16:9, so a fraction of this box and a
-                fraction of the template's own frame are the same number —
-                which is what lets the chrome be drawn over the slide rather
-                than measured against it. */}
             <div
               ref={canvasRef}
               role="presentation"
@@ -1849,16 +1536,10 @@ export const TemplateEditor = ({
               className={cn(
                 'relative aspect-video w-full max-w-4xl touch-none overflow-hidden rounded-studio',
                 'bg-cover bg-center ring-1 ring-studio-border',
-                // The same stand-in the stream's look tiles use: a picture with
-                // a bright half and a dark one, so a white plate and a black
-                // one are each visibly doing something.
                 stream ? 'l3-ground' : 'bg-studio-slide',
               )}
               style={background ? { backgroundImage: `url(${background})` } : undefined}
             >
-              {/* The projector's scrim, so the sample reads the way the slide
-                  will over the same picture. The stream has none: nothing is
-                  laid over the video but the strap itself. */}
               {stream ? null : <div className="absolute inset-0 bg-black/55" />}
 
               <CustomSlide template={draft} showData={sample} style={style} assets={assets} />
@@ -1886,11 +1567,6 @@ export const TemplateEditor = ({
                 />
               ))}
 
-              {/* Back to front, exactly as the slide paints them — these are
-                  siblings with no z-index, so the last one drawn is the one on
-                  top and the one a click lands on. Reversed, the box in front
-                  went in first and every box behind it covered its hit area,
-                  so clicking a box just added selected whatever was under it. */}
               {draft.elements.map(one => (
                 <div
                   key={one.id}
@@ -1906,9 +1582,6 @@ export const TemplateEditor = ({
                 />
               ))}
 
-              {/* The chrome lives inside a box turned the same way the element
-                  is, so the grips stay on its own corners rather than on the
-                  corners of the square it would occupy if it were upright. */}
               {element ? (
                 <div
                   className="pointer-events-none absolute"
@@ -1925,8 +1598,6 @@ export const TemplateEditor = ({
                     />
                   ))}
 
-                  {/* Above the top edge, where a turn handle is everywhere
-                      else. Shift rounds it to fifteen degrees. */}
                   <div
                     role="presentation"
                     title="Drag to turn — hold Shift for 15° steps"
@@ -1935,10 +1606,6 @@ export const TemplateEditor = ({
                       rounded-full border-2 border-studio-accent bg-studio-bg"
                   />
 
-                  {/* The reading, while the knob is being turned. Turned back
-                      by the box's own angle so the number stays the right way
-                      up — a readout that tips over with the box is a readout
-                      that has to be read sideways. */}
                   {turning ? (
                     <span
                       aria-hidden
@@ -1960,8 +1627,6 @@ export const TemplateEditor = ({
           >
             {!element ? (
               <>
-                {/* Topmost first, so the list reads in the order the eye meets
-                    the slide: the thing in front is the thing at the top. */}
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-[11px] font-semibold tracking-wide text-studio-text uppercase">Layers</span>
                   <span className="text-[10px] text-studio-faint tabular-nums">
@@ -1991,9 +1656,6 @@ export const TemplateEditor = ({
                           <span className="min-w-0 flex-1 truncate text-[11px] text-studio-muted">{nameOf(one)}</span>
                         </button>
 
-                        {/* Shown on hover, because a list of eight boxes with
-                            sixteen arrows down the side is a wall rather than
-                            a list. */}
                         <span
                           className="flex shrink-0 items-center opacity-0 transition-opacity duration-150
                           group-focus-within:opacity-100 group-hover:opacity-100"
@@ -2088,8 +1750,6 @@ export const TemplateEditor = ({
                   <div className="flex items-center gap-0.5 rounded-studio border border-studio-border p-0.5">
                     {EDGES.map(({ edge, label, Icon }, index) => (
                       <Fragment key={edge}>
-                        {/* The two axes are separate questions, so they read as
-                            two groups rather than one run of six. */}
                         {index === 3 ? <span aria-hidden className="mx-0.5 h-4 w-px bg-studio-border" /> : null}
 
                         <IconButton

@@ -22,24 +22,8 @@ import type { Sortable } from '@/components/studio/shared/sortable';
 
 import { VerseCard } from '@/components/studio/lyrics/VerseCard';
 
-/** How long the tile is held before it takes the whole chapter. */
 const HOLD_MS = 2000;
 
-/**
- * Pulls the neighbouring verse into the passage, or the rest of the chapter
- * when it is held. Sized to match a verse card.
- *
- * Reaching a long passage a verse at a time is a dozen clicks during a service,
- * and typing the reference again is a trip back to the search bar. Holding is
- * the same gesture as clicking, kept down.
- *
- * The wait is shown as a disc growing out of the centre, not as a chevron that
- * swells: the arrow is the tile's one piece of meaning, and something that
- * changes size under the cursor reads as a wobble rather than as progress. The
- * disc runs the whole hold at a constant rate, so how much is left is a
- * distance rather than a guess, and it falls away quickly on release — a
- * cancelled hold should look cancelled.
- */
 const ExtendTile = ({
   label,
   holdLabel,
@@ -56,8 +40,6 @@ const ExtendTile = ({
   const [holding, setHolding] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Set when the hold fired, so the click that follows the release is swallowed
-  // — a pointer release is still a click, and the chapter is already in.
   const fired = useRef(false);
 
   const stop = () => {
@@ -76,7 +58,6 @@ const ExtendTile = ({
         title={`${label} · ${holdLabel}`}
         aria-label={label}
         onPointerDown={event => {
-          // Primary button only: a right-click opens a menu, not a chapter.
           if (event.button !== 0) return;
 
           fired.current = false;
@@ -107,8 +88,6 @@ const ExtendTile = ({
           holding ? 'border-studio-accent bg-studio-surface text-studio-accent' : 'border-studio-border',
         )}
       >
-        {/* Always mounted, so the growth is a transition on a class rather than
-            an entrance — a disc that appears at full size shows nothing. */}
         <span
           aria-hidden="true"
           className={cn(
@@ -125,7 +104,6 @@ const ExtendTile = ({
   );
 };
 
-/** Compact label: 15:1-3,7 rather than a bare first-to-last span. */
 const verseRange = (numbers: number[]) => {
   if (numbers.length === 0) return '';
 
@@ -168,9 +146,6 @@ export const PassageBlock = ({
     moveBlock,
   } = useStudio();
 
-  // Folded either because the operator collapsed this passage, or because a
-  // drag is in progress — during a drag every block folds so the whole running
-  // order fits on screen and the drop target is easy to hit.
   const collapsed = Boolean(sortable.lifted) || Boolean(block.collapsed);
 
   const lang = block.adminLang;
@@ -183,7 +158,6 @@ export const PassageBlock = ({
   const canPrepend = !wholeChapter && firstVerse > 1;
   const canAppend = !wholeChapter && (!block.chapterLength || lastVerse < block.chapterLength);
 
-  // Nothing to reorder when it is the only passage.
   const reorderable = !(isFirst && isLast);
 
   const isDragging = sortable.lifted === block.id;
@@ -197,8 +171,6 @@ export const PassageBlock = ({
         isDragging && 'opacity-40',
       )}
     >
-      {/* The picture the drag carries: the title, not the screenful of verse
-          cards underneath it. See `ghostOf`. */}
       <header data-ghost className="flex items-start justify-between gap-4">
         <div className="group/header flex min-w-0 items-start gap-1.5">
           {reorderable ? (
@@ -253,8 +225,6 @@ export const PassageBlock = ({
         </div>
       </header>
 
-      {/* The collapse clipper would cut the live card's ring at the edges, so the
-          wrapper is widened by 4px and the content padded back in by the same. */}
       <div
         className="-mx-1 grid transition-[grid-template-rows] duration-200 ease-out"
         style={{ gridTemplateRows: collapsed ? '0fr' : '1fr' }}
@@ -292,9 +262,6 @@ export const PassageBlock = ({
                     isLive={live?.kind !== 'lyrics' && live?.blockId === block.id && live?.verseIndex === groupIndex}
                     onGoLive={() => selectVerse(block.id, groupIndex)}
                     onRemove={() => void removeGroup(block.id, groupIndex)}
-                    /* The first card's cut takes only itself — see
-                       `planDropFirst`. Everywhere else it takes the rest of the
-                       passage with it, and the card says so. */
                     removesRest={groupIndex > 0}
                     onJoin={groupIndex < groups.length - 1 ? () => joinGroup(block.id, groupIndex) : undefined}
                     onSplit={() => splitGroup(block.id, groupIndex)}

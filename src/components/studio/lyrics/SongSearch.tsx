@@ -13,49 +13,25 @@ import { homeOf } from '@/lib/lyrics/lists';
 
 import { songDragProps } from '@/components/studio/lyrics/SongRail';
 
-/**
- * The shortcut as this platform writes it, for the hint in the library header.
- *
- * Read after mount rather than while rendering: the console is server rendered,
- * and a hint decided by `navigator` is a different string on the server than in
- * the browser — which is a hydration mismatch, and throws the whole tree away.
- * Everyone gets the portable spelling for one paint; a Mac swaps it in.
- */
 export const useSearchHint = () =>
   useSyncExternalStore(
-    // Nothing to subscribe to: which keyboard is under the operator does not
-    // change while the console is open.
     () => () => {},
     () => (/Mac|iPhone|iPad/.test(navigator.platform || '') ? '⌘F' : 'Ctrl F'),
     () => 'Ctrl F',
   );
 
-/**
- * Both spellings of a string: as written, and transliterated into Latin — the
- * same pair the book search indexes on, so "ami" finds ამის… without switching
- * the keyboard to Georgian.
- */
 const keysOf = (value: string) => {
   const normalized = normalizeName(value);
 
   return [normalized, normalizeName(transliterate(normalized))];
 };
 
-/**
- * The text, with the words the query reached marked.
- *
- * Word by word rather than character by character, because the match may have
- * been made on the *transliterated* spelling — "didia" reaches დიდია — and
- * there is no honest way to point at three letters of a Georgian word from a
- * Latin query. A whole word is a true answer to "this is the bit you typed".
- */
 const marked = (text: string, probes: string[]) =>
   text.split(/(\s+)/).map(part => ({
     part,
     hit: part.trim().length > 0 && keysOf(part).some(key => probes.some(probe => key.includes(probe))),
   }));
 
-/** The same, drawn: a hit is inked in the accent rather than painted behind. */
 const Marked = ({ text, probes }: { text: string; probes: string[] }) => (
   <>
     {marked(text, probes).map(({ part, hit }, index) =>
@@ -76,12 +52,6 @@ interface Entry {
   lines: { line: string; keys: string[] }[];
 }
 
-/**
- * Everything a song can be found by, built once per library rather than per
- * keystroke: the title, and every line of every slide — in every language the
- * song is sung in, so half a remembered phrase finds it whichever of them it
- * was remembered in.
- */
 const indexOf = (songs: Song[]): Entry[] =>
   songs.map(song => ({
     song,
@@ -100,7 +70,6 @@ interface Result {
   line?: string;
 }
 
-/** Title prefix, then title substring, then a line of the lyrics. */
 const matchOf = (entry: Entry, probes: string[]) => {
   const hit = (test: (key: string, probe: string) => boolean) =>
     entry.keys.some(key => probes.some(probe => test(key, probe)));
@@ -113,36 +82,15 @@ const matchOf = (entry: Entry, probes: string[]) => {
   return found ? { rank: 2, line: found.line } : null;
 };
 
-/**
- * ProPresenter's ⌘F: a palette over the workspace that searches the whole song
- * library from anywhere, without reaching for the Lyrics tab first. Arrow keys
- * walk the results, Enter opens the song, ⇧Enter drops it on the playlist.
- *
- * It floats without dimming the room behind it, and its backdrop takes no
- * pointer events, so a row can be dragged straight out onto the playlist while
- * the palette stays open for the next song.
- */
 export const SongSearch = ({ onClose }: { onClose: () => void }) => {
   const { songs, setTab, setActiveSongId, placeInPlaylist, playlists, open, libraries } = useStudio();
 
-  // A song that has never been filed is on the first shelf, which is the same
-  // rule the rail reads it by.
   const libraryOf = (song: Song) =>
     libraries.find(list => list.id === (song.libraryId ?? homeOf(libraries)))?.name ?? '';
 
-  // Mounted only while the palette is open, so it always opens empty.
   const [query, setQuery] = useState('');
-  /**
-   * The row the operator has picked out, or -1 for none.
-   *
-   * Nothing is picked until they say so: a list that arrives with its first
-   * row already lit invites Enter to put a song on the wall that nobody chose,
-   * and the strip at the foot would be previewing a song they have not looked
-   * at yet.
-   */
   const [cursor, setCursor] = useState(-1);
 
-  // Held in a ref so the outside-click effect keys on `open` alone.
   const onCloseRef = useRef(onClose);
 
   useEffect(() => {
@@ -158,8 +106,6 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
   const probes = useMemo(() => {
     const needle = normalizeName(query);
 
-    // A Latin query stays itself; a Georgian one is folded to Latin too, so
-    // either keyboard reaches either spelling of the library.
     return needle ? [...new Set([needle, normalizeName(transliterate(needle))])] : [];
   }, [query]);
 
@@ -177,18 +123,12 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
       .sort((a, b) => a.rank - b.rank || a.song.title.localeCompare(b.song.title));
   }, [index, probes, query, songs]);
 
-  // The row the cursor is on, which is what the strip at the foot draws. A
-  // click moves the cursor rather than opening the song, so "show me" and
-  // "put it up" are two different acts.
   const previewing = results[cursor]?.song ?? null;
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
 
-  // With the backdrop transparent to the mouse, close-on-outside-click has to
-  // come from the document. `mousedown` rather than `click`, so it fires before
-  // whatever was clicked behind takes focus.
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
       if (!cardRef.current?.contains(event.target as Node)) onCloseRef.current();
@@ -199,7 +139,6 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, []);
 
-  // Keep the highlighted row in view while the arrows walk past the fold.
   useEffect(() => {
     if (cursor >= 0) listRef.current?.children[cursor]?.scrollIntoView({ block: 'nearest' });
   }, [cursor, results]);
@@ -219,7 +158,6 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
 
     if (event.key === 'ArrowUp') {
       event.preventDefault();
-      // Up from nothing is the last row, the way down from nothing is the first.
       setCursor(current => {
         if (results.length === 0) return -1;
 
@@ -235,9 +173,6 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
 
       event.preventDefault();
 
-      // Shift adds to the running order rather than opening the song — but
-      // only when one is open to add it to. A library is a shelf, and a song
-      // is already on one.
       if (event.shiftKey && open.kind === 'playlist') {
         const list = playlists.find(item => item.id === open.id);
 
@@ -289,15 +224,7 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
             <div
               key={song.id}
               {...songDragProps(song.id, song.title)}
-              // Closed on the drop, never on the way into it: hiding the row
-              // as it is picked up takes the drag's own ghost with it, since
-              // the browser snapshots the source element at the end of the
-              // dragstart handler.
               onDragEnd={onClose}
-              // Picked up: the operator wants to know what it is they are
-              // carrying, the same as if they had clicked it. The spread's own
-              // handler has to be called by hand — this one replaces it, and
-              // without it the drag would carry no song at all.
               onDragStart={event => {
                 songDragProps(song.id, song.title).onDragStart(event);
                 setCursor(position);
@@ -306,8 +233,6 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
               onClick={() => setCursor(position)}
               onDoubleClick={() => openSong(song)}
               className={cn(
-                // A pointer, not a grab hand: the click is what this row is
-                // for now, and dragging is the thing it also happens to do.
                 'flex w-full cursor-pointer items-baseline gap-3 px-4 py-2 text-left',
                 position === cursor && 'bg-studio-raised',
               )}
@@ -323,8 +248,6 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
                 ) : null}
               </span>
 
-              {/* Which shelf it is on: two songs can share a title across
-                  libraries, and "open it" means opening that one. */}
               <span className="flex shrink-0 items-baseline gap-3 text-[11px] text-studio-faint">
                 {libraryOf(song) ? <span className="max-w-32 truncate">{libraryOf(song)}</span> : null}
                 <span>{song.slides.length} slides</span>
@@ -339,9 +262,6 @@ export const SongSearch = ({ onClose }: { onClose: () => void }) => {
           ) : null}
         </div>
 
-        {/* What the song actually says, for the moment between finding it and
-            putting it up. Half a line of each slide is enough to tell two
-            songs of the same name apart, which is the question being asked. */}
         {previewing ? (
           <div className="shrink-0 border-t border-studio-divider px-4 py-2">
             <div className="studio-scroll flex gap-1.5 overflow-x-auto">

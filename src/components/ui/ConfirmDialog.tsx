@@ -5,11 +5,6 @@ import { useEffect } from 'react';
 import { Button, type ButtonProps } from '@/components/ui/Button';
 import { Modal, useModalClose } from '@/components/ui/Modal';
 
-/**
- * A yes/no gate in front of something that cannot be undone. The confirming
- * button carries the action's own wording, so the dialog reads as a sentence
- * rather than as an OK/Cancel pair.
- */
 export const ConfirmDialog = ({
   open,
   title,

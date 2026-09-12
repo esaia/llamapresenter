@@ -6,7 +6,6 @@ import { Check, ChevronDown, Search } from 'lucide-react';
 import { bookMatches, normalizeName, type BookEntry } from '@/lib/bible/passage';
 import { cn } from '@/lib/cn';
 
-/** One book on the menu, with the tick where the current one is. */
 const Row = ({
   name,
   chosen,
@@ -32,15 +31,6 @@ const Row = ({
   </button>
 );
 
-/**
- * Which book a text search is narrowed to.
- *
- * A native `<select>` of 66 books is the browser's own list, in the browser's
- * own colours, with no way to type past the Ks — and the whole point of this
- * control is that the operator already knows the book they want. So it is a
- * menu with a filter at the top of it, the same way the Browse box itself
- * finds a book: type `rom`, press Enter, and the search is in Romans.
- */
 export const BookScope = ({
   books,
   value,
@@ -48,7 +38,6 @@ export const BookScope = ({
   className,
 }: {
   books: BookEntry[];
-  /** The shared book id, or null for the whole translation. */
   value: number | null;
   onPick: (book: number | null) => void;
   className?: string;
@@ -70,8 +59,6 @@ export const BookScope = ({
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        // Swallowed, or the modal hosting this closes with it and the operator
-        // loses the search they were narrowing.
         event.stopPropagation();
         setOpen(false);
       }
@@ -130,8 +117,6 @@ export const BookScope = ({
               placeholder="Filter books"
               onChange={event => setFilter(event.target.value)}
               onKeyDown={event => {
-                // Enter takes the one book left standing, which is what makes
-                // this three keys rather than a scroll: `rom`, Enter.
                 if (event.key === 'Enter' && shown.length > 0) {
                   event.preventDefault();
                   pick(shown[0].book);
@@ -144,8 +129,6 @@ export const BookScope = ({
           </div>
 
           <div className="studio-scroll max-h-64 overflow-y-auto">
-            {/* Always offered, however the filter is set: coming back out of a
-                book is one click rather than clearing the filter first. */}
             <Row name="Whole Bible" chosen={value === null} onPick={() => pick(null)} />
 
             {shown.length > 0 ? (

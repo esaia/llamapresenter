@@ -18,7 +18,6 @@ import { REQUIRED_LANG, type ProjectorStyle, type ShowData } from '@/lib/types';
 
 import { TemplateEditor } from '@/components/studio/lyrics/TemplateEditor';
 
-/** Which kind of slide the grid — and everything under it — is about. */
 export type LookTarget = 'verses' | 'lyrics';
 
 const TARGETS: { id: LookTarget; label: string }[] = [
@@ -30,18 +29,9 @@ const SAMPLE_LYRIC: ShowData = {
   lyrics: { title: 'Amazing Grace', text: 'Amazing grace, how sweet the sound that saved a wretch like me' },
 };
 
-/** The screen a tile stands for, before it is scaled down to the tile's width. */
 const FRAME_W = 640;
 const FRAME_H = 360;
 
-/**
- * One tile: the sample slide on a small screen of its own.
- *
- * The frame is a fixed size and the fit runs against it exactly as it runs
- * against a projector, so a look that comes out large comes out large here —
- * which is the only thing separating the two song looks that differ in size
- * and nothing else. The whole frame is then scaled to the tile.
- */
 const LookTile = ({
   look,
   showData,
@@ -73,7 +63,6 @@ const LookTile = ({
   }, []);
 
   useLayoutEffect(() => {
-    // The custom template fits each of its own boxes; see `Look.selfFit`.
     if (look.selfFit) return;
 
     const { available, min, max } = fitTo(look, FRAME_H, {
@@ -87,8 +76,6 @@ const LookTile = ({
   return (
     <div ref={boxRef} className="show-preview" style={background ? { backgroundImage: `url(${background})` } : undefined}>
       <div className="show-preview-frame" style={{ width: FRAME_W, height: FRAME_H, transform: `scale(${scale})` }}>
-        {/* The projector's scrim, so the sample reads the way the slide will
-            over the same picture. */}
         <div className="absolute inset-0 bg-black/55" />
 
         <Slide ref={slideRef} showData={showData} style={style} assets={assets} />
@@ -97,20 +84,6 @@ const LookTile = ({
   );
 };
 
-/**
- * Picks the layout of the projector slide by showing it. The tiles render the
- * real `<Slide>` — the same component `/show` draws with — over the operator's
- * own background, so a look and its preview cannot disagree and the choice is
- * made against the picture the room will actually see.
- *
- * Verses and song slides keep separate looks, switched by the tabs above the
- * grid rather than by a second identical grid, exactly as the lower third's
- * picker does.
- *
- * The tab itself belongs to the panel around it: the sizing and the type below
- * the grid are as much about one kind of slide as the tiles are, and they all
- * turn together.
- */
 export const ProjectorLookPicker = ({
   target,
   onTarget,
@@ -120,7 +93,6 @@ export const ProjectorLookPicker = ({
 }) => {
   const { settings, update, room } = useStudio();
 
-  // Which of the operator's own layouts is open on the canvas, if any.
   const [editing, setEditing] = useState('');
 
   const lyrics = target === 'lyrics';
@@ -128,10 +100,6 @@ export const ProjectorLookPicker = ({
   const selected = lyrics ? settings.projectorLyricsLook : settings.projectorLook;
   const select = (value: string) => update(lyrics ? { projectorLyricsLook: value } : { projectorLook: value });
 
-  // The operator's own picture cannot be reached from here — it lives in this
-  // browser's IndexedDB, and minting a URL for it is the preview panel's job —
-  // so a tile falls back to the plain dark slide, which is what an unsupported
-  // background looks like on the projector too.
   const background =
     settings.theme === LOCAL_THEME
       ? ''
@@ -139,8 +107,6 @@ export const ProjectorLookPicker = ({
         ? settings.dynamicImage
         : themeSrc(settings.theme);
 
-  // The tiles show the layout, not the language set: one language, armed, so a
-  // three-language operator is not judging a look through three stacked blocks.
   const style: ProjectorStyle = {
     ...projectorStyle(settings),
     fonts: settings.customFonts,
@@ -148,15 +114,6 @@ export const ProjectorLookPicker = ({
     enabled: { [REQUIRED_LANG]: true },
   };
 
-  /**
-   * The grid: the shipped looks, then the operator's own.
-   *
-   * `custom` is dropped from the shipped row — it was one tile standing for
-   * one drawing, and it is now as many tiles as they have drawn, each labelled
-   * with its own name. A tile carries its template so the sample is that
-   * layout whichever look is currently on, which is how an operator sees what
-   * they built before switching to it.
-   */
   const mine = templatesFor(settings, target);
   const custom = lookOf(CUSTOM_LOOK, lyrics);
 
@@ -165,8 +122,6 @@ export const ProjectorLookPicker = ({
     ...mine.map(row => ({ value: customLook(row.id), look: custom, label: row.name, template: row.template })),
   ];
 
-  // A picture placed in a template is in this browser's IndexedDB, so unlike
-  // the background it can be minted here.
   const assets = useLocalFiles(
     useMemo(
       () => settings.customTemplates.flatMap(row => filesUsedBy(row.template)),
@@ -175,12 +130,6 @@ export const ProjectorLookPicker = ({
     null,
   );
 
-  /**
-   * Draw another one. Saved before the canvas opens rather than after it
-   * closes: the editor writes back to a row, and an operator who draws a slide
-   * and then closes the dialog without saving has lost nothing but an empty
-   * name in the grid.
-   */
   const add = () => {
     const row = {
       id: crypto.randomUUID(),
@@ -189,10 +138,6 @@ export const ProjectorLookPicker = ({
       template: startingTemplate(target),
     };
 
-    // Over the plan's ceiling the editor still opens — on a template that was
-    // never written. Refusing at the door answered "is this worth paying for?"
-    // by never showing the thing being sold; this way they draw on it, and the
-    // line is found at Save, which is where it actually is.
     if (!room('custom_templates')) {
       setEditing(row.id);
       return;
@@ -238,9 +183,6 @@ export const ProjectorLookPicker = ({
 
       <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
         {tiles.map(({ value, look, label, template }) => (
-          // One of the operator's own carries a second control, and a button
-          // cannot hold another one — so the tile is a box with the two side
-          // by side.
           <div key={value} className="relative">
             <button
               type="button"
@@ -290,9 +232,6 @@ export const ProjectorLookPicker = ({
           </div>
         ))}
 
-        {/* Its own tile at the end of the grid rather than a button beside the
-            heading: what it makes is another one of these, and it belongs
-            where they are. */}
         <button
           type="button"
           onClick={add}
@@ -302,9 +241,6 @@ export const ProjectorLookPicker = ({
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
           )}
         >
-          {/* Built like a tile rather than styled like one: the same picture
-              above the same strip of label, so it stands exactly as tall as
-              the looks beside it. */}
           <div className="flex aspect-video w-full items-center justify-center">
             <Plus className="size-5" />
           </div>

@@ -26,11 +26,6 @@ const TAB_LABELS: Record<SettingsTab, string> = {
 
 const isTab = (value: string): value is SettingsTab => (TABS as readonly string[]).includes(value);
 
-/**
- * Setup that is not touched mid-service: how the projector looks, what the
- * stream carries, and where the outputs are. What *is* touched — the languages
- * and translations — stays on the rail, one click from the cards.
- */
 export const SettingsModal = ({ tab: opened, onClose }: { tab: string; onClose: () => void }) => {
   const [tab, setTab] = useState<SettingsTab>(isTab(opened) ? opened : 'projector');
 
@@ -76,8 +71,6 @@ export const SettingsModal = ({ tab: opened, onClose }: { tab: string; onClose: 
             </IconButton>
           </header>
 
-          {/* Extra room on the right: the scrollbar is drawn inside this box, so
-              equal padding leaves the widest controls sitting against it. */}
           <div className="studio-scroll min-h-0 flex-1 overflow-y-auto p-4 pr-5 sm:p-5 sm:pr-7">
             {tab === 'projector' ? <StyleSection /> : null}
             {tab === 'stream' ? <StreamSection /> : null}

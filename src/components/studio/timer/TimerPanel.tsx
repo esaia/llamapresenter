@@ -15,7 +15,6 @@ const Heading = ({ children }: { children: ReactNode }) => (
   <h2 className="mb-2 text-[11px] font-semibold tracking-wider text-studio-faint uppercase">{children}</h2>
 );
 
-/** A header button that is either on or off, and says which. */
 const ToggleButton = ({
   active,
   label,
@@ -48,49 +47,26 @@ const ToggleButton = ({
   </button>
 );
 
-/**
- * The stage timer's console: the dashboard on the left, the running order in
- * the middle, the messages on the right — the arrangement a timer is operated
- * in, kept the same here so muscle memory from one carries to the other.
- *
- * Nothing in this panel touches the verse on the projector unless the operator
- * arms the timer onto it, so a countdown can run on the speaker's monitor
- * through the whole service while the room goes on seeing scripture.
- */
 export const TimerPanel = () => {
   const { timer, updateTimer } = useStudio();
 
-  // Dead unless the timer is actually putting something out, so a stab at it
-  // between services cannot be mistaken for one that did something — and so
-  // the button doubles as a read of whether the stage is on the timer.
-  // A count on the stage's rail is as much "showing" as one filling the screen,
-  // so Clear answers for it too.
   const live = onOutputs(timer) || runUnderWay(timer);
 
   return (
     <div className="studio-scroll min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto w-full max-w-[1440px] px-4 py-4">
-        {/* Pinned: Flash and Clear are what an operator reaches for
-            without looking, and scrolling down the running order used to take
-            them off the screen. It bleeds through the column's own padding so
-            nothing shows past its edges as the list runs under it. */}
         <div
           className="sticky top-0 z-10 -mx-4 -mt-4 mb-4 flex flex-wrap items-center justify-between gap-x-3
             gap-y-2 border-b border-studio-divider bg-studio-bg px-4 pt-4 pb-3"
         >
           <div className="min-w-0">
             <h1 className="text-sm font-semibold text-studio-text">Stage timer</h1>
-            {/* Capped: the header is a flex row, and a subtitle allowed to
-                run the width of a wide console pushes the controls it shares
-                the row with off the end of it. */}
             <p className="max-w-[46ch] truncate text-xs text-studio-muted">
               Runs beside the slides, or takes the stage screen over.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-            {/* The projector is a second screen for the same face, so it is
-                only on offer once the stage is showing it. */}
             {timer.onStage ? (
               <ToggleButton
                 active={timer.onProjector}
@@ -102,10 +78,6 @@ export const TimerPanel = () => {
               </ToggleButton>
             ) : null}
 
-            {/* The stream is the other second screen, and it goes with the
-                stage for the same reason: the overlay's band is the lower
-                third's, and handing it to the digits is a decision about which
-                face the timer is wearing, not a separate one. */}
             {timer.onStage ? (
               <ToggleButton
                 active={timer.onStream}
@@ -117,10 +89,6 @@ export const TimerPanel = () => {
               </ToggleButton>
             ) : null}
 
-            {/* Which face the stage is showing. Starting a count no longer
-                decides it: with the slides up a run appears in the box at the
-                foot of the stage's rail, and the person standing there keeps
-                the verse in front of them. */}
             <ToggleButton
               active={timer.onStage}
               label="Give the stage screen over to the timer, in place of the slides"
@@ -128,9 +96,6 @@ export const TimerPanel = () => {
                 updateTimer(current => ({
                   ...current,
                   onStage: !current.onStage,
-                  // The projector follows the stage off: its own button goes
-                  // with it, and a timer left on the wall with no way to take
-                  // it down is not a state to leave an operator in.
                   onProjector: current.onStage ? false : current.onProjector,
                   onStream: current.onStage ? false : current.onStream,
                 }))
@@ -140,9 +105,6 @@ export const TimerPanel = () => {
               Timer on stage
             </ToggleButton>
 
-            {/* What takes the timer back off the screens and the run back to
-                the top. Nothing about the run itself does it — pausing a count
-                is not the same as being finished with it. */}
             <button
               type="button"
               disabled={!live}
@@ -189,11 +151,6 @@ export const TimerPanel = () => {
             </div>
           </div>
 
-          {/* Pinned beside the running order, once there is a column of its own
-              to pin it in: the notes are written against the list, and scrolling
-              down to timer twelve used to take them off the screen. It stops
-              under the header the panel already pins, and scrolls within itself
-              rather than growing past the foot of the window. */}
           <div
             className="min-w-0 lg:sticky lg:top-[4.5rem] lg:max-h-[calc(100dvh-9rem)] lg:overflow-y-auto
               lg:studio-scroll lg:pb-2"

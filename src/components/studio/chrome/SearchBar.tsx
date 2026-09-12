@@ -19,15 +19,6 @@ import { useStudio } from '@/lib/studio/StudioProvider';
 import { BrowseModal } from '@/components/studio/modals/BrowseModal';
 import { useSearchHint } from '@/components/studio/lyrics/SongSearch';
 
-/**
- * The console's one text box. Typing a reference and pressing enter imports the
- * passage and puts its first verse on the projector — the whole path from
- * thought to screen in one gesture.
- *
- * Whether the browser is open is the console's business, not this bar's: the
- * find shortcut opens it from anywhere on the Bible tab, the same key that
- * opens the song library on the tab next door.
- */
 export const SearchBar = ({
   browsing,
   onBrowse,
@@ -55,8 +46,6 @@ export const SearchBar = ({
     const reference = parseReference(input, settings.adminLang);
 
     if (!reference) {
-      // A bare book name is a reasonable thing to type: open Browse on that
-      // book's chapters rather than rejecting it.
       const book = findBook(input, settings.adminLang);
 
       if (book) {
@@ -66,9 +55,6 @@ export const SearchBar = ({
         return;
       }
 
-      // Not a reference and not a book name — the words themselves are a
-      // reasonable thing to type, so ask Browse's own text search rather than
-      // rejecting a search a moment before Browse would have answered it.
       setError('');
       setInput('');
       openBrowse(null, input);

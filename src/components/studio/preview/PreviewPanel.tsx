@@ -30,17 +30,9 @@ import { ClearBar } from '@/components/studio/chrome/ClearBar';
 import { OutputBar } from '@/components/studio/chrome/OutputBar';
 import type { ShowData } from '@/lib/types';
 
-/** The frame the lower third is authored against; the iframe is scaled from it. */
 const STREAM_W = 1920;
 const STREAM_H = 1080;
 
-/**
- * What the panel shows for an output that has been blanked.
- *
- * The output itself is nothing at all, and so is this — but the panel is the
- * one place an operator finds out *why* a screen has gone dark, so it says so
- * quietly rather than looking like a preview that has stopped working.
- */
 const Blanked = ({ label }: { label: string }) => (
   <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/90">
     <span className="rounded-[4px] bg-black/70 px-2 py-1 text-[10px] font-medium tracking-wide text-white/45 uppercase">
@@ -49,13 +41,6 @@ const Blanked = ({ label }: { label: string }) => (
   </div>
 );
 
-/**
- * Which previews have a look to edit, and where that look is set.
- *
- * The stage has none of its own — it is drawn from the projector's type and
- * the language chosen for it — so it gets no pencil rather than one that opens
- * somebody else's settings.
- */
 const LOOK_TABS = [
   { mode: 'projector', tab: 'projector', label: 'Edit the projector look' },
   { mode: 'stream', tab: 'stream', label: 'Edit the lower third look' },
@@ -67,14 +52,6 @@ const MODE_LABELS: Record<PreviewMode, string> = {
   stage: 'Stage',
 };
 
-/**
- * Which output the panel is mirroring. The saved tab is already on `<html>`
- * before this file runs — the blocking script in the root layout puts it there
- * — and the CSS in `globals.css` dresses the panel from it, so what paints
- * first is right. This store is the same value for React: it decides what the
- * panes are handed and what a screen reader is told, and writing to it moves
- * the attribute the CSS reads.
- */
 const modeListeners = new Set<() => void>();
 let modeSnapshot: PreviewMode | null = null;
 
@@ -94,29 +71,15 @@ const modeStore = {
   },
 };
 
-/**
- * Mirror of what the projector is showing, docked at the top of the right rail
- * the way a presentation app puts its output preview: always in the same place,
- * never in front of the verse it is previewing.
- *
- * The projector pane renders the projector's own `<Slide>`, at the operator's
- * own look: the markup is sized in `em`, so one fit pass against the panel's
- * height scales the whole thing — text, gaps and reference together — and what
- * the operator judges here cannot disagree with what the room sees.
- */
 export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void }) => {
   const { settings, showData, nextShowData, session, timer, blackout } = useStudio();
 
-  // Which outputs are blanked, so the tabs can mark the ones the operator is
-  // not looking at. The switches themselves are in the strip below.
   const blanked: Record<PreviewMode, boolean> = {
     projector: blackout.audience,
     stream: settings.obsHidden,
     stage: blackout.stage,
   };
 
-  // The panel runs the projector's own crossfade, at the operator's setting, so
-  // the preview lies about nothing — timing included.
   const fadeMs = settings.transitionMs / 2;
 
   const screenRef = useRef<HTMLDivElement>(null);
@@ -125,11 +88,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
 
   const mode = useSyncExternalStore(modeStore.subscribe, modeStore.get, modeStore.getServer);
 
-  /**
-   * A background from this machine has no URL to put in a style, so the preview
-   * mints its own from the stored file — the same picture the projector is
-   * being sent, read straight out of IndexedDB here.
-   */
   const [localUrl, setLocalUrl] = useState('');
   const localImageId = settings.theme === LOCAL_THEME ? settings.localImage?.id : null;
 
@@ -156,8 +114,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
     };
   }, [localImageId]);
 
-  // The lower third is authored at 1920x1080 and scaled down to whatever width
-  // the rail happens to be, so the preview has to know its own size.
   const [scale, setScale] = useState(0);
 
   useLayoutEffect(() => {
@@ -171,23 +127,14 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
     return () => observer.disconnect();
   }, []);
 
-  // What the panel is showing, which lags the live slide by one fade. Swapping
-  // only while the text is invisible means the refit measures the incoming
-  // verse and the operator never sees a hard cut.
   const [displayed, setDisplayed] = useState<ShowData>(showData);
 
   const cut = fadeMs === 0;
 
-  // Disarming a language rebuilds the slide without it, and the words that
-  // remain are the ones already on screen. That is a line being dropped, not a
-  // slide being changed, so it goes up at once: read as a new slide it would
-  // crossfade out and back, which from the back of a hall is the projector
-  // blinking because the operator touched a switch.
   const restyled = showData !== displayed && sameVerse(displayed, showData);
 
   const onScreen = cut || restyled ? showData : displayed;
   const visible = cut || restyled || showData === displayed;
-
 
   useEffect(() => {
     if (visible) return;
@@ -204,8 +151,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
   const projector = projectorStyle(settings);
   const look = lookOf(lyrics ? projector.lyricsLook : projector.look, Boolean(lyrics));
 
-  // The pictures a custom template places. No transport: the console owns
-  // every file in its own media library, so there is no peer to ask.
   const assets = useLocalFiles(
     useMemo(
       () => [...filesUsedBy(projector.template), ...filesUsedBy(projector.lyricsTemplate)],
@@ -214,21 +159,9 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
     null,
   );
 
-  // The badge and the clear strip answer for the outputs, not for the panel,
-  // so they read the live slide rather than the one the fade is still showing.
   const isLive = Boolean(showData.lyrics?.text) || armed.some(lang => (showData[lang] ?? []).length > 0);
 
-  // Same fit as the projector, in proportion to the panel: the look supplies
-  // the bounds as fractions of the screen height, so a slide that fills the
-  // projector fills the preview too.
-  // A layout effect, not an effect: fitting after the frame is painted means
-  // the panel shows one frame of the outgoing size — disarming a language
-  // leaves the remaining text briefly at the size it had when it was sharing
-  // the slide, and only then jumps. Measured and set before the paint, there
-  // is nothing to see in between.
   useLayoutEffect(() => {
-    // A custom template fits each of its own boxes; there is no single size
-    // for the slide to be given. Same check the projector makes.
     if (look.selfFit) return;
 
     const refit = () => {
@@ -253,8 +186,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
     };
   });
 
-  // A pasted URL and one of the operator's own pictures are both drawn as an
-  // inline background; so is a stock theme, which is just a file on disk.
   const background =
     settings.theme === LOCAL_THEME
       ? localUrl
@@ -264,9 +195,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
 
   return (
     <div className="group/preview shrink-0 border-b border-studio-border">
-      {/* Dark, so the bar reads as the edge of the output rather than as more
-          console furniture, and the screen under it is not fighting a white
-          strip. */}
       <div className="@container flex h-9 items-center justify-between gap-2 bg-studio-bar px-2">
         <div className="flex shrink-0 items-center gap-0.5">
           {PREVIEW_MODES.map(value => (
@@ -281,9 +209,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
                 'rounded-[4px] px-2 py-1 text-[11px] font-medium transition-colors duration-150',
                 'hover:bg-white/10 hover:text-white',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40',
-                // Dimmed rather than marked: the outputs strip below names
-                // every blanked output already, and a second indicator on the
-                // tabs only made the bar noisy.
                 blanked[value] ? 'text-white/40' : 'text-white/75',
               )}
             >
@@ -293,9 +218,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
         </div>
 
         <div className="flex min-w-0 items-center gap-1">
-          {/* A look is set in Settings and judged here, so the way back to it
-              sits on the preview it changes — one per output, each hidden
-              until its own tab is up. */}
           {LOOK_TABS.map(({ mode: only, tab, label }) => (
             <button
               key={only}
@@ -320,16 +242,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
         </div>
       </div>
 
-      {/* Both outputs stay mounted and the tabs only swap which is visible.
-          Remounting the iframe on every switch meant reloading the whole
-          overlay app and waiting for it to rejoin the channel — a preview that
-          was blank for a moment each time. Hidden with `visibility`, not
-          `display`, so the box keeps its size and the scale below stays right
-          for the frame it comes back on. */}
-      {/* `isolate`: the panes stack against each other — the blanked cover
-          over the timer over the slide — and without a stacking context of
-          their own those z-indexes compete with the whole console. A blanked
-          projector was painting its cover over the Present menu. */}
       <div className="relative isolate aspect-video w-full overflow-hidden">
         <div
           ref={streamRef}
@@ -339,14 +251,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
         >
           {settings.obsHidden ? <Blanked label="Stream" /> : null}
 
-          {/* The real /lower3rd page, scaled down, rather than a second
-              rendering of the same design: it joins the session's channel like
-              any other output, and its vh/vw padding resolves against its own
-              1920x1080 viewport, so what shows here is what the stream tool draws. The
-              chequerboard stands in for the camera and reads as transparency.
-              `?preview=1` is what keeps it out of the Present menu's count —
-              the same trap the stage pane below sidesteps by not being a
-              frame at all. */}
           <iframe
             title="Lower third preview"
             src={`/lower3rd/${session.outputKey}?preview=1`}
@@ -363,12 +267,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
           />
         </div>
 
-        {/* The stage display, drawn from the console's own state rather than
-            through an iframe: it is a plain function of the live slide, the one
-            after it and the run, and a second /stage in a frame would join the
-            channel and count itself as a monitor that is standing in the room.
-            Its layout is a fraction of its own frame, so at rail width it is the
-            same screen, smaller. */}
         <div
           data-preview-pane="stage"
           aria-hidden={mode !== 'stage'}
@@ -400,9 +298,6 @@ export const PreviewPanel = ({ onSettings }: { onSettings: (tab: string) => void
 
           {blackout.audience ? <Blanked label={SCREEN_LABELS.audience} /> : null}
 
-          {/* The timer takes the projector when it is armed, so the panel has
-              to show that: an operator who arms it and sees the verse still
-              sitting here has no way to tell it worked. */}
           {timer.onProjector ? (
             <div className="absolute inset-0">
               <TimerScreen state={timer} showClock={false} />

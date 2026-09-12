@@ -6,24 +6,6 @@ import { MdCheck, MdChevronRight, MdContentCopy } from 'react-icons/md';
 import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 
-/**
- * In-app setup for the stream lower third.
- *
- * In the old app this ran to three steps: enable obs-websocket, add the Browser
- * Source, then come back and connect — plus a warning about mixed content,
- * because a ws:// connection from an https page only reaches loopback. None of
- * that survives: the overlay joins the session's realtime channel like any
- * other output, so adding the browser source *is* the setup, and it works from
- * a phone or another machine with nothing extra.
- *
- * Which is also why the steps below name more than one program. Nothing here
- * is an integration with OBS: the overlay is a web page, so every tool that
- * can put a web page over a camera — vMix, Wirecast, Streamlabs, Ecamm — takes
- * it the same way, and the only thing that differs is where each one keeps the
- * menu item. OBS goes first because it is what most churches have, not because
- * it is the one we support.
- */
-
 const Code = ({ children }: { children: ReactNode }) => (
   <code
     className="rounded-[4px] border border-studio-border bg-studio-surface px-1.5 py-0.5 font-mono text-[12px]
@@ -37,13 +19,6 @@ const Strong = ({ children }: { children: ReactNode }) => (
   <strong className="font-semibold text-studio-text">{children}</strong>
 );
 
-/**
- * A value to be carried into the streaming tool, with the copy button next to it.
- *
- * `label` names the value for the copy button's accessible name only — the
- * field it sits in already says what the value is in type the operator can
- * read, and a second "URL" beside it was furniture.
- */
 export const CopyField = ({ label, value }: { label: string; value: string }) => {
   const [copied, setCopied] = useState(false);
 
@@ -103,7 +78,6 @@ const Step = ({ n, title, where, children }: { n: string; title: string; where: 
   </li>
 );
 
-/** Folded-away detail. Native disclosure, so no state and no keyboard work. */
 const More = ({ title, children }: { title: string; children: ReactNode }) => (
   <details className="group rounded-studio border border-studio-border">
     <summary

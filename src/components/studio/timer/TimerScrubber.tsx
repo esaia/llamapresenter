@@ -25,7 +25,6 @@ import {
 } from "@/lib/timer/model";
 import { useStudio } from "@/lib/studio/StudioProvider";
 
-/** Tick spacings, coarsest first match that still gives a readable count. */
 const STEPS = [
   10_000,
   30_000,
@@ -38,20 +37,8 @@ const STEPS = [
   60 * MINUTE,
 ];
 
-/** The narrowest a labelled tick can be and still be read. Tight on purpose:
- *  a mark every minute is what makes the track worth glancing at, and the
- *  labels are 10px tabular figures — `-12:30` is the widest of them. */
 const LABEL_ROOM = 38;
 
-/**
- * The marks to draw, as offsets from the end of the run: a countdown is read
- * in whole minutes *left*, so the marks are anchored to zero and the ragged
- * one — the total, which is rarely round once a minute has been added — falls
- * at the start where the operator is already reading it.
- *
- * How many there are comes from the measured width, because the same bar is
- * 380px on a laptop and twice that on the desk machine.
- */
 const ticksFor = (total: number, width: number) => {
   if (!total || !width) return [];
 
@@ -65,14 +52,6 @@ const ticksFor = (total: number, width: number) => {
   return marks;
 };
 
-/**
- * The run as a line, with a handle on it.
- *
- * Reading how far through a talk the speaker is off a bare number is work; the
- * line answers it at a glance. Dragging is the only way to move a run to a
- * point — the ± buttons change its *length*, which is a different thing, and
- * using them to skip forward quietly leaves the timer ending somewhere else.
- */
 export const TimerScrubber = () => {
   const { timer, updateTimer } = useStudio();
 
@@ -99,10 +78,6 @@ export const TimerScrubber = () => {
 
   const kind = activeTimer(timer)?.kind;
 
-  // A wall clock's line is the hour it is in. It cannot be dragged — there is
-  // nowhere to drag time of day to — but leaving the track out altogether put
-  // a hole in the panel where the run is meant to be, and took away the one
-  // thing the operator was reading it for: how far through the hour they are.
   const isClock = kind === "clock";
   const total = isClock ? HOUR : totalOf(timer);
 
@@ -123,8 +98,6 @@ export const TimerScrubber = () => {
     event.preventDefault();
     event.currentTarget.setPointerCapture(event.pointerId);
 
-    // Held locally while the pointer is down, so the line follows the finger at
-    // screen rate rather than at the rate the run is published.
     setDragging(elapsedAt(event.clientX));
   };
 
@@ -143,7 +116,6 @@ export const TimerScrubber = () => {
     updateTimer((state) => seekRun(state, elapsed));
   };
 
-  // A timer with no length has no line.
   if (!total) return null;
 
   const at = now ?? timer.startedAt ?? 0;
@@ -160,11 +132,8 @@ export const TimerScrubber = () => {
       ? "transition-[left] duration-200 ease-linear"
       : "";
 
-  // The top of the hour the clock is in, which its marks are counted from.
   const struck = at - intoHour(at);
 
-  // Where the marks go and what each says: a run is read in whole minutes from
-  // whichever end matters, an hour in the times it will actually be.
   const marks = isClock
     ? [10, 20, 30, 40, 50].map((minutes) => ({
         key: minutes,
@@ -221,15 +190,12 @@ export const TimerScrubber = () => {
         className="relative h-8 overflow-hidden rounded-studio border border-studio-border bg-studio-surface
           group-focus-visible:ring-2 group-focus-visible:ring-studio-accent/40"
       >
-        {/* How far it has come, in the colour the digits are wearing. */}
         <span
           className="absolute inset-y-0 left-0 opacity-25"
           style={{ width: `${left}%`, backgroundColor: colour }}
         />
 
         {marks
-          // The corner label sits at the start; a mark landing on top of it
-          // printed one number over the other.
           .filter((mark) => mark.at * width >= LABEL_ROOM)
           .map((mark) => (
             <span
@@ -258,8 +224,6 @@ export const TimerScrubber = () => {
         />
       </div>
 
-      {/* The grip sits proud of the track, so there is something to aim at —
-          and there is nothing to aim at on an hour. */}
       {isClock ? null : (
         <span
           className={cn(

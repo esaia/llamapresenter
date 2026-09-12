@@ -10,14 +10,6 @@ import type { Song } from '@/lib/types';
 import { LyricCard } from '@/components/studio/lyrics/LyricCard';
 import { LIFTED_SLOT, useSortable } from '@/components/studio/shared/sortable';
 
-/**
- * Which language this song's cards are read in.
- *
- * The console's side of the glass: what the room sees is set in the rail, and
- * this only decides which of a bilingual song's texts is printed on the
- * thumbnails — so a Georgian operator can run an English chorus off cards they
- * read at a glance. Shown only when there is a choice to make.
- */
 const CardLang = ({ song, onPick }: { song: Song; onPick: (langId: string) => void }) => {
   const chosen = cardLangOf(song);
 
@@ -44,14 +36,6 @@ const CardLang = ({ song, onPick }: { song: Song; onPick: (langId: string) => vo
   );
 };
 
-/**
- * One song's slides, as the grid the operator works from.
- *
- * A component of its own because the workspace shows more than one of them at
- * a time — a song picked off the playlist is read in the running order it
- * belongs to — and each carries its own drag: a card lifted out of the second
- * song must not renumber the first.
- */
 export const SlideGrid = ({
   song,
   heading,
@@ -60,16 +44,8 @@ export const SlideGrid = ({
   onEditSlide,
 }: {
   song: Song;
-  /** Named when there is more than one song on screen to tell apart. */
   heading?: boolean;
-  /** Bring this song into view: the operator has just asked to see it. */
   scrollTo?: boolean;
-  /**
-   * When they asked. A slide going live lights a row without moving the panel,
-   * so the scroll follows this rather than which song is active — otherwise
-   * sending a slide from the next song in the order would scroll the panel out
-   * from under the operator mid-service.
-   */
   cue?: number;
   onEditSlide: (index: number) => void;
 }) => {
@@ -86,14 +62,6 @@ export const SlideGrid = ({
     setSelectedSlides,
   } = useStudio();
 
-  /**
-   * A save the caller does not wait on.
-   *
-   * Grouping a slide is a change to the song, and a plan ceiling can refuse
-   * it — silently here, because the console's notice has already said so, and
-   * loudly nowhere, because an unhandled rejection is a crash overlay in
-   * development and nothing at all in production.
-   */
   const saveSongOrShrug = (song: Song) => {
     void saveSong(song).catch(() => {});
   };
@@ -101,32 +69,15 @@ export const SlideGrid = ({
 
   const onScreen = live?.kind === 'lyrics' && live.songId === song.id;
 
-  // Only a song sung in more than one has a card language to choose.
   const many = langsOf(song).length > 1;
 
   const pickCardLang = (langId: string) => void setSongLangs({ ...song, cardLang: langId });
 
-  /**
-   * The running order, dragged on the cards rather than on a rail.
-   *
-   * A slide *is* its card here — there is nothing else on it to grab by mistake
-   * — so the whole card carries, the way ProPresenter's slide grid does. The
-   * grid layout is passed on because the card to the left and the card to the
-   * right are neighbours too, and a column's rule about crossing a middle says
-   * nothing about them.
-   */
   const slides = useSortable(song.slides, slide => slide.id, ids => void reorderSlides(song, ids), {
     byHandle: false,
     layout: 'grid',
   });
 
-  /**
-   * A drag across the gaps between cards, the way Finder rubber-bands icons.
-   *
-   * Only a mousedown that lands on the grid itself — never on a card, which
-   * has its own drag for reordering — arms this, so the two gestures never
-   * fight over the same pixel.
-   */
   const grid = useRef<HTMLDivElement>(null);
   const [marquee, setMarquee] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
@@ -189,13 +140,6 @@ export const SlideGrid = ({
     window.addEventListener('mouseup', onUp);
   };
 
-  // Asked for from the playlist, so the list is taken to it rather than the
-  // operator being left to find it: the song's own title goes to the top of the
-  // panel, which is what "open that song" looks like.
-  //
-  // Instantly, not smoothly. A pick off the playlist mid-service is a cue, and
-  // a list gliding for half a second is half a second of the operator watching
-  // the console instead of the song they are about to put up.
   useEffect(() => {
     if (scrollTo) box.current?.scrollIntoView({ behavior: 'instant', block: 'start' });
   }, [scrollTo, cue]);
@@ -203,29 +147,10 @@ export const SlideGrid = ({
   return (
     <section ref={box} className="scroll-mt-2">
       {heading ? (
-        /* A bar rather than a line of text, and stuck to the top of the panel
-           while its own slides are passing: scrolled into the middle of a long
-           song, the operator can still see which song they are in — which is
-           the whole reason the running order is laid out end to end. */
         <h2
-          // Bled out into the panel's own padding — the strip spans the
-          // scroller, or a card slides up through the gap at either end of it —
-          // and padded back in by the same amount, so the title still starts
-          // where the first card starts.
-          //
-          // The same strip whatever is live. What is on the projector is said
-          // by the card that is on it, in the one place the operator is
-          // watching; saying it again across the width of the panel is a second
-          // red thing on screen competing with the first.
-          // Solid, not translucent: a card passing under a see-through strip
-          // shows through it, and blurring that only turns the show-through
-          // into a smear that reads as a gradient.
           className="sticky top-0 z-20 mb-3 -ml-1 -mr-4 flex items-center justify-between gap-2 border-b
             border-studio-border bg-studio-surface py-1.5 pr-4 pl-1"
         >
-          {/* Nothing here marks the live song. The card that is on the
-              projector already says so, and a second red mark in the strip
-              above it only competes with the first. */}
           <span className="truncate text-sm font-semibold text-studio-text">{song.title}</span>
 
           <span className="flex shrink-0 items-center gap-2">
@@ -237,16 +162,11 @@ export const SlideGrid = ({
           </span>
         </h2>
       ) : many ? (
-        // No strip to hang it in — one song, so there is no title bar — but the
-        // choice still has to be reachable.
         <div className="mb-2 flex justify-end">
           <CardLang song={song} onPick={pickCardLang} />
         </div>
       ) : null}
 
-      {/* The gaps between the cards belong to the grid, so a release in one of
-          them is still a release on the order the drag arrived at. A mousedown
-          landing here rather than on a card arms the marquee instead. */}
       <div
         ref={grid}
         className="relative grid gap-x-4 gap-y-3"
@@ -271,8 +191,6 @@ export const SlideGrid = ({
               isLive={onScreen && live.slideIndex === index}
               selected={selectedSlides.has(slide.id)}
               onGoLive={event => {
-                // Shift or ctrl/cmd picks a card out without sending it live —
-                // the same modifier a Finder click uses to build a selection.
                 if (event.shiftKey || event.metaKey || event.ctrlKey) {
                   toggleSelected(slide.id);
                   return;
@@ -283,8 +201,6 @@ export const SlideGrid = ({
                 selectLyric(song, index);
               }}
               onEdit={() => onEditSlide(index)}
-              /* A song has to keep a slide. Emptying one out is the editor's
-                 job, where the song can be deleted outright. */
               onDelete={song.slides.length > 1 ? () => void removeSlide(song, slide.id) : undefined}
               onGroup={group =>
                 saveSongOrShrug({

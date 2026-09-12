@@ -17,7 +17,6 @@ import {
 import { SortHandle } from "@/components/studio/shared/SortHandle";
 import { LIFTED_SLOT, useSortable, type Sortable } from "@/components/studio/shared/sortable";
 
-/** The one-character style buttons under each message. */
 const Chip = ({
   label,
   active,
@@ -73,18 +72,10 @@ const Card = ({
     <li
       {...sortable.row(message.id)}
       className={cn(
-        // The console's ordinary radius, not the larger one: `rounded-studio-lg`
-        // is for surfaces that float — a modal, a menu — and a card sitting in
-        // a list reads as a pill at that corner.
         "group relative rounded-studio border transition-colors duration-150",
-        // A message on the screen is tinted rather than repainted: same border
-        // width, same padding, so nothing under it moves when it goes up.
         message.visible
           ? "border-studio-accent bg-studio-accent/[0.06]"
           : "border-studio-border bg-studio-bg focus-within:border-studio-accent/50",
-        // The browser snapshots the ghost before this paints, so the empty
-        // berth lands on the slot the card is holding open rather than on the
-        // one in the air.
         sortable.lifted === message.id && LIFTED_SLOT,
       )}
     >
@@ -101,7 +92,6 @@ const Card = ({
           placeholder="Message for the screen…"
           onChange={(event) => patch({ text: event.target.value })}
           style={{
-            // White ink would be invisible on paper, so only the two tints show.
             color:
               message.color === "white"
                 ? undefined
@@ -124,8 +114,6 @@ const Card = ({
                 (item) => item.id !== message.id,
               );
 
-              // Never down to nothing: the last card is emptied rather than
-              // taken away, so there is always somewhere to write.
               return {
                 ...current,
                 messages: messages.length ? messages : [newMessage()],
@@ -136,8 +124,6 @@ const Card = ({
           <Trash2 className="size-3.5" />
         </IconButton>
 
-        {/* Flashing something the outputs are not showing does nothing, so the
-            button waits for the message to be up. */}
         <IconButton
           label={
             message.visible
@@ -158,8 +144,6 @@ const Card = ({
             label={`${color} text`}
             active={message.color === color}
             onClick={() => patch({ color })}
-            // The swatch is the colour the message will be, and the console is
-            // dark: white ink reads as white here, not as the old paper ink.
             style={{ color: MESSAGE_COLORS[color] }}
           >
             <span className="underline">A</span>
@@ -195,7 +179,6 @@ const Card = ({
                 : "border-studio-border bg-studio-bg text-studio-text hover:bg-studio-surface",
             )}
           >
-            {/* The label never moves; only the tally lights. */}
             <span
               aria-hidden="true"
               className={cn(
@@ -232,21 +215,9 @@ const Card = ({
   );
 };
 
-/**
- * Notes for whoever is on stage: "wrap up", "the mic is live", a name to
- * mention. They sit under the digits on every timer output, and each is shown
- * or hidden on its own — so several can be written before the service and put
- * up at the moment they are needed. One marked full screen takes the output
- * over instead, digits and all.
- *
- * The order is the operator's, dragged by the handle, so the cards read down
- * the column in the order the service will want them.
- */
 export const TimerMessages = () => {
   const { timer, updateTimer } = useStudio();
 
-  // Reordered by id rather than by the slots the cards were dragged through:
-  // the list can have been rewritten by another console while one was in the air.
   const sortable = useSortable(
     timer.messages,
     (message) => message.id,
@@ -268,8 +239,6 @@ export const TimerMessages = () => {
 
   return (
     <section className="space-y-2">
-      {/* The gaps between the cards belong to the list, and a release in one of
-          them is still a release on the order the drag arrived at. */}
       <ul className="space-y-2" {...sortable.list()}>
         {sortable.items.map((message, index) => (
           <Card

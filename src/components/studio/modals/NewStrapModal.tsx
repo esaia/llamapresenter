@@ -12,14 +12,6 @@ import type { Align } from '@/lib/types';
 import { Preview, VARIANTS } from '@/components/studio/pickers/LowerThirdStylePicker';
 import { CUSTOM_LOOK } from '@/lib/projector/looks';
 
-/**
- * How a new strap gets started: blank, as it always did, or drawn from one of
- * the shipped looks — already coloured in whatever the operator has picked —
- * as a copy of boxes to drag from rather than a fixed CSS bar.
- *
- * Every tile is the same `Preview` the grid behind this modal already draws,
- * so nothing shown here can disagree with the look it is named after.
- */
 export const NewStrapModal = ({
   open,
   onClose,

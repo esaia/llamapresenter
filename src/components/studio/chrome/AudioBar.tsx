@@ -8,7 +8,6 @@ import { Marquee } from '@/components/ui/Marquee';
 import { cn } from '@/lib/cn';
 import { useAudio, type Repeat as RepeatMode } from '@/lib/studio/AudioProvider';
 
-/** What the button is about to do, said the way an operator would ask for it. */
 const REPEAT_LABEL: Record<RepeatMode, string> = {
   off: 'Play once — click to play the library through',
   all: 'Playing the library through — click to repeat this track',
@@ -23,10 +22,6 @@ const clock = (seconds: number) => {
   return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 };
 
-/**
- * Transport for whatever is playing, kept mounted on every tab so a bed can be
- * faded or stopped without leaving the passage the operator is presenting.
- */
 export const AudioBar = () => {
   const {
     current,
@@ -47,11 +42,6 @@ export const AudioBar = () => {
   if (!current) return null;
 
   return (
-    // On a phone the bar wraps into two lines rather than dropping the track
-    // name: what is playing is the first thing an operator looks for, and a
-    // transport with no title on it is somebody else's player. The name takes
-    // the first line and the transport the second; from `sm` up it is the one
-    // row it has always been.
     <div
       className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-studio-border bg-studio-bg
         px-3 py-2 sm:h-12 sm:flex-nowrap sm:gap-3 sm:px-4 sm:py-0"
@@ -83,10 +73,6 @@ export const AudioBar = () => {
 
       <span className="w-9 shrink-0 text-[11px] text-studio-muted tabular-nums">{clock(duration)}</span>
 
-      {/* One button through three states rather than two controls: what is to
-          happen at the end of a track is a single question, and the icon
-          answers it — a loop with a 1 on it is the one place a player has ever
-          put "this track again". */}
       <button
         type="button"
         aria-pressed={repeat !== 'off'}
@@ -118,15 +104,6 @@ export const AudioBar = () => {
         >
           {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
         </button>
-        {/* The slider reads what is coming out, so muted it reads zero rather
-            than leaving the handle parked at the old level on an empty track —
-            which says the sound is set to 80 and looks broken.
-
-            The two ends work the way every other player's do: dragging to zero
-            mutes, and moving off zero unmutes to wherever it was dropped.
-            Dragging to zero deliberately does not write a volume of 0 — mute
-            rides on the element, so the level behind it survives and unmuting
-            comes back to it. */}
         <input
           type="range"
           min={0}
@@ -153,16 +130,6 @@ export const AudioBar = () => {
           className="studio-range h-1.5 w-24 cursor-pointer appearance-none rounded-full bg-studio-border"
         />
 
-        {/* The number, not just the handle: a level is something an operator
-            sets back to what it was last week, and reads out to the desk.
-
-            It reads what is coming out, so it agrees with the handle beside it
-            — muted, both say zero. The level behind the mute is not shown at
-            all: a number disagreeing with the handle was the confusing part,
-            and unmuting still comes back to it. Dimmed while muted, never
-            struck through — at this size a strikethrough stopped it reading as
-            a number. Wide enough for three digits: 100 is a level like any
-            other. */}
         <span
           className={cn(
             'w-7 shrink-0 text-right text-[11px] tabular-nums',

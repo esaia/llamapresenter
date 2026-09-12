@@ -4,16 +4,7 @@ import { cn } from '@/lib/cn';
 import { fontStyleOf, type CustomFont } from '@/lib/projector/fonts';
 import type { Lang } from '@/lib/types';
 
-/**
- * A line of each script, so a face that cannot draw one shows it here rather
- * than on the wall. Georgian is not a given: most of the faces on offer are
- * Latin and Cyrillic only, and an operator running a Georgian service needs to
- * see the tofu before the service, not during it.
- */
 export const SAMPLE: Partial<Record<Lang, string>> = {
-  // Modern Georgian, as the 2015 revision has it — not the old `რამეთუ ესრეთ
-  // შეიყუარა ღმერთმან`, which is a different century's spelling and reads as
-  // one to anybody in the room.
   geo: 'რადგან ისე შეიყვარა ღმერთმა ქვეყნიერება',
   eng: 'For God so loved the world',
   ru: 'Ибо так возлюбил Бог мир',
@@ -24,13 +15,6 @@ export const SAMPLE: Partial<Record<Lang, string>> = {
 
 export const FALLBACK_SAMPLE = 'For God so loved the world';
 
-/**
- * One face, drawn in itself, in each language the operator has armed.
- *
- * Shared by the Fonts tab, which lists the library, and by the picker that
- * chooses from it — the same specimen answering the same question in both,
- * rather than a list of names in one and a list of faces in the other.
- */
 export const FontSpecimen = ({
   value,
   fonts,
@@ -40,7 +24,6 @@ export const FontSpecimen = ({
   value: string;
   fonts: CustomFont[];
   langs: Lang[];
-  /** Smaller inside a dropdown row, where a dozen of them are stacked. */
   size?: 'base' | 'sm';
 }) => {
   const type = fontStyleOf(value, fonts);

@@ -7,18 +7,6 @@ import { Modal, useModalClose } from '@/components/ui/Modal';
 import { cn } from '@/lib/cn';
 import type { Song } from '@/lib/types';
 
-/**
- * Which songs of a bundle to bring in, when they will not all fit.
- *
- * A ProPresenter bundle is somebody's whole library — two hundred songs is
- * ordinary — and a free account holds fifteen. Refusing the bundle outright was
- * the honest answer to "this is too many" and a useless one: the operator wants
- * the eight songs they are singing on Sunday, and had no way to say which.
- *
- * So the ceiling becomes a budget rather than a wall. The first `allowance` are
- * ticked to begin with, because a bundle usually arrives in the order it was
- * built and that is a reasonable guess, and every one of them can be changed.
- */
 export const ImportPicker = ({
   songs,
   allowance,
@@ -26,7 +14,6 @@ export const ImportPicker = ({
   onImport,
 }: {
   songs: Song[];
-  /** How many may come in. */
   allowance: number;
   onCancel: () => void;
   onImport: (chosen: Song[]) => void;
@@ -41,9 +28,6 @@ export const ImportPicker = ({
       const next = new Set(current);
 
       if (next.has(title)) next.delete(title);
-      // A tick that would go over the line does nothing rather than pushing
-      // another song out: quietly reshuffling someone's choices is worse than
-      // asking them to untick one.
       else if (next.size < allowance) next.add(title);
 
       return next;
@@ -92,9 +76,6 @@ export const ImportPicker = ({
                 className={cn(
                   'flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm transition-colors duration-150',
                   on ? 'text-studio-text' : 'text-studio-muted',
-                  // A song that cannot be ticked because the budget is spent
-                  // says so by going quiet, rather than by a disabled checkbox
-                  // the operator has to hover to understand.
                   !on && full ? 'opacity-45' : 'hover:bg-studio-surface',
                 )}
               >

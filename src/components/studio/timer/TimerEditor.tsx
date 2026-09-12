@@ -19,16 +19,7 @@ import {
   type TimerLabel,
 } from '@/lib/timer/model';
 
-/**
- * The digits of a duration, filling from the right: `5` is five seconds, `530`
- * is five thirty, `13000` is an hour and a half. Everything but a digit is
- * dropped on the way in and the colons are put back as they are earned, so
- * there is no way to type a time the field cannot read — and no way to leave it
- * holding something that is not one.
- */
 const maskOf = (input: string) => {
-  // Six digits is `HH:MM:SS`. Past that the field would be counting days, which
-  // no service does and no output draws.
   const digits = input.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(-6);
 
   if (!digits) return { digits, shown: '', ms: 0 };
@@ -41,19 +32,11 @@ const maskOf = (input: string) => {
 
   return {
     digits,
-    // The leading group keeps whatever it was given; the rest are pairs, which
-    // is what makes a half-typed time read as one.
     shown: parts.map((part, at) => (at ? part.padStart(2, '0') : part)).join(':'),
     ms: ((hours * 60 + minutes) * 60 + seconds) * 1000,
   };
 };
 
-/**
- * A duration typed as a stage clock is read, masked as it goes: the operator
- * types digits and the field puts the colons in. Held as text while it is being
- * typed — reformatting mid-keystroke would fight them — and committed on blur
- * or Enter. An empty field reverts rather than emptying the timer.
- */
 const DurationInput = ({
   value,
   label,
@@ -70,9 +53,6 @@ const DurationInput = ({
   const [text, setText] = useState(() => formatDuration(value));
   const [editing, setEditing] = useState(false);
 
-  // A duration changed elsewhere — ±1m, or a reset — has to show here too, but
-  // not while it is being typed into. Adjusted during render rather than in an
-  // effect: the field must never paint the old value for a frame.
   const [seen, setSeen] = useState(value);
 
   if (value !== seen) {
@@ -142,13 +122,6 @@ const INPUT =
   'w-full rounded-studio border border-studio-border bg-studio-bg px-2.5 py-1.5 text-sm text-studio-text ' +
   'transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40';
 
-/**
- * Escape, or a click anywhere but the panel and the control it hangs from.
- *
- * The anchor is the ref's parent: counting a click on the button that opened
- * the panel as "outside" would close it on the way down and let that button's
- * own toggle reopen it on the way up.
- */
 const useDismiss = (onClose: () => void) => {
   const box = useRef<HTMLDivElement>(null);
 
@@ -162,8 +135,6 @@ const useDismiss = (onClose: () => void) => {
     };
 
     window.addEventListener('keydown', onKey);
-    // Captured, so a control that stops the click on its way up cannot leave
-    // the panel open behind it.
     document.addEventListener('mousedown', onDown, true);
 
     return () => {
@@ -175,12 +146,6 @@ const useDismiss = (onClose: () => void) => {
   return box;
 };
 
-/**
- * The sheet both panels are drawn on: hung under the cell that opened it,
- * arrow and all, rather than taking the middle of the screen. What is being
- * edited is one row of a list the operator is reading down, and a centred
- * dialog puts the answer somewhere other than the question.
- */
 const Panel = ({
   label,
   width,
@@ -192,10 +157,6 @@ const Panel = ({
   boxRef: RefObject<HTMLDivElement | null>;
   children: ReactNode;
 }) => {
-  // Which side of the row it hangs from. Under it by default, over it when the
-  // last timer in a long running order is the one being edited and there is no
-  // window left below — a panel that opens off the bottom of the screen is a
-  // panel the operator has to scroll to answer.
   const [above, setAbove] = useState(false);
 
   useLayoutEffect(() => {
@@ -211,16 +172,12 @@ const Panel = ({
       const under = window.innerHeight - anchor.bottom;
       const over = anchor.top;
 
-      // Only flips when the other side is genuinely roomier: squeezed both
-      // ways, hanging down is the arrangement the operator expects.
       setAbove(under < panel.offsetHeight + 16 && over > under);
     };
 
     place();
 
     window.addEventListener('resize', place);
-    // Captured, so the panel follows a scroll of the list it is in and not
-    // only one of the window.
     window.addEventListener('scroll', place, true);
 
     return () => {
@@ -230,24 +187,17 @@ const Panel = ({
   }, [boxRef]);
 
   return (
-    // The row it belongs to is clickable — that is how a timer is armed — so
-    // nothing that happens inside the panel is allowed to reach it.
     <div
       ref={boxRef}
       role="dialog"
       aria-label={label}
       onClick={event => event.stopPropagation()}
       className={cn(
-        // The console's ordinary radius, not the larger one: a corner that
-        // round left the arrow standing off on its own with nothing to meet.
         'absolute left-0 z-40 rounded-studio border border-studio-border bg-studio-bg p-3 shadow-studio-modal',
         above ? 'bottom-full mb-2' : 'top-full mt-2',
         width,
       )}
     >
-      {/* Says which cell the panel belongs to. It marks the start of the cell
-          rather than the button inside it: a pencil follows the text as it is
-          typed, and an arrow that tracked it would take the panel along. */}
       <span
         aria-hidden="true"
         className={cn(
@@ -261,7 +211,6 @@ const Panel = ({
   );
 };
 
-/** Writes one timer's fields, wherever the panel is. */
 const usePatch = (timer: StageTimer) => {
   const { updateTimer } = useStudio();
 
@@ -272,14 +221,6 @@ const usePatch = (timer: StageTimer) => {
     }));
 };
 
-/**
- * How long the item runs, and when it starts warning.
- *
- * A panel of its own, hung off the duration on the row, because the length is
- * the one thing here an operator changes mid-service — "give them five more" —
- * and hunting for it under a name and a note is the wrong shape for that. What
- * the item *is* stays behind the pencil.
- */
 export const TimerLength = ({ timer, onClose }: { timer: StageTimer; onClose: () => void }) => {
   const box = useDismiss(onClose);
   const patch = usePatch(timer);
@@ -290,10 +231,6 @@ export const TimerLength = ({ timer, onClose }: { timer: StageTimer; onClose: ()
       label={`Length of ${timer.name || 'this timer'}`}
       width="w-[min(21rem,calc(100vw-2rem))]"
     >
-      {/* What it counts, beside how long for: the two answer one question
-          between them, and reading the length without knowing which way it
-          runs says nothing. It is on the row as well — this is the panel the
-          operator is already in when they change one of the two. */}
       <Field label="Counts">
         <Select
           className="w-[140px]"
@@ -303,7 +240,6 @@ export const TimerLength = ({ timer, onClose }: { timer: StageTimer; onClose: ()
         />
       </Field>
 
-      {/* A clock reads the hour off the wall, so there is nothing to set. */}
       {timer.kind === 'clock' ? null : (
         <Field label="Length">
           <DurationInput
@@ -316,15 +252,8 @@ export const TimerLength = ({ timer, onClose }: { timer: StageTimer; onClose: ()
         </Field>
       )}
 
-      {/* Both warnings are read off the time *left*, so anything with a length
-          to run out of has them — a count-up towards a target turns amber and
-          then red on its way there in exactly the same way. Only the clock has
-          neither: it counts the hour, which nothing runs out of. */}
       {timer.kind === 'clock' ? null : (
         <>
-          {/* What each one does is said by the colour it is written in — the
-              same amber and red the digits will wear — so the panel is three
-              figures rather than three sentences. The titles carry the rest. */}
           <Field label="Wrap-up">
             <DurationInput
               value={timer.wrapUp}
@@ -343,10 +272,6 @@ export const TimerLength = ({ timer, onClose }: { timer: StageTimer; onClose: ()
             />
           </Field>
 
-          {/* Spelled out rather than labelled "Auto-clear", because what it
-              does is exactly what a button on the transport does and the
-              operator knows that button by its words. It sits under the
-              figures: it is about the end of the run those figures describe. */}
           <label className="flex cursor-pointer items-start gap-2 pt-1 text-xs text-studio-text">
             <input
               type="checkbox"
@@ -368,14 +293,6 @@ export const TimerLength = ({ timer, onClose }: { timer: StageTimer; onClose: ()
   );
 };
 
-/**
- * Writing a label: its words and its colour, in one dialog.
- *
- * A modal rather than a field in the panel, because a label is picked as much
- * as it is typed — the colour is the point of it, and cycling through tints by
- * clicking the chip until the right one came round was a guessing game. The
- * same dialog edits an existing label, so a colour chosen once can be changed.
- */
 const LabelModal = ({
   label,
   taken,
@@ -387,8 +304,6 @@ const LabelModal = ({
   onSave: (fields: { text: string; color: LabelColor }) => void;
   onClose: () => void;
 }) => {
-  // Opened on nothing means a new label, and it arrives wearing the first tint
-  // this timer is not already using — two labels the same colour say nothing.
   const [text, setText] = useState(label?.text ?? '');
   const [color, setColor] = useState<LabelColor>(
     label?.color ?? COLORS.find(tint => !taken.includes(tint)) ?? 'amber',
@@ -461,7 +376,6 @@ const LabelModal = ({
           </div>
         </div>
 
-        {/* What it will look like on the row, at the size it is read there. */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-studio-muted">Preview</span>
 
@@ -477,25 +391,10 @@ const LabelModal = ({
   );
 };
 
-/**
- * What the item *is*: the title and the speaker, which the person standing up
- * is shown, and the note and the labels, which are the operator's own — a cue
- * to themselves and a colour to find the row by. Anything meant to be *read* on
- * stage is a stage message, sent deliberately and one at a time.
- *
- * How long it runs is not here: that is `TimerLength`, on the duration itself.
- *
- * The fields write as they are typed, like every other field in the console.
- * There is no Save because there is nothing here that is half-entered — a name
- * is a name the moment it is typed, and the row behind it shows it happening.
- * A label is the exception: it is written in a dialog and lands finished.
- */
 export const TimerEditor = ({ timer, onClose }: { timer: StageTimer; onClose: () => void }) => {
   const box = useDismiss(onClose);
   const patch = usePatch(timer);
 
-  // The label being written: an existing one, `'new'` for one that does not
-  // exist yet, or nothing at all with the dialog shut.
   const [writing, setWriting] = useState<TimerLabel | 'new' | null>(null);
 
   return (
@@ -542,8 +441,6 @@ export const TimerEditor = ({ timer, onClose }: { timer: StageTimer; onClose: ()
                 text-white"
               style={{ backgroundColor: LABEL_COLORS[label.color] }}
             >
-              {/* The chip is the way back into it: its words and its colour are
-                  written in the same dialog they were made in. */}
               <button type="button" title="Edit this label" onClick={() => setWriting(label)}>
                 {label.text}
               </button>

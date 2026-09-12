@@ -24,12 +24,6 @@ import { SlideEditor } from '@/components/studio/lyrics/SlideEditor';
 import { SlideGrid } from '@/components/studio/lyrics/SlideGrid';
 import { SongEditor } from '@/components/studio/lyrics/SongEditor';
 
-/**
- * The Lyrics tab: songs imported straight from a ProPresenter bundle, listed on
- * the left and laid out as slides on the right. Clicking a slide sends it to the
- * projector exactly as clicking a verse does, so ← and → step through a song the
- * same way they step through a passage.
- */
 export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
   const {
     songs,
@@ -56,16 +50,12 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dropping, setDropping] = useState(false);
-  /** A bundle too big for the plan, waiting for the operator to choose from it. */
   const [choosing, setChoosing] = useState<{ songs: Song[]; allowance: number; shelf: string } | null>(null);
 
   useDragEnded(dropping, () => setDropping(false));
 
   const active = songs.find(song => song.id === activeSongId) ?? songs[0] ?? null;
 
-  // The whole running order when the open list is one and the song is on it,
-  // and that song alone otherwise. A playlist the active song is not on has
-  // nothing to say about it, and a library is a shelf rather than an order.
   const ordered = songsInPlaylist(
     songs,
     playlists.find(list => list.id === open.id),
@@ -78,12 +68,10 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
         ? [active]
         : [];
 
-  /** What the bundle is called, which is what its shelf is called. */
   const bundleName = (files: File[]) =>
     (files.length === 1 ? files[0].name.replace(/\.[^.]+$/, '') : `Import ${new Date().toLocaleDateString()}`).trim() ||
     'Import';
 
-  /** A save whose failure the notice has already reported. */
   const saveSongQuietly = (song: Song) => {
     void saveSong(song).catch(failure => {
       if (!isPlanLimit(failure)) setError((failure as Error).message);
@@ -104,9 +92,6 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
         return;
       }
 
-      // A bundle is somebody's whole library, and the plan may not have room
-      // for all of it. Rather than refuse the lot, ask which — a re-import
-      // replaces a song already here, so only the new titles cost anything.
       const held = new Set(songs.map(song => song.title.toLowerCase()));
       const fresh = imported.filter(song => !held.has(song.title.toLowerCase()));
       const limit = ceiling(plan, isGuest, 'songs');
@@ -119,8 +104,6 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
 
       await importSongs(imported, bundleName(files));
     } catch (failure) {
-      // A ceiling has already said so, once, in the console's own notice.
-      // Repeating it here is what put the same sentence on screen twice.
       if (isPlanLimit(failure)) return;
 
       setError(
@@ -132,7 +115,6 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
     }
   };
 
-  /** Bring in what the operator ticked, onto the shelf the bundle would have made. */
   const importChosen = async (chosen: Song[]) => {
     const shelf = choosing?.shelf;
 
@@ -156,16 +138,9 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
     void importFiles(files);
   };
 
-  // A bundle dragged off the desktop onto the tab is the same import as the
-  // button — the operator should not have to find the button first. Only a
-  // drag carrying files answers here; a song being dragged onto the playlist
-  // is the setlist's own business.
   const carriesFiles = (event: DragEvent<HTMLElement>) => [...event.dataTransfer.types].includes('Files');
 
   return (
-    // The right-hand padding belongs to the slide column, not to this box: the
-    // column is what scrolls, and a gutter outside it left the scrollbar
-    // floating in a strip of white with the rail on the far side of it.
     <div
       onDragOver={event => {
         if (!carriesFiles(event)) return;
@@ -205,9 +180,6 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
           {busy ? 'Importing…' : 'Import from ProPresenter'}
         </Button>
 
-        {/* Met before the dialog opens. It used to open, take a title, open
-            the editor, and only then be refused by the database — so the
-            operator watched a song they could not have appear and vanish. */}
         <Button
           icon={<HiOutlineDocumentAdd className="text-sm" />}
           onClick={() => (room('songs') ? setCreating(true) : noteLimit('songs'))}
@@ -256,8 +228,6 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
 
       {editing ? <SongEditor song={editing} onClose={() => setEditing(null)} /> : null}
 
-      {/* The song is carried alongside the index: with a whole playlist laid
-          out, "slide 4" alone no longer says which song's slide 4. */}
       {editingSlide ? (
         <SlideEditor
           key={`${editingSlide.song.id}-${editingSlide.index}`}
@@ -294,11 +264,6 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
             </p>
           </div>
         ) : (
-          /* A song picked off the playlist is one item of a running order, so
-             the whole order is laid out and the one that was asked for is
-             scrolled to — the next song is then a scroll away rather than
-             another trip to the rail. A song picked out of the library is the
-             only thing the operator asked to see, and it is all they get. */
           <div className="space-y-6">
             {shown.map(song => (
               <SlideGrid
@@ -311,13 +276,6 @@ export const LyricsPanel = ({ onSearch }: { onSearch: () => void }) => {
               />
             ))}
 
-            {/* Room under the last song, so every song in the order can be
-                taken to the top of the panel — the last one included. Without
-                it the list stops where its cards stop, and picking the last
-                song moves nothing: it is already as far down as it goes.
-                Only where this column is the thing that scrolls: below lg the
-                page scrolls instead, and the room is dead space under the
-                last slide. */}
             <div aria-hidden className="hidden lg:block lg:h-[70vh]" />
           </div>
         )}

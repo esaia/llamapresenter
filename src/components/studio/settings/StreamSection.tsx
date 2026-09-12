@@ -15,19 +15,6 @@ const POSITIONS = [
   { value: 'top' as const, label: 'Top', Icon: MdArrowUpward },
 ];
 
-/**
- * The stream panel: what the OBS overlay carries, and how it sits on the shot.
- *
- * In the old app this tab also held an obs-websocket connection — address,
- * password, and a running commentary on why it could not reach OBS. The overlay
- * now joins the same realtime channel as the projector, so there is nothing to
- * connect at all.
- *
- * It is only the look, too: the Browser Source link is in the app bar's Present
- * menu, blanking is a lamp on the output bar, and the stream's language is
- * picked on the destination itself in the sidebar. This panel is what the
- * overlay looks like on the shot, and nothing else.
- */
 export const StreamSection = () => {
   const { settings, update } = useStudio();
 
@@ -35,8 +22,6 @@ export const StreamSection = () => {
     <div className="space-y-6">
       <LowerThirdStylePicker />
 
-      {/* Both straps drawn from a template of their own place everything
-          themselves, so top and bottom has nothing left to decide. */}
       {isCustomLook(settings.lowerThirdVariant) && isCustomLook(settings.lyricsVariant) ? null : (
       <Field label="Position on screen">
         <div className="grid grid-cols-2 gap-2">
@@ -62,12 +47,6 @@ export const StreamSection = () => {
       </Field>
       )}
 
-      {/* Side by side, because these two are read against each other. Its own
-          type, not the projector's — the wall and the camera shot are read from
-          different distances and almost never want the same setting — and a
-          typeface name needs the room to be read as one. */}
-      {/* A custom strap names a typeface and an alignment on every box it has,
-          so one setting for the whole strap has nothing left to say. */}
       <div className="grid gap-4 sm:grid-cols-2">
         {isCustomLook(settings.lowerThirdVariant) ? null : (
           <TypeRow

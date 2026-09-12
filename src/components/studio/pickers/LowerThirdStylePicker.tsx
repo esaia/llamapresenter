@@ -33,9 +33,6 @@ import { ColorField } from "@/components/studio/pickers/ColorField";
 import { NewStrapModal } from "@/components/studio/modals/NewStrapModal";
 import { TemplateEditor } from "@/components/studio/lyrics/TemplateEditor";
 
-// Each look re-points the CSS variables on `.lower3rd-bar`; see globals.css.
-// A look here is an arrangement only — what it is painted in is picked below
-// the grid, which is why the bands appear once rather than in black and white.
 export const VARIANTS = [
   { value: "scrim", label: "Gradient fade" },
   { value: "solid", label: "Solid bar" },
@@ -43,9 +40,6 @@ export const VARIANTS = [
   { value: "card", label: "Reference card" },
   { value: "split", label: "Split bar" },
   { value: "plain", label: "Text only" },
-  // The one the operator draws. Not a `.lower3rd-bar` variant at all: it
-  // replaces the bar with a template on the whole frame, which is why the
-  // colourway below the grid has nothing to say about it.
   { value: CUSTOM_LOOK, label: "Custom" },
 ];
 
@@ -57,33 +51,21 @@ const TARGETS = [
   { id: "lyrics", label: "Lyrics" },
 ];
 
-/** What each knob is called where the operator meets it. */
 const KNOBS: Record<keyof Colorway, { label: string; hint: string }> = {
   plate: { label: "Plate", hint: "The panel the words sit on." },
   ink: { label: "Text", hint: "The words, and the reference under them." },
   accent: { label: "Accent", hint: "The rule and the reference chip." },
 };
 
-/** Short enough to fit the tile, long enough to wrap onto a second line. */
 const SAMPLE_VERSE = "For God so loved the world that he gave his only Son";
 const SAMPLE_LYRIC = "Amazing grace, how sweet the sound";
 
-/** The same map the overlay itself uses, so a tile cannot disagree with it. */
 const ALIGN_CLASS: Record<Align, string> = {
   left: "text-left",
   center: "text-center",
   right: "text-right",
 };
 
-/**
- * The live markup of /lower3rd, shrunk into a tile. Rendering the real classes
- * rather than a drawing of them means a look and its preview cannot disagree —
- * a new variant in the stylesheet previews itself.
- *
- * The typeface, the alignment and the colours come from the settings around the
- * grid, for the same reason: a tile that is always ragged-left in one face is
- * answering a question the operator has already given a different answer to.
- */
 export const Preview = ({
   variant,
   top,
@@ -138,35 +120,15 @@ export const Preview = ({
   );
 };
 
-/**
- * Picks the look of the lower third by showing it, instead of naming it in a
- * dropdown — "Split bar" and "Reference card" mean nothing until you have seen
- * them. Verses and lyrics each keep their own look, switched by the tabs above
- * the grid rather than by a second identical grid.
- *
- * The colours are asked separately, below. They used to be part of the look,
- * which meant the same arrangement had to be listed once per colourway and an
- * operator whose church is not black or white was out of luck.
- */
 export const LowerThirdStylePicker = () => {
   const { settings, showData, update, room } = useStudio();
 
-  // Opens on whichever kind of slide is live. An operator who hits the pencil
-  // over a song is there about the song, and landing on the verse grid means
-  // finding the tab before finding the tile.
   const [target, setTarget] = useState(showData?.lyrics ? "lyrics" : "verses");
-  // Which of the operator's own straps is open on the canvas, if any.
   const [editing, setEditing] = useState("");
-  // Whether the "start from" chooser is open for a new one.
   const [choosing, setChoosing] = useState(false);
 
-  // What the custom tile draws its sample against: the stream's own wire
-  // style, which already reduces the armed set to the one language the
-  // overlay carries.
   const wire = streamStyle(settings);
 
-  // A picture placed in a strap is in this browser's IndexedDB, so unlike a
-  // projector's background it can be minted here.
   const assets = useLocalFiles(
     useMemo(
       () => settings.customTemplates.flatMap((row) => filesUsedBy(row.template)),
@@ -181,8 +143,6 @@ export const LowerThirdStylePicker = () => {
     update(lyrics ? { lyricsVariant: value } : { lowerThirdVariant: value });
   const top = settings.lowerThirdPosition === "top";
 
-  // The tiles are drawn in the type the stream is actually set in, so the look
-  // being chosen and the look being described are the same picture.
   const font = lyrics ? settings.streamLyricsFont : settings.streamFont;
   const align = lyrics ? settings.streamLyricsAlign : settings.streamAlign;
 
@@ -193,17 +153,9 @@ export const LowerThirdStylePicker = () => {
     update({
       streamColors: { ...settings.streamColors, [target]: next },
     });
-  // Dropped, not set to the default: a knob that is absent is the look's own
-  // colour, and a look the operator switches to later should paint in its own.
   const clearColor = (knob: keyof Colorway) =>
     setColors(Object.fromEntries(Object.entries(colors).filter(([key]) => key !== knob)));
 
-  /**
-   * The grid: the shipped straps, then the operator's own.
-   *
-   * `custom` is dropped from the shipped row — it stood for one drawing, and
-   * it is now as many tiles as they have drawn, each under its own name.
-   */
   const kind: TemplateTarget = lyrics ? "streamLyrics" : "stream";
   const mine = templatesFor(settings, kind);
 
@@ -212,7 +164,6 @@ export const LowerThirdStylePicker = () => {
     ...mine.map((row) => ({ value: customLook(row.id), label: row.name, template: row.template })),
   ];
 
-  /** Draw another one; saved before the canvas opens, as the projector's is. */
   const add = (template: SlideTemplate) => {
     const row = {
       id: crypto.randomUUID(),
@@ -221,10 +172,6 @@ export const LowerThirdStylePicker = () => {
       template,
     };
 
-    // Over the plan's ceiling the editor still opens — on a template that was
-    // never written. Refusing at the door answered "is this worth paying for?"
-    // by never showing the thing being sold; this way they draw on it, and the
-    // line is found at Save, which is where it actually is.
     if (!room('custom_templates')) {
       setEditing(row.id);
       return;
@@ -237,8 +184,6 @@ export const LowerThirdStylePicker = () => {
 
   const knobs = knobsOf(selected);
   const defaults = defaultsOf(selected);
-  // Only the knobs this look uses count as picked: an accent left behind by the
-  // split bar should not light up Reset on a look that has no rule to paint.
   const picked = knobs.some((knob) => colors[knob]);
 
   return (
@@ -280,9 +225,6 @@ export const LowerThirdStylePicker = () => {
 
       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
         {tiles.map(({ value, label, template }) => (
-          // One of the operator's own carries a second control, and a button
-          // cannot hold another one — so the tile is a box with the two side
-          // by side.
           <div key={value} className="relative">
             <button
               type="button"
@@ -301,9 +243,6 @@ export const LowerThirdStylePicker = () => {
                   <CustomSlide
                     template={template}
                     showData={lyrics ? SAMPLE_LYRIC_SLIDE : SAMPLE_VERSE_SLIDE}
-                    // One language, as the overlay itself carries: without
-                    // this the tile drew both of the sample's and wrapped
-                    // differently from the thing it is a picture of.
                     style={{ ...wire, fonts: settings.customFonts, lyricsLang: "sample-1" }}
                     assets={assets}
                   />
@@ -345,8 +284,6 @@ export const LowerThirdStylePicker = () => {
           </div>
         ))}
 
-        {/* Its own tile at the end of the grid rather than a button beside the
-            heading: what it makes is another one of these. */}
         <button
           type="button"
           onClick={() => setChoosing(true)}
@@ -356,8 +293,6 @@ export const LowerThirdStylePicker = () => {
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40",
           )}
         >
-          {/* Built like a tile rather than styled like one, so it stands
-              exactly as tall as the straps beside it. */}
           <div className="flex aspect-video w-full items-center justify-center">
             <Plus className="size-5" />
           </div>
@@ -387,8 +322,6 @@ export const LowerThirdStylePicker = () => {
         <TemplateEditor target={kind} id={editing} onClose={() => setEditing("")} />
       ) : null}
 
-      {/* A template carries its own plates and colours on every box, so the
-          colourway has nothing to re-point under one of the operator's. */}
       {isCustomLook(selected) ? null : (
         <>
       <div className="mt-4 flex items-baseline justify-between gap-2">

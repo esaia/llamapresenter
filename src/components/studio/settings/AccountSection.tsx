@@ -12,25 +12,11 @@ import { LIMIT_GROUPS, proLimitValue } from '@/lib/billing/table';
 import { useAudio } from '@/lib/studio/AudioProvider';
 import { useStudio } from '@/lib/studio/StudioProvider';
 
-/**
- * What a Pro account has made. Counts only — no ceilings, because there are
- * none, and a column of the word "Unlimited" eleven times over is a table with
- * nothing in it.
- */
 const BUILT: LimitKey[] = ['songs', 'playlists', 'audio_tracks', 'custom_templates', 'name_cards', 'custom_fonts'];
 
-/** A date the operator reads, not an ISO string. */
 const readable = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 
-/**
- * What the subscription's state means for the person reading it.
- *
- * `past_due` and `on_hold` still carry Pro — a failed card has a dunning run
- * behind it and we would rather not take the projector away mid-service — so
- * the panel has to be the thing that says a card needs attention, because
- * nothing else in the console will.
- */
 const STATES: Record<string, { tone: string; says: string }> = {
   active: { tone: 'text-studio-on', says: 'Active' },
   past_due: { tone: 'text-studio-danger', says: 'Payment failed' },
@@ -40,7 +26,6 @@ const STATES: Record<string, { tone: string; says: string }> = {
   expired: { tone: 'text-studio-muted', says: 'Ended' },
 };
 
-/** Plan, what it costs the operator in practice, and the way out of the account. */
 export const AccountSection = () => {
   const { email, isGuest, plan, billing, usage, claimedSpots } = useStudio();
   const router = useRouter();
@@ -48,16 +33,11 @@ export const AccountSection = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Pro costs what the next church to sign up would pay — while the founding
-  // spots last that depends on how many are gone, so the button says the price
-  // the checkout route is actually about to charge.
   const plans = plansFor(claimedSpots);
   const current = plans[planOf(plan)];
   const free = current.id === 'free';
   const pro = plans.pro;
 
-  // The music library lives in its own provider, so those two counts are the
-  // ones the studio does not already hold.
   const used = (key: LimitKey) =>
     key === 'audio_tracks' ? tracks.length : key === 'audio_categories' ? categories.length : usage[key];
 
@@ -125,15 +105,9 @@ export const AccountSection = () => {
         )}
 
         {free && !isGuest ? (
-          // Where the line is, in the operator's own numbers. "15 of 15 songs"
-          // is something they can check against what they were about to do this
-          // morning; a bullet saying "song catalogue" is not.
           <table className="w-full border-t border-studio-divider text-xs">
             <thead>
               <tr className="text-studio-faint">
-                {/* The group headings underneath already say what the column
-                    is, so the label was a caption for a caption. Kept for a
-                    screen reader, which has no groups to read ahead to. */}
                 <th className="px-4 py-2 text-left font-normal">
                   <span className="sr-only">What is being counted</span>
                 </th>
@@ -159,9 +133,6 @@ export const AccountSection = () => {
                   {group.keys.map(key => {
                     const limit = FREE_LIMITS[key];
                     const count = used(key);
-                    // A ceiling of zero is not something you can fill. Saying
-                    // "custom fonts full" to an operator who has none reads as
-                    // a bug, and the dash in the Free column already says it.
                     const full = gatesEnforced && limit > 0 && count !== undefined && count >= limit;
 
                     return (
@@ -198,8 +169,6 @@ export const AccountSection = () => {
                   'slide stops being readable, and not something we would charge for.'}
             </p>
 
-            {/* What they have made, rather than a column of the word
-                "Unlimited" repeated down the panel. */}
             <dl className="mt-4 grid grid-cols-3 gap-x-3 gap-y-4">
               {BUILT.map(key => (
                 <div key={key}>
@@ -214,13 +183,8 @@ export const AccountSection = () => {
         <div className="border-t border-studio-divider px-4 py-4">
           {free ? (
             <>
-              {/* The offer, above the button that takes it. Free accounts only:
-                  a church already paying cannot act on a countdown. */}
               <FoundingSpots claimed={claimedSpots} />
 
-              {/* A demo room has no email for Dodo to bill and no account for
-                  the webhook to reconcile against — checkout would 401. Send
-                  the guest to a real sign-in instead of a broken purchase. */}
               <button
                 type="button"
                 onClick={() =>

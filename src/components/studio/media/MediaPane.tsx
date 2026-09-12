@@ -40,23 +40,8 @@ import { useStudio } from '@/lib/studio/StudioProvider';
 
 import { DROP_ZONE, leftZone, useDragEnded } from '@/components/studio/shared/dropZone';
 
-/** The shelf that ships with the app and cannot be renamed or emptied. */
 const BUILT_IN = 'built-in';
 
-/**
- * The media pane: backgrounds along the foot of the console.
- *
- * It sits under whatever tab is open rather than inside the settings dialog,
- * because changing what is behind the words is a thing done *during* a service
- * — the lights come up, the song ends, the background wants to be something
- * quieter — and a background two clicks deep behind Settings is a background
- * nobody changes. ProPresenter puts it here for the same reason.
- *
- * Shelves on the left, pictures on the right. The first shelf is the one that
- * ships with the app; the rest are the operator's own, and so are the pictures
- * on them: a picture stays in this browser and is fetched from it over WebRTC
- * when a projector on another machine needs it. Nothing is uploaded.
- */
 export const MediaPane = () => {
   const { settings, update, setLocalBackground, tab, cardSize, setCardSize } = useStudio();
 
@@ -75,15 +60,10 @@ export const MediaPane = () => {
 
   const picker = useRef<HTMLInputElement>(null);
 
-  // The saved height, put on the document the moment the pane is opened. The
-  // variable is what the pane is sized by, so the drag below writes to it and
-  // nothing re-renders while the handle moves.
   useLayoutEffect(() => {
     if (open) writeMediaHeight(readMediaHeight());
   }, [open]);
 
-  // A pane sized on a tall screen has to give the slides their room back on a
-  // shorter one.
   useEffect(() => {
     const onResize = () => writeMediaHeight(clampMediaHeight(readMediaHeight()));
 
@@ -101,7 +81,6 @@ export const MediaPane = () => {
     const startY = event.clientY;
     const startHeight = readMediaHeight();
 
-    // The handle is on the top edge, so dragging up makes the pane taller.
     const onMove = (move: PointerEvent) => writeMediaHeight(clampMediaHeight(startHeight + (startY - move.clientY)));
 
     const onUp = () => {
@@ -114,7 +93,6 @@ export const MediaPane = () => {
     document.addEventListener('pointerup', onUp);
   };
 
-  // Selecting the verses behind the cursor while dragging looks broken.
   useEffect(() => {
     if (!dragging) return;
 
@@ -127,8 +105,6 @@ export const MediaPane = () => {
     };
   }, [dragging]);
 
-  // Object URLs die with the document that minted them, so they are made here
-  // and revoked on the way out rather than stored.
   useEffect(() => {
     let live: string[] = [];
 
@@ -177,8 +153,6 @@ export const MediaPane = () => {
 
     setFiles(current => current.filter(item => item.id !== record.id));
 
-    // The wall is showing the picture that just went: it falls back to the
-    // stock background rather than to nothing at all.
     if (settings.localImage?.id === record.id) setLocalBackground(null);
   };
 
@@ -233,13 +207,8 @@ export const MediaPane = () => {
 
         <span className="min-w-0 flex-1" />
 
-        {/* The card size rides in this strip rather than in a bar of its own:
-            two 36px rails stacked at the foot of the console cost the cards
-            above them a row, and this one is already here. */}
         {tab === 'bible' || tab === 'lyrics' ? (
           <label className="flex min-w-0 items-center gap-2 text-[11px] text-studio-muted">
-            {/* The word goes on a narrow screen, not the slider: the handle is
-                the control, and the strip has an Add button to fit beside it. */}
             <span className="hidden sm:inline">Card size</span>
             <input
               type="range"
@@ -267,8 +236,6 @@ export const MediaPane = () => {
           }}
         />
 
-        {/* Only on a shelf of the operator's own: the built-in one is ours and
-            takes nothing. */}
         {open && !onBuiltIn ? (
           <button
             type="button"
@@ -305,13 +272,8 @@ export const MediaPane = () => {
           style={{ height: `var(${MEDIA_HEIGHT_VAR}, ${DEFAULT_MEDIA_HEIGHT}px)`, minHeight: MEDIA_MIN_HEIGHT }}
           className={cn('flex border-t border-studio-border', dropping && DROP_ZONE)}
         >
-          {/* The shelves. The first ships with the app; the rest are the
-              operator's, named by double-clicking the row. */}
           <ul
             tabIndex={-1}
-            // Delete takes out the shelf that is open. Never the built-in one,
-            // which is ours, and never while a name is being typed: Backspace
-            // there is a letter, not a verdict.
             onKeyDown={event => {
               if (event.key !== 'Delete' && event.key !== 'Backspace') return;
               if (onBuiltIn || event.target instanceof HTMLInputElement) return;
@@ -403,8 +365,6 @@ export const MediaPane = () => {
             </li>
           </ul>
 
-          {/* The pictures on the open shelf. Clicking one puts it behind the
-              words at once — that is the whole point of the pane. */}
           <div className="studio-scroll min-w-0 flex-1 overflow-y-auto p-2">
             {onBuiltIn ? (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(7rem,1fr))]">
@@ -421,7 +381,6 @@ export const MediaPane = () => {
                       chosen(theme.id) ? 'ring-2 ring-studio-accent' : 'ring-1 ring-studio-border hover:ring-studio-faint',
                     )}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={theme.src} alt="" loading="lazy" className="aspect-video w-full object-cover" />
                   </button>
                 ))}
@@ -429,8 +388,6 @@ export const MediaPane = () => {
             ) : (
               <>
                 {shown.length === 0 ? (
-                  // The one place the note is worth reading is the shelf that
-                  // has nothing on it yet.
                   <div className="grid h-full place-items-center px-4 text-center">
                     <p className="text-xs text-studio-faint">
                       Drop pictures here.
@@ -458,7 +415,6 @@ export const MediaPane = () => {
                               : 'ring-1 ring-studio-border hover:ring-studio-faint',
                           )}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={urls[record.id]}
                             alt=""
@@ -467,9 +423,6 @@ export const MediaPane = () => {
                           />
                         </button>
 
-                        {/* Always there on a touch screen: hover is a thing a
-                            finger cannot do, and this is the only way to take a
-                            picture off a shelf. */}
                         <span className="absolute top-1 right-1 transition-opacity sm:opacity-0 sm:group-hover/tile:opacity-100">
                           <IconButton
                             label={`Remove ${record.name}`}

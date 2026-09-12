@@ -3,14 +3,6 @@
 import { cn } from '@/lib/cn';
 import { TEMPLATES, type Template } from '@/lib/lower3rd/card';
 
-/**
- * One design, drawn from the real markup and shrunk into a tile.
- *
- * The same trick the lower third's own look picker uses, and for the same
- * reason: a drawing of a design and the design itself drift the moment either
- * changes, so the tile renders the thing rather than a picture of it. A new
- * design in the stylesheet previews itself.
- */
 const Preview = ({ template, title, subtitle }: { template: Template; title: string; subtitle: string }) => (
   <div className="nc-preview">
     <div className={`namecard namecard--${template} namecard--in`}>
@@ -22,11 +14,6 @@ const Preview = ({ template, title, subtitle }: { template: Template; title: str
   </div>
 );
 
-/**
- * Picks the look of a name card by showing it with the operator's own words
- * in it — "Marquee" and "Offset" mean nothing until you have seen them, and
- * less still until you have seen your own pastor's name in them.
- */
 export const NameCardPicker = ({
   value,
   onChange,

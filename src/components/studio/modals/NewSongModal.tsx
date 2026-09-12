@@ -16,7 +16,6 @@ import { slidesFrom } from '@/lib/lyrics/text';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import type { Song } from '@/lib/types';
 
-/** One candidate, as `/api/lyrics/search` hands it over. */
 interface Result {
   id: string;
   source: string;
@@ -26,20 +25,16 @@ interface Result {
   image: string;
 }
 
-/** Long enough that a first keystroke does not fire a request nobody wanted. */
 const MIN_TERM = 2;
 
-/** A pause in typing, not a pause in thinking. */
 const SETTLE_MS = 300;
 
 const INPUT =
   'w-full rounded-studio border border-studio-border bg-studio-bg py-2 text-sm text-studio-text outline-none ' +
   'placeholder:text-studio-faint focus:border-studio-accent focus-visible:ring-2 focus-visible:ring-studio-accent/40';
 
-/** A draft's id, until the database mints a real one on save. */
 const seedId = () => `song-${Date.now()}`;
 
-/** Read a route's own words back when it refuses, the way the scripture client does. */
 const jsonOf = async (url: string, signal?: AbortSignal) => {
   const response = await fetch(url, { signal });
   const body = await response.json();
@@ -49,7 +44,6 @@ const jsonOf = async (url: string, signal?: AbortSignal) => {
   return body;
 };
 
-/** One of the three ways in, as a square card. */
 const Choice = ({
   label,
   hint,
@@ -79,18 +73,6 @@ const Choice = ({
   </button>
 );
 
-/**
- * How a song gets started.
- *
- * Three ways in from one name. Quick lyrics and Web search both open the editor
- * — one empty, one already full of the words the catalogue had — and only save
- * when the operator says so. Empty song is the shortcut for someone who knows
- * they are typing it all in later: it writes the row and gets out of the way.
- *
- * The search runs itself. An operator mid-service is not looking for a button,
- * and the catalogue answers fast enough that typing and reading can be the same
- * motion.
- */
 export const NewSongModal = ({ onClose, onDraft }: { onClose: () => void; onDraft: (song: Song) => void }) => {
   const { saveSong, setActiveSongId } = useStudio();
   const [name, setName] = useState('');
@@ -104,8 +86,6 @@ export const NewSongModal = ({ onClose, onDraft }: { onClose: () => void; onDraf
 
   const term = name.trim();
 
-  // Search as the operator types. Each run cancels the one before it, so a fast
-  // typist gets the answer to their last word rather than a race between five.
   useEffect(() => {
     if (!searching) return;
 
@@ -149,7 +129,6 @@ export const NewSongModal = ({ onClose, onDraft }: { onClose: () => void; onDraf
     return { id: seed, title, slides: [{ id: `${seed}-0`, text: '' }] };
   };
 
-  /** Straight into the library, no editor in between. */
   const empty = async () => {
     setBusy(true);
     setError('');
@@ -173,8 +152,6 @@ export const NewSongModal = ({ onClose, onDraft }: { onClose: () => void; onDraf
     setError('');
 
     try {
-      // The source and its own key, passed back exactly as it issued them:
-      // asking Hymnary for an artist and a title is how a hymn goes missing.
       const body = (await jsonOf(
         `/api/lyrics?source=${encodeURIComponent(result.source)}&key=${encodeURIComponent(result.key)}`,
       )) as { lyrics: string };
@@ -256,11 +233,6 @@ export const NewSongModal = ({ onClose, onDraft }: { onClose: () => void; onDraf
                   taking !== null && taking !== result.id ? 'opacity-40' : null,
                 )}
               >
-                {/* Sleeve art where the source has it, a note where it does
-                    not — a tab site and a hymnal carry no artwork, and an empty
-                    square reads as a picture that failed to load. The note sits
-                    under the image rather than beside it, so a cover that turns
-                    out to be a dead link falls back to it as well. */}
                 <span
                   className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden
                     rounded-[4px] bg-studio-surface text-studio-faint"
@@ -268,7 +240,6 @@ export const NewSongModal = ({ onClose, onDraft }: { onClose: () => void; onDraf
                   <Music className="size-4" />
 
                   {result.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={result.image}
                       alt=""
@@ -283,10 +254,6 @@ export const NewSongModal = ({ onClose, onDraft }: { onClose: () => void; onDraf
                   <span className="block truncate text-xs text-studio-faint">{result.artist}</span>
                 </span>
 
-                {/* Which catalogue it came out of. It is the one thing that
-                    tells two identical-looking rows apart — the same hymn is
-                    filed in three of these — and it is how the operator learns
-                    which source is worth reading first for what they sing. */}
                 <span
                   className="shrink-0 rounded-full border border-studio-border px-2 py-0.5 text-[10px]
                     font-medium text-studio-faint"

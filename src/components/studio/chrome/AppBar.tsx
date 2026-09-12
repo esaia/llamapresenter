@@ -23,14 +23,6 @@ import { Wordmark } from '@/components/brand/Wordmark';
 import { cn } from '@/lib/cn';
 import { useStudio, type Tab } from '@/lib/studio/StudioProvider';
 
-/**
- * `beta` marks a tab that works but is not finished.
- *
- * It is a promise to the operator rather than a decoration: what is behind it
- * can still move between now and the version that drops the flag, so a church
- * can decide for itself whether to lean on it this Sunday. Take the flag off
- * the day the tab stops changing.
- */
 const TABS: { id: Tab; label: string; Icon: typeof BookOpen; beta?: boolean }[] = [
   { id: 'bible', label: 'Bible', Icon: BookOpen },
   { id: 'lyrics', label: 'Lyrics', Icon: Mic2 },
@@ -39,7 +31,6 @@ const TABS: { id: Tab; label: string; Icon: typeof BookOpen; beta?: boolean }[] 
   { id: 'stage', label: 'Stage', Icon: MonitorPlay },
 ];
 
-/** One output an operator carries to another machine, with a one-click copy. */
 const OutputRow = ({
   label,
   hint,
@@ -51,7 +42,6 @@ const OutputRow = ({
   hint: string;
   href: string;
   connected: number;
-  /** A guest room: the link exists but signing up is what makes it usable. */
   disabled?: boolean;
 }) => {
   const [copied, setCopied] = useState(false);
@@ -120,7 +110,6 @@ const OutputRow = ({
   );
 };
 
-/** The three outputs behind one button, so the bar keeps its room. */
 const PresentMenu = () => {
   const { session, peers, isGuest } = useStudio();
   const [open, setOpen] = useState(false);
@@ -229,9 +218,6 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
           <Menu className="size-4" />
         </button>
 
-        {/* Home for the console is the console. An operator mid-service who
-            clicks the logo out of habit must not land on the marketing page
-            with the running order behind them. */}
         <Link
           href="/studio"
           aria-label="LlamaPresenter — the console"
@@ -241,24 +227,14 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
         </Link>
       </div>
 
-      {/* Five tabs and two buttons do not share a row until the window is wide.
-          Below that the tabs take a line of their own and split it evenly,
-          which is the only way "Lower3rd" stays on screen on a phone. */}
       <nav
         aria-label="Workspace"
         className="order-last flex w-full items-center gap-0.5 rounded-studio border border-studio-border
           bg-studio-surface p-0.5 lg:order-none lg:w-auto"
       >
         {TABS.map(({ id, label, Icon, beta }) => {
-          // A run started on the Stage tab keeps going while the operator is
-          // off in Bible or Lyrics, and nothing else in the bar says so. The
-          // tab that owns the timer wears the run.
           const running = id === 'stage' && timer.running;
 
-          // Read out as part of the tab's own name rather than hidden from it:
-          // "Lower3rd, beta" and "Stage, timer running" are what a screen
-          // reader should say, because they are what the sighted operator is
-          // being told by the badge and the dot.
           const name = [label, beta ? 'beta' : null, running ? 'timer running' : null].filter(Boolean).join(', ');
 
           return (
@@ -284,8 +260,6 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
               <span className="relative flex shrink-0 items-center">
                 <Icon className="size-3.5" />
 
-                {/* The same beat as the on-screen badge, so a running timer
-                    and a live slide read as one language. */}
                 {running ? (
                   <span
                     aria-hidden
@@ -297,8 +271,6 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
 
               <span className="hidden truncate sm:inline">{label}</span>
 
-              {/* On a phone the label is gone and the badge with it: the tab is
-                  an icon, and one dot beside it is already the run. */}
               {beta ? (
                 <span
                   aria-hidden
@@ -337,7 +309,6 @@ export const AppBar = ({ onSettings, onOpenNav }: { onSettings: () => void; onOp
   );
 };
 
-/** What the room is seeing, for the foot of the preview rail. */
 export const LiveBadge = () => {
   const { live, peers } = useStudio();
 

@@ -20,17 +20,6 @@ import { useStudio } from '@/lib/studio/StudioProvider';
 
 import { Field } from '@/components/studio/settings/StyleSection';
 
-/**
- * Archives with no index to read.
- *
- * The two in `ARCHIVES` are browsed in the list below because they publish a
- * machine-readable listing and serve it to any origin. These three do not —
- * SourceForge has no API we may call from a browser, and eBible ships zips —
- * so they stay what they were: a link, and a download the operator makes
- * themselves. Front pages rather than deep links, because an archive
- * reorganises and a dead link reads as a broken feature.
- */
-/** "1,048 translations", or "1 translation" — a count nobody has to parse. */
 const counted = (many: number) => `${many.toLocaleString()} translation${many === 1 ? '' : 's'}`;
 
 const LINKED = [
@@ -54,40 +43,12 @@ const LINKED = [
   },
 ];
 
-/**
- * How many rows are drawn at once.
- *
- * The whole archive is in the list — over a thousand of them — and every one
- * is reachable by typing. This is only how many are put in the document at a
- * time, because a thousand rows rebuilt on every keystroke is a search box
- * that stutters. Nobody finds their Bible by scrolling a thousand names, so
- * the cap costs nothing as long as it never reads as a limit on what is there.
- */
 const SHOWN = 200;
 
-/**
- * Bibles the operator brought themselves.
- *
- * Everything else the console offers is a translation we mirrored, which is
- * what makes "the catalogue and the corpus are the same list" true. This is
- * the other door, for a church whose Bible we hold nothing of.
- *
- * Two ways in, and the first is the one that will be used: tick a translation
- * in a public archive and the console fetches it. The second is a file they
- * already have, which is what covers every archive with no index and every
- * church that was sent one by their Bible society.
- *
- * Either way it is filed *under* one of the six languages, so it inherits that
- * language's book names, its book ordering and its browse list — and the one
- * thing it may disagree with the language about is how the psalms are split,
- * which is the one thing that would silently show the wrong verse.
- */
 export const TranslationsSection = () => {
   const { translations, importTranslation, importFromArchive, removeTranslation, importing, room } = useStudio();
 
   const picker = useRef<HTMLInputElement>(null);
-  // An ISO code rather than one of ours, because the picker is every language
-  // and only six of them are ours. `langOf` is what turns it into either.
   const [iso, setIso] = useState('en');
   const [error, setError] = useState('');
 
@@ -95,14 +56,6 @@ export const TranslationsSection = () => {
   const [search, setSearch] = useState('');
   const [ticked, setTicked] = useState<Set<string>>(new Set());
 
-  /**
-   * The archive's index, stamped with the archive it is of.
-   *
-   * One piece of state rather than three, because "which archive is this a
-   * listing of" is the question that matters: a slow reply that lands after
-   * the operator moved on is simply not this archive's, and drawing one
-   * archive's files under another's name is the bug that would cause.
-   */
   const [index, setIndex] = useState<{ id: string; entries: ArchiveEntry[]; error: string } | null>(null);
 
   useEffect(() => {
@@ -124,9 +77,6 @@ export const TranslationsSection = () => {
 
   const matching = useMemo(() => (entries ?? []).filter(entry => entryMatches(entry, search)), [entries, search]);
 
-  // Where a translation goes, in the terms the provider wants: one of the six,
-  // or a language of the operator's own keyed by the same ISO code — so two
-  // Spanish Bibles added months apart land in one Spanish.
   const into = { lang: langOf(iso), langLabel: labelForIso(iso) };
 
   const busy = importing !== null;
@@ -152,7 +102,6 @@ export const TranslationsSection = () => {
       await task;
       setTicked(new Set());
     } catch (failure) {
-      // A ceiling has already been said once, by the console's own notice.
       if (isPlanLimit(failure)) return;
 
       setError((failure as Error).message);
@@ -162,8 +111,6 @@ export const TranslationsSection = () => {
   const chosen = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = [...(event.target.files ?? [])];
 
-    // Cleared before the await, so choosing the same file twice after a failed
-    // first try still fires a change.
     event.target.value = '';
 
     if (files.length === 0) return;
@@ -194,13 +141,6 @@ export const TranslationsSection = () => {
           you add sits on the rail beside ours."
       >
         <div className="space-y-2">
-          {/* The only thing the operator is asked, because it is the only thing
-              the file cannot answer. Six of these are languages we hold
-              translations of and the rest become the operator's own, which is
-              a distinction they have no reason to care about and are never
-              shown. How the psalms are split used to be a second dropdown and
-              is measured off the file now, which is both simpler and more
-              often right. */}
           <Select
             value={iso}
             onChange={setIso}
@@ -275,8 +215,6 @@ export const TranslationsSection = () => {
             )}
           </div>
 
-          {/* Worded so it can never read as "we only fetched 80 of them". Every
-              one of these is in the list; this is how many are drawn. */}
           {!listing && !listError && entries?.length ? (
             <p className="text-[11px] text-studio-faint">
               {search ? (
@@ -323,9 +261,6 @@ export const TranslationsSection = () => {
             </p>
           ) : null}
 
-          {/* The file picker is one line rather than a section of its own: it
-              is the way in for the archives with no list to read, and for a
-              church that was sent a file, and neither is the common case. */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5">
             <input
               ref={picker}
@@ -438,8 +373,6 @@ export const TranslationsSection = () => {
         </ul>
       </Field>
 
-      {/* Said here rather than in the terms, because this is the one screen
-          where somebody is about to copy a translation they may not own. */}
       <p className="text-[11px] leading-snug text-studio-faint">
         Most modern translations are under copyright, and these archives carry some of them. Check
         what a file says about itself before you put it on a screen. A language we hold no

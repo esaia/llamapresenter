@@ -40,7 +40,6 @@ const Section = ({ title, hint, children }: { title: string; hint?: string; chil
   </section>
 );
 
-/** A row in the footer: what a setup area is set to, click to change. */
 const SummaryRow = ({
   icon,
   label,
@@ -62,7 +61,6 @@ const SummaryRow = ({
         hover:bg-studio-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40"
     >
       {thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={thumb} alt="" className="size-7 shrink-0 rounded-[4px] object-cover ring-1 ring-studio-border" />
       ) : (
         <span
@@ -83,15 +81,6 @@ const SummaryRow = ({
   </div>
 );
 
-/**
- * A flyout that opens on hover (or focus) rather than click, portaled and
- * fixed-positioned for the same reason `MiniFlyout` is: nested and `absolute`,
- * it would both grow the mini rail's scrolling region a horizontal scrollbar
- * and be clipped by it. Held open by hovering the panel too — the gap between
- * it and the icon is small, but a tooltip that vanished the instant the
- * pointer left the icon would make the panel unreachable, which is exactly
- * what a live control (the transition slider) cannot afford.
- */
 const useHoverFlyout = (align: 'center' | 'top' = 'center') => {
   const [open, setOpen] = useState(false);
   const [origin, setOrigin] = useState({ top: 0, left: 0 });
@@ -122,7 +111,6 @@ const useHoverFlyout = (align: 'center' | 'top' = 'center') => {
   return { open, origin, anchorRef, show, hide };
 };
 
-/** `SummaryRow`, shrunk to its icon: the mini rail's version of the same row. */
 const MiniIcon = ({
   icon,
   thumb,
@@ -153,7 +141,6 @@ const MiniIcon = ({
           hover:bg-studio-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40"
       >
         {thumb ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img src={thumb} alt="" className="size-7 shrink-0 rounded-[4px] object-cover ring-1 ring-studio-border" />
         ) : (
           <span
@@ -185,16 +172,6 @@ const MiniIcon = ({
   );
 };
 
-/**
- * One section of the rail, shrunk to an icon: hover shows what it is, click
- * pops the whole section open beside the rail rather than widening it.
- *
- * The panel is portaled to `document.body` and positioned in fixed
- * coordinates rather than nested and `absolute`: the rail it lives in scrolls
- * vertically, and a box that scrolls one axis has its other axis's `visible`
- * computed to `auto` — so an `absolute` panel here would both grow the rail a
- * horizontal scrollbar and be clipped by it instead of floating free.
- */
 const MiniFlyout = ({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) => {
   const { open, origin, anchorRef, show, hide } = useHoverFlyout('top');
 
@@ -238,7 +215,6 @@ const MiniFlyout = ({ icon, label, children }: { icon: ReactNode; label: string;
   );
 };
 
-/** The crossfade slider, shrunk to an icon whose hover panel holds the live control. */
 const MiniTransition = ({ value, onChange }: { value: number; onChange: (value: number) => void }) => {
   const { open, origin, anchorRef, show, hide } = useHoverFlyout();
 
@@ -302,7 +278,6 @@ const MiniTransition = ({ value, onChange }: { value: number; onChange: (value: 
   );
 };
 
-/** One section of the rail, in whichever of its two shapes `mini` calls for. */
 const RailSection = ({
   mini,
   icon,
@@ -328,21 +303,13 @@ const RailSection = ({
     </Section>
   );
 
-/**
- * The live rail: what is being browsed, and what the projector is armed with.
- *
- * Setup that is not touched mid-service — backgrounds, typefaces, the stream —
- * sits one click away in the settings dialog, summarised at the foot.
- */
 export const Sidebar = ({
   onSettings,
   mini = false,
   onToggleMini,
 }: {
   onSettings: (tab: string) => void;
-  /** Icons only, each opening its section beside the rail instead of in it. */
   mini?: boolean;
-  /** Absent on the mobile drawer, which has its own close button and no mini shape. */
   onToggleMini?: () => void;
 }) => {
   const {
@@ -363,31 +330,17 @@ export const Sidebar = ({
     isGuest,
   } = useStudio();
 
-  // The rail sits outside the tabs, so on the Lyrics tab it was offering the
-  // scripture languages while the wall carried a chorus that pays them no
-  // attention. The song's own languages take the slot there instead — the same
-  // columns answering the same question, about what is actually on screen.
   const song = songs.find(item => item.id === activeSongId) ?? null;
 
-  // The translation the cards are printed in. An armed language reads in
-  // whatever the projector is carrying; only an unarmed one has a browsing
-  // translation of its own.
   const browsing = settings.enabled[settings.adminLang]
     ? (settings.versions[settings.adminLang] ?? settings.adminVersion)
     : settings.adminVersion;
 
   const theme = THEMES.find(entry => entry.id === settings.theme);
 
-  // The stacking order on the projector, dragged by the number each row is read
-  // by. Committed on release, not on every row the pointer crosses.
   const sortable = useSortable(settings.langOrder, lang => lang, ids => setLangOrder(ids as Lang[]));
 
-  // One language is a list of one: nothing to stack, nothing to choose between.
-  // The chips and the grip all say something about a choice, so with a
-  // single row there is nothing for them to say.
   const many = settings.langOrder.length > 1;
-  // The six, plus every language the operator added a Bible in — a Spanish
-  // translation is no use until Spanish can be armed on the rail.
   const spare = [...LANGS, ...customLangsOf(translations).map(entry => entry.code)].filter(
     lang => !settings.langOrder.includes(lang),
   );
@@ -441,13 +394,6 @@ export const Sidebar = ({
                   className="w-full"
                 />
 
-                {/* One control, shown twice.
-                
-                    A block holds one array per language, so an armed language has
-                    exactly one translation — the one on the projector. This is
-                    that same setting when the language being browsed is armed, and
-                    the row below moves with it. Two dropdowns over one value is
-                    better than a second dropdown that silently loses. */}
                 <Select
                   value={browsing}
                   onChange={value =>
@@ -475,8 +421,6 @@ export const Sidebar = ({
             >
               {many ? <LangDestHeader /> : null}
 
-              {/* The gaps between the rows belong to the list, and a release in
-                  one of them is still a release on the order the drag arrived at. */}
               <ul className="space-y-3" {...sortable.list()}>
                 {sortable.items.map((lang, index) => (
                   <li
@@ -484,8 +428,6 @@ export const Sidebar = ({
                     {...sortable.row(lang)}
                     className={cn(
                       'group rounded-studio transition-opacity duration-150',
-                      // The browser snapshots the ghost before this paints, so the
-                      // empty berth lands on the slot the row is holding open.
                       sortable.lifted === lang && LIFTED_SLOT,
                     )}
                   >
@@ -523,8 +465,6 @@ export const Sidebar = ({
                         label={`Show ${labelOf(lang)} on the projector`}
                       />
 
-                      {/* English stays: it is what every output falls back to when
-                          a pick goes away, so there is always one language left. */}
                       {lang === REQUIRED_LANG ? (
                         <span className="w-5" />
                       ) : (
@@ -551,9 +491,6 @@ export const Sidebar = ({
                 ))}
               </ul>
 
-              {/* Adding is a pick, not a dialog: the list is short enough that the
-                  native menu is the whole interaction, and it resets to its
-                  placeholder because it is a verb rather than a setting. */}
               {settings.langOrder.length >= MAX_LANGS ? null : room('languages') ? (
                 <Select
                   value=""
@@ -565,11 +502,6 @@ export const Sidebar = ({
                   className="mt-3 w-full"
                 />
               ) : (
-                // At the plan's ceiling the menu is replaced rather than left
-                // to be clicked to no effect. A picker that opens, lists four
-                // languages and then quietly does nothing is the most confusing
-                // thing this rail could do; the reason belongs in the slot the
-                // picker was in, where the operator is already looking.
                 <p className="mt-3 text-xs leading-relaxed text-studio-muted">
                   {limitMessage('languages')}{' '}
                   <a href="/pricing" className="text-studio-accent underline underline-offset-2">
@@ -584,11 +516,6 @@ export const Sidebar = ({
       </div>
 
       <div className="shrink-0 border-t border-studio-border">
-        {/* The crossfade sits with the outputs rather than in the look dialog:
-            it is the one thing on this list an operator reaches for mid-service
-            — a hard cut for a reading, a long fade under a prayer — and it
-            belongs where the screens themselves are summarised, at the width
-            of a rail control rather than a page of settings. */}
         {mini ? (
           <MiniTransition
             value={settings.transitionMs}

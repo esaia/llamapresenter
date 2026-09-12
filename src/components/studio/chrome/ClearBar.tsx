@@ -8,11 +8,6 @@ import { useAudio } from '@/lib/studio/AudioProvider';
 import { useStudio } from '@/lib/studio/StudioProvider';
 import { clearOutputs, onOutputs } from '@/lib/timer/model';
 
-/**
- * One layer's clear key. Dead unless that layer is actually putting something
- * out, so a stab at it mid-service cannot be mistaken for one that did
- * something — and so the strip doubles as a read of what is live.
- */
 const ClearKey = ({
   label,
   live,
@@ -44,17 +39,6 @@ const ClearKey = ({
   </button>
 );
 
-/**
- * Clear, one layer at a time, the way a presentation app hangs it off its
- * output preview.
- *
- * Three things can be in front of the room at once and they are cleared by
- * three different owners — the slide is a push, the timer is a state, the bed
- * is a fade — so one Clear button could only ever mean "all of it". During a
- * service that is rarely what is wanted: the bed keeps playing while the verse
- * comes down, the countdown stays up while the song ends. Hence a key each,
- * and one that takes the lot.
- */
 export const ClearBar = ({ slideLive }: { slideLive: boolean }) => {
   const { clearProjector, timer, updateTimer } = useStudio();
   const { current, stop } = useAudio();
@@ -91,8 +75,6 @@ export const ClearBar = ({ slideLive }: { slideLive: boolean }) => {
 
       <span className="min-w-0 flex-1" />
 
-      {/* The one every operator reaches for when the service has moved on and
-          they are not looking at which layers are up. */}
       <ClearKey
         label="All"
         live={anythingLive}

@@ -5,24 +5,13 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/cn';
 
-/**
- * The rail down the left of a row in an ordered list: its place in the order at
- * rest, the grip under the pointer.
- *
- * The number is what the operator reads off the list when they are told to put
- * up the second message or run the third timer; the grip only has to be there
- * at the moment they reach for it. The row itself must carry `group` for the
- * swap — the whole row is the target, not this strip of it.
- */
 export const SortHandle = ({
   index,
   children,
   className,
   ...handle
 }: {
-  /** Zero-based, printed one-based. Ignored when `children` says otherwise. */
   index?: number;
-  /** What the row shows at rest instead of its number — a tick, say. */
   children?: ReactNode;
   className?: string;
   onPointerDown?: () => void;

@@ -75,27 +75,17 @@ interface Range {
   to: number;
 }
 
-/**
- * Browse to a passage when the reference is not on the tip of the tongue:
- * book, then chapter, then a verse range.
- *
- * The grids are drawn straight from the static versification table, so they
- * appear the instant a book is picked, and corrected from the API once the
- * passage is actually fetched.
- */
 export const BrowseModal = ({
   initialBook = null,
   initialQuery = '',
   onClose,
 }: {
   initialBook?: BookEntry | null;
-  /** What the search bar couldn't read as a reference — asked here as words instead. */
   initialQuery?: string;
   onClose: () => void;
 }) => {
   const { settings, addPassage, goLive, loadChapterCount, loadVerseCount } = useStudio();
 
-  // Opened by typing a bare book name: start on that book's chapters.
   const [book, setBook] = useState<BookEntry | null>(initialBook);
   const [chapter, setChapter] = useState<number | null>(null);
   const [counts, setCounts] = useState(() => ({
@@ -106,21 +96,8 @@ export const BrowseModal = ({
   const [query, setQuery] = useState(initialQuery);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  // What the same box found in the text. A book name is answered from a table
-  // the console already holds, so it filters as fast as the operator types;
-  // the words of a verse are a question for the library, so they are asked a
-  // moment after the typing stops and the answer arrives beneath the books.
-  //
-  // The question the answer belongs to is kept with it — the words, and the
-  // translation they were looked for in — which is what makes both "these are
-  // stale" and "still looking" plain derivations rather than a second piece of
-  // state to keep in step.
   const [found, setFound] = useState<{ asked: string; hits: VerseHit[] }>({ asked: '', hits: [] });
 
-  // Which book the words are looked for in, as a shared id. Common words find
-  // more than the forty verses that come back, and those forty are the first
-  // forty in canonical order — every one of them in Matthew. Narrowing to a
-  // book is what makes "jesus" a search rather than a list of Matthew 1.
   const [scope, setScope] = useState<number | null>(null);
 
   const lang = settings.adminLang;
@@ -145,9 +122,6 @@ export const BrowseModal = ({
 
     const controller = new AbortController();
 
-    // Long enough that a word typed at speed is one request rather than six,
-    // short enough that the answer is there by the time the eye has finished
-    // reading the books above it.
     const timer = setTimeout(() => {
       void searchVerses({ lang, version: settings.adminVersion, query: term, book: scope }, controller.signal)
         .then(results => setFound({ asked, hits: results }))
@@ -187,8 +161,6 @@ export const BrowseModal = ({
     setCounts(current => ({ ...current, verses: verseCount(book.book, next, lang) }));
   };
 
-  // The static table is a hint drawn instantly; the translation is the truth,
-  // so both grids correct themselves as soon as the API can say.
   useEffect(() => {
     if (!book) return;
 
@@ -221,7 +193,6 @@ export const BrowseModal = ({
     };
   }, [book, chapter, lang, loadVerseCount, settings.adminVersion]);
 
-  /** Tap to select, tap again to extend, tap a third time to start over. */
   const pickVerse = (verse: number) => {
     setRange(current =>
       !current || current.from !== current.to || verse === current.from
@@ -239,10 +210,6 @@ export const BrowseModal = ({
 
   const [error, setError] = useState('');
 
-  // A chapter is a round trip to the API, and on a hall's connection that is
-  // long enough for the operator to wonder whether the click landed. Which
-  // button is waiting is held rather than a bare flag: a verse found by its
-  // words is added by its own card, and that card is what should spin.
   const [adding, setAdding] = useState<string | null>(null);
 
   const put = async (
@@ -271,8 +238,6 @@ export const BrowseModal = ({
   const add = (from: number | null, to: number | null) =>
     book && chapter ? void put({ book: book.book, chapter, from, to }, from === null ? 'chapter' : 'range') : undefined;
 
-  // A hit carries the language's own book id, because that is what the row it
-  // came out of holds. Everything past this point speaks the shared one.
   const addHit = (hit: VerseHit) =>
     void put(
       { book: toSharedBook(hit.book, lang), chapter: hit.chapter, from: hit.verse, to: hit.verse },
@@ -327,9 +292,6 @@ export const BrowseModal = ({
                     onKeyDown={event => {
                       if (event.key !== 'Enter') return;
 
-                      // A book if the words name one, and the first verse they
-                      // were found in otherwise: Enter takes whatever the box is
-                      // actually offering.
                       if (matches.length > 0) {
                         event.preventDefault();
                         pickBook(matches[0]);
@@ -344,10 +306,6 @@ export const BrowseModal = ({
                   />
                 </div>
 
-                {/* Only ever narrows the text search — the book grid below is
-                    the whole 66 whatever this says, because picking a book
-                    there is how the operator browses to a reference — so it
-                    appears with the search it belongs to and not before. */}
                 {searchable ? (
                   <BookScope books={books} value={scope} onPick={setScope} className="shrink-0 sm:w-48" />
                 ) : null}
@@ -363,10 +321,6 @@ export const BrowseModal = ({
                 </div>
               ) : null}
 
-              {/* The other half of the same box: what the operator typed, found
-                  in the text rather than in a book's name. A remembered line —
-                  "a thousand generations" — is how a verse is asked for at
-                  least as often as by its reference. */}
               {searchable ? (
                 <div className={cn('pb-2', matches.length > 0 && 'mt-5 border-t border-studio-border pt-4')}>
                   <p className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wide text-studio-faint">

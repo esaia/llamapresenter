@@ -31,7 +31,6 @@ const KEY_BASE =
   'inline-flex h-10 items-center justify-center gap-1 text-xs font-semibold transition-colors duration-150 ' +
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-studio-accent/40';
 
-/** The transport buttons, sized for a hand rather than for a mouse. */
 const Key = ({
   label,
   tone = 'default',
@@ -56,22 +55,10 @@ const Key = ({
   </button>
 );
 
-/**
- * The amounts the ± buttons offer. A minute covers most of it, which is why it
- * stays on the face of the button; the rest are a click away, because "give
- * them another ten" and "we are thirty seconds over" are both real and neither
- * is worth pressing the same key ten times for.
- */
 const STEPS = [1_000, 10_000, 30_000, MINUTE, 5 * MINUTE, 10 * MINUTE, 20 * MINUTE, 30 * MINUTE];
 
 const stepLabel = (ms: number) => (ms < MINUTE ? `${ms / 1000}s` : `${ms / MINUTE}m`);
 
-/**
- * Add or take off time: a minute on the button itself, any of the other
- * amounts from the caret beside it. Picking from the list applies it there and
- * then rather than arming the button — the operator opened it because the
- * speaker needs the time now.
- */
 const AdjustGroup = ({ sign }: { sign: 1 | -1 }) => {
   const { updateTimer } = useStudio();
 
@@ -108,8 +95,6 @@ const AdjustGroup = ({ sign }: { sign: 1 | -1 }) => {
 
   return (
     <div ref={box} className="relative flex min-w-0 max-w-[220px] flex-1">
-      {/* One split key, not two buttons side by side: the rounding belongs to
-          the group, and the halves are told apart by a hairline. */}
       <div className="flex w-full overflow-hidden rounded-studio">
         <Key label={`${word} a minute`} className="min-w-0 flex-1 px-2" onClick={() => apply(MINUTE)}>
           <Icon className="size-3.5" />
@@ -162,14 +147,6 @@ const AdjustGroup = ({ sign }: { sign: 1 | -1 }) => {
   );
 };
 
-/**
- * What the outputs are showing, and the controls for it — the pair kept
- * together the way a stage timer's dashboard does, so the operator never has to
- * look in two places to know what pressing play will do.
- *
- * It heads the running order, so what is armed and what it is doing are read
- * in one glance down the column.
- */
 export const TimerDashboard = () => {
   const { nextShowData, settings, showData, timer, updateTimer } = useStudio();
 
@@ -177,17 +154,7 @@ export const TimerDashboard = () => {
   const finish = now === null ? null : finishesAt(timer, now);
 
   return (
-    /* Stacked, always: the screen across the top of the column at the size it
-       is actually read at, the transport under it at the width of the thing it
-       is driving. Side by side, both halves were squeezed — the preview too
-       small to read a stage message off, the keys bunched into a strip. */
     <section className="flex flex-col gap-3">
-      {/* What `/stage/[key]` is drawing, face for face: the run while it is up,
-          the slides once it has been cleared, decided by the same predicate the
-          output itself uses. Not the page in an iframe — that would be a second
-          output joining the channel to tell the console what the console
-          already knows. The projector's version of the timer, which leaves the
-          wall clock off, is previewed beside the slide instead. */}
       <div className="w-full overflow-hidden rounded-studio bg-studio-slide">
         <div className="aspect-video w-full">
           {timerIsLive(timer) ? (
@@ -204,14 +171,9 @@ export const TimerDashboard = () => {
         </div>
       </div>
 
-      {/* The scrubber, the transport and the clocks, in that order, each at the
-          width of the screen above them — so the line being scrubbed sits
-          directly under the picture it is scrubbing. */}
       <div className="flex min-w-0 flex-col gap-2.5">
         <TimerScrubber />
 
-        {/* Spread rather than bunched: the two amounts sit under the ends of
-            the line they move, and the transport keeps the middle. */}
         <div className="flex items-stretch justify-between gap-2">
           <AdjustGroup sign={-1} />
 

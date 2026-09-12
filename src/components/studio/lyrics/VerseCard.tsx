@@ -26,13 +26,6 @@ const Control = ({ label, onClick, children }: { label: string; onClick: () => v
   </button>
 );
 
-/**
- * One slide: a single verse, or several joined verses shown together.
- *
- * The card is a scale model of the projector — same black ground, same fitted
- * text — so what an operator picks from is what the room will actually see,
- * rather than a paragraph of body copy that happens to contain the words.
- */
 export const VerseCard = ({
   items,
   lang,
@@ -56,10 +49,6 @@ export const VerseCard = ({
   size?: number;
   onGoLive: () => void;
   onRemove?: () => void;
-  /**
-   * Whether this card's cut takes the cards after it too. False on the first
-   * card, which trims from the front and leaves the rest standing.
-   */
   removesRest?: boolean;
   onJoin?: () => void;
   onSplit?: () => void;
@@ -71,9 +60,6 @@ export const VerseCard = ({
   const first = verses[0];
   const last = verses[verses.length - 1];
 
-  // A translation that lacks this verse leaves the card with nothing to show.
-  // Rendering the hole as a black slide labelled "Vundefined" is worse than
-  // leaving the slot empty until the refetch lands.
   const label = first ? (verses.length > 1 ? `V${first.muxli}-${last.muxli}` : `V${first.muxli}`) : '';
   const reference = first ? (verses.length > 1 ? `${verseRef(first, lang)}-${last.muxli}` : verseRef(first, lang)) : '';
 
@@ -132,10 +118,6 @@ export const VerseCard = ({
         style={type.style ? { fontFamily: type.style } : undefined}
       >
         <span ref={bodyRef} className="flex flex-1 items-center justify-center overflow-hidden">
-          {/* The weight the wall uses, which is none: `.show-text` sets a colour
-              and a line height and no font-weight at all. Semibold here was the
-              card's own idea, and at nine pixels of Georgian on black it filled
-              the counters in and read as a blur rather than as bold. */}
           <span ref={textRef} className={cn('w-full leading-snug text-white', ALIGN_CLASS[align])}>
             {text}
           </span>

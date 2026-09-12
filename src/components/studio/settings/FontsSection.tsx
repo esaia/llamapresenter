@@ -20,13 +20,6 @@ import { useStudio } from '@/lib/studio/StudioProvider';
 import { FontSpecimen } from '@/components/studio/pickers/FontSpecimen';
 import { Field } from '@/components/studio/settings/StyleSection';
 
-/**
- * The operator's typefaces: the ones we ship, and the ones they add.
- *
- * Its own tab rather than a block inside the projector panel, because the
- * library serves both — a face added here is offered to the projector and to
- * the stream alike, and neither of those panels owns it.
- */
 export const FontsSection = () => {
   const { settings, update, room } = useStudio();
 
@@ -36,17 +29,12 @@ export const FontsSection = () => {
   const [busy, setBusy] = useState(false);
 
   const langs = settings.langOrder.filter(lang => settings.enabled[lang]);
-  // Two ceilings, and they are answered differently. MAX_CUSTOM_FONTS is how
-  // many faces a slide can sensibly carry and is fixed for everyone; the plan's
-  // is a line that can be moved, so it says so and offers the way past it.
   const atPlanCeiling = !room('custom_fonts');
   const full = settings.customFonts.length >= MAX_CUSTOM_FONTS || atPlanCeiling;
 
   const add = async (event: FormEvent) => {
     event.preventDefault();
 
-    // What was pasted decides what it is — a Google Fonts page, a link to a
-    // font file, or a family name typed out.
     const parsed = parseSource(source);
 
     if (!parsed) {
@@ -60,9 +48,6 @@ export const FontsSection = () => {
       ...parsed,
     };
 
-    // Fetch it before storing it. A face that will not load is worse than no
-    // face at all: the picker offers it, the operator chooses it, and the wall
-    // quietly shows the fallback with nothing to explain why.
     setBusy(true);
     setError('');
 
@@ -84,12 +69,6 @@ export const FontsSection = () => {
     setSource('');
   };
 
-  /**
-   * Removing a face has to take the pickers with it. A setting left naming a
-   * font that is gone resolves to the default anyway — `fontClassOf` sees to
-   * that — but leaving it there means the dropdown shows a blank selection,
-   * which reads as broken rather than as reverted.
-   */
   const remove = (font: CustomFont) => {
     const gone = valueOf(font);
     const reset = (current: string) => (current === gone ? DEFAULT_FONT : current);
