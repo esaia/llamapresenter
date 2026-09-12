@@ -15,21 +15,21 @@ import { useStudio } from '@/lib/studio/StudioProvider';
 import { toggleRun } from '@/lib/timer/model';
 import type { SongSlide } from '@/lib/types';
 
-import { AppBar } from './AppBar';
-import { AudioBar } from './AudioBar';
-import { MediaPane } from './MediaPane';
-import { AudioPanel } from './AudioPanel';
-import { Lower3rdPanel } from './Lower3rdPanel';
-import { LyricsPanel } from './LyricsPanel';
-import { SongSearch } from './SongSearch';
-import { PassageBlock } from './PassageBlock';
-import { modalOpen } from './modal';
-import { useSortable } from './sortable';
-import { RightRail } from './RightRail';
-import { SearchBar } from './SearchBar';
-import { SettingsModal } from './SettingsModal';
-import { Sidebar } from './Sidebar';
-import { TimerPanel } from './TimerPanel';
+import { AppBar } from '@/components/studio/chrome/AppBar';
+import { AudioBar } from '@/components/studio/chrome/AudioBar';
+import { MediaPane } from '@/components/studio/media/MediaPane';
+import { AudioPanel } from '@/components/studio/audio/AudioPanel';
+import { Lower3rdPanel } from '@/components/studio/lower3rd/Lower3rdPanel';
+import { LyricsPanel } from '@/components/studio/lyrics/LyricsPanel';
+import { SongSearch } from '@/components/studio/lyrics/SongSearch';
+import { PassageBlock } from '@/components/studio/lyrics/PassageBlock';
+import { modalOpen } from '@/components/studio/modals/modal';
+import { useSortable } from '@/components/studio/shared/sortable';
+import { RightRail } from '@/components/studio/chrome/RightRail';
+import { SearchBar } from '@/components/studio/chrome/SearchBar';
+import { SettingsModal } from '@/components/studio/modals/SettingsModal';
+import { Sidebar } from '@/components/studio/chrome/Sidebar';
+import { TimerPanel } from '@/components/studio/timer/TimerPanel';
 
 /**
  * Let go of the card the operator last clicked.

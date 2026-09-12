@@ -14,7 +14,7 @@
  *
  * This file is pure. The loading of a custom face is
  * `components/projector/useCustomFonts.ts`; the picking of one is
- * `components/studio/FontsSection.tsx`.
+ * `components/studio/settings/FontsSection.tsx`.
  */
 
 /**

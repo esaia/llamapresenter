@@ -13,7 +13,7 @@
  * settings dialog — the same property the `em` sizing gives the shipped looks.
  *
  * This file is pure. The drawing of it is `components/projector/CustomSlide.tsx`,
- * the editing of it `components/studio/TemplateEditor.tsx`, and the geometry a
+ * the editing of it `components/studio/lyrics/TemplateEditor.tsx`, and the geometry a
  * drag works out is `lib/studio/canvas.ts`.
  */
 import { apiBookName } from '@/lib/bible/passage';
